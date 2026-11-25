@@ -24,6 +24,18 @@ export const CARDS = {
     text: ['Two travellers who set out from different places can finish in different valleys, even if both always go downhill.', 'So where you start matters. When nobody knows the best place to begin, people try several starts and keep the one that ends lowest.'] },
   heavy: { name: 'Too much momentum', draw: 'overshoot',
     text: ['Keep too much speed and you sail past the valley you wanted and have to come back for it.', 'So μ is kept a little under 1. A value of 0.9 is a common choice: nine tenths of the old speed is kept on every step.'] },
+  // ---- Galápagos ----
+  batch: { name: 'A handful at a time', draw: 'batch',
+    text: ['To know the slope exactly, a machine would have to look at every example it has been given, and there may be millions.', 'So it looks at a handful, picked by chance, and takes the slope from those. The handful is called a batch.'] },
+  noise: { name: 'A noisy slope', draw: 'noisy',
+    text: ['A handful never tells the whole truth. The slope it gives is a little off, and off in a different way each time.', 'The steps wobble, as a raft does on the swell. On average they still go downhill.'] },
+  sgd: { name: 'Stochastic gradient descent', draw: 'noisy', who: 'Herbert Robbins and Sutton Monro, 1951',
+    text: ['Taking every step from a chance handful is called stochastic gradient descent. Stochastic means governed by chance.', 'In 1951 Herbert Robbins and Sutton Monro showed that a method fed on noisy measurements still arrives, as long as its steps grow smaller as it goes.'],
+    math: 'θ ← θ − η ∇L_B(θ)', key: 'L_B is the loss measured on one handful, B, of the examples.' },
+  shake: { name: 'Shaken loose', draw: 'local',
+    text: ['The wobble is not only a nuisance. A noisy step can lift a traveller out of a shallow hollow that an exact step would never leave.', 'The tide does the same for Theta here: it comes in, and what was a trap is a way out.'] },
+  settle: { name: 'Settling', draw: 'descent',
+    text: ['Near the bottom, the same wobble keeps you from ever standing still.', 'Smaller steps quiet it, and so do bigger handfuls. Many training runs shorten their steps toward the end for this reason.'] },
 };
 export const HINTS = {
   move: { key: 'Press → or D to run.', touch: 'Slide your left thumb to run.', pad: 'Push the stick to run.' },
@@ -31,6 +43,8 @@ export const HINTS = {
   slide: { key: 'On ice and snow, hold Shift to slide.', touch: 'On ice and snow, hold the lower button to slide.', pad: 'On ice and snow, hold B to slide.' },
   roll: { key: 'Hold Shift to tuck in and roll.', touch: 'Hold the lower button to tuck in and roll.', pad: 'Hold B to tuck in and roll.' },
   rim: { key: 'Too steep to walk up. Roll down the slope behind you and let the speed carry you over.', touch: 'Too steep to walk up. Roll down the slope behind you and let the speed carry you over.', pad: 'Too steep to walk up. Roll down the slope behind you and let the speed carry you over.' },
+  raft: { key: 'Stay on the rafts to stay fast. Falling in only costs time.', touch: 'Stay on the rafts to stay fast. Falling in only costs time.', pad: 'Stay on the rafts to stay fast. Falling in only costs time.' },
+  tide: { key: 'Too high to climb. Stand on the raft and let the tide lift it.', touch: 'Too high to climb. Stand on the raft and let the tide lift it.', pad: 'Too high to climb. Stand on the raft and let the tide lift it.' },
   ride: { key: 'Stand still in the basket.', touch: 'Stand still in the basket.', pad: 'Stand still in the basket.' },
   jet: { key: 'Stand in the geyser and let it carry you up.', touch: 'Stand in the geyser and let it carry you up.', pad: 'Stand in the geyser and let it carry you up.' },
 };

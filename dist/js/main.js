@@ -100,7 +100,7 @@ UI.initUI({ G, startLevel, attract, greet, applyGfx, applyText, unlockAll: q.has
 // For looking at one level directly: ?level=1-1, with &x= to stand somewhere along it, &time= to change the hour, &run to hold right and &wx=0..1 to fix the weather.
 if (q.has('level')) {
   const f = levelById(q.get('level')); if (f && q.has('time')) f.spec.time = q.get('time');
-  UI.play(q.get('level')); const p = G.play;
+  UI.play(q.get('level'), !q.has('story')); const p = G.play;
   if (p && q.has('x')) { const x = +q.get('x'); p.b.x = x; p.b.y = p.T.h(x) + 0.5; p.cam.update(p.b, 0.016, G.W / G.H, true); p.eta.x = x; p.eta.y = p.b.y + 1; }
   if (q.has('run')) G.autoPlay = () => ({ move: 1, jump: false, jumpNow: false, tuck: q.get('run') === 'tuck' });
 } else UI.showTitle();

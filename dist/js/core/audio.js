@@ -95,6 +95,15 @@ TRACKS.cappadocia = { bpm: 82, len: 72, parts: [
   line('bass', 0.2, 0.4, T(Array.from({ length: 8 }, (_, b) => { const r = [38, 38, 36, 38, 38, 36, 34.65, 38][b]; return `${r} . . . ${r} . ${r + 7} . .`; }).join(' '))),
   beat('tom', 0.16, 0.5, 'o.x.o.x..', 8), beat('tick', 0.035, 0.7, 'x.xxx.xxx', 8), beat('shake', 0.04, 0.85, '..x...x.x', 8),
 ] };
+// Galápagos: light and bright, in A, six quick beats to the bar like a small wave coming in and going out; wooden notes over a rocking bass.
+TRACKS.galapagos = { bpm: 104, len: 96, parts: [
+  chords(0.14, [[57, 64, 69, 73], [54, 61, 66, 69], [50, 57, 62, 66], [52, 59, 64, 68], [57, 64, 69, 76], [54, 61, 66, 73], [50, 57, 66, 69], [52, 59, 64, 71]], 12),
+  line('keys', 0.2, 0, T('69 . . 73 . 76 . . 73 . 69 . 66 . . 69 . 73 . . 69 . . . 74 . . 69 . 66 . . 62 . 66 . 64 . . 68 . 71 . . 68 . . . 81 . . 80 . 76 . . 73 . 76 . 78 . . 73 . 69 . . 73 . . . 74 . . 78 . 81 . . 78 . 74 . 76 . . 71 . 68 . . 64 . . .')),
+  line('pluck', 0.1, 0.3, T(Array.from({ length: 8 }, (_, b) => { const r = [57, 54, 50, 52, 57, 54, 50, 52][b]; return `${r} . ${r + 7} ${r + 12} . ${r + 7} ${r + 16} . ${r + 12} ${r + 7} . ${r + 12}`; }).join(' '))),
+  line('bell', 0.06, 0.45, T('. . . . . . 88 . . . . . . . . . . . 85 . . . . . . . . . . . 90 . . . . . . . . . . . 88 . . . . . . . . . . . 93 . . . . . . . . . . . 90 . . . . . . . . . . . 86 . . . . . . . . . . . 83 . . . . .')),
+  line('bass', 0.2, 0.4, T(Array.from({ length: 8 }, (_, b) => { const r = [45, 42, 38, 40, 45, 42, 38, 40][b]; return `${r} . . . . . ${r + 7} . . ${r} . .`; }).join(' '))),
+  beat('thump', 0.14, 0.55, 'x.....x.....', 8), beat('shake', 0.05, 0.6, '..x..x..x..x', 8), beat('tick', 0.03, 0.85, 'x.xx.xx.xx.x', 8),
+] };
 export const trackNames = () => Object.keys(TRACKS);
 export function addTrack(name, def) { TRACKS[name] = def; }
 export const tk = { T, line, chords, beat };

@@ -6,11 +6,12 @@ import { WORLDS, levelById, ALL } from '../dist/js/data/worlds.js';
 import { Weather } from '../dist/js/game/weather.js';
 import { Geyser } from '../dist/js/game/boss.js';
 import { Rides } from '../dist/js/game/ride.js';
+import { tides } from '../dist/js/game/tide.js';
 
 export function runBot(spec, can, { maxT = 240, trace = false } = {}) {
   const L = build(spec), T = L.T, b = new Body(L.start.x, L.start.y + R); Object.assign(b.can, can); b.grounded = true;
   const f0 = levelById(spec.id), wx = new Weather(spec.id + (spec.time || 'day'), f0 && f0.world.theme.weather ? f0.world.theme.weather(spec.time || 'day') : {}); T.air = (tt) => wx.windAt(tt);
-  const boss = spec.boss === 'geyser' ? new Geyser(L, T) : null; let erupts = 0; const rides = new Rides(L, T); let retreat = 0, retreats = 0;
+  const boss = spec.boss === 'geyser' ? new Geyser(L, T) : null; let erupts = 0; const rides = new Rides(L, T); let retreat = 0, retreats = 0, leaping = false;
   const inp = { move: 1, jump: false, jumpNow: false, tuck: false }; let t = 0, falls = 0, check = L.checks[0], holdT = 0, lastX = b.x, lastMove = 0, seeds = 0, stuckAt = null, top = 0;
   const pitAhead = (x, d) => L.pits.find((p) => p.x0 >= x - 0.2 && p.x0 - x < d);
   const riseAhead = (x, d) => { let m = -1e9; for (let u = 0.3; u <= d; u += 0.3) m = Math.max(m, T.h(x + u) - T.h(x)); return m; };
@@ -32,10 +33,18 @@ export function runBot(spec, can, { maxT = 240, trace = false } = {}) {
     if (can.slide && !can.roll && b.grounded && s < -0.1 && (surf === 'ice' || surf === 'snow') && !pitAhead(b.x, 3)) inp.tuck = true;
     if (can.roll && b.grounded && (s < -0.06 || (sp > 6 && s > 0.25) || b.mode === 'ball' && sp > 9) && !pitAhead(b.x, 3)) inp.tuck = true;
     { const rd = rides.list.find((r) => !r.done && r.x > b.x - 1.5 && r.x - b.x < 12); if (rd && !rides.on) { inp.tuck = false; const d = rd.x - b.x; inp.move = Math.abs(d) < 0.5 ? 0 : d > 0 ? (sp > 4 && d < 5 ? 0 : 1) : -1; inp.jumpNow = false; holdT = 0; inp.jump = false; } }
+    let inBasin = false;
+    { const wtr = T.waterAt(b.x); if (wtr && wtr.tide && wtr.tide.amp > 2) { // a tide basin: get on the raft, wait for the water, hop out near the top
+        const pf = T.platforms.find((p) => p.move && (p.x0 + p.x1) / 2 > wtr.x0 && (p.x0 + p.x1) / 2 < wtr.x1); if (pf) { inBasin = true; retreat = 0; lastMove = t; inp.tuck = false;
+          const mid = (pf.x0 + pf.x1) / 2, top = pf.move(b.t).y0, feet = b.y - b.r, dx = mid - b.x, on = b.grounded && Math.abs(dx) < (pf.x1 - pf.x0) / 2 - 0.15 && Math.abs(feet - top) < 0.25, rim = T.h(wtr.x1 + 0.8);
+          if (on) { if (top + 1.1 >= rim) { inp.move = 1; leaping = true; if (b.x > pf.x1 - 1.1 && holdT <= 0) { inp.jumpNow = true; holdT = 0.34; } } else { inp.move = Math.abs(dx) > 0.5 ? Math.sign(dx) : 0; holdT = 0; } }
+          else if (leaping && b.inWater < 0.2) inp.move = 1;
+          else if (b.x < wtr.x1 - 0.5 || feet < rim - 0.3) { leaping = false; inp.move = Math.abs(dx) > 0.35 ? Math.sign(dx) : 0; if (b.grounded && Math.abs(dx) < 1.3 && top - feet > 0.15 && top - feet < 2.4 && holdT <= 0) { inp.jumpNow = true; holdT = 0.26; } }
+          inp.jump = holdT > 0; } } }
     if (retreat > 0) { retreat -= STEP; inp.move = -1; inp.tuck = false; inp.jump = false; inp.jumpNow = false; }
     if (trace > 1 && inp.jumpNow) console.log('   jump at', b.x.toFixed(2), 'vx', b.vx.toFixed(1), 'hold', holdT.toFixed(2));
-    if (!rides.step(b, STEP)) step(b, T, inp); inp.jumpNow = false; t += STEP; if (rides.on) { lastX = b.x; lastMove = t; }
-    if (can.roll && retreat <= 0 && t - lastMove > 2.2 && retreats < 30 && !rides.list.some((r) => !r.done && Math.abs(r.x - b.x) < 3)) { retreat = 3.2 + (retreats % 3) * 0.8; retreats++; lastMove = t; if (trace) console.log('  stopped at x', b.x.toFixed(1), '- going back for a run-up'); }
+    tides(T, b.t); if (!rides.step(b, STEP)) step(b, T, inp); inp.jumpNow = false; t += STEP; if (rides.on) { lastX = b.x; lastMove = t; }
+    if (can.roll && !inBasin && retreat <= 0 && t - lastMove > 2.2 && retreats < 30 && !rides.list.some((r) => !r.done && Math.abs(r.x - b.x) < 3)) { retreat = 3.2 + (retreats % 3) * 0.8; retreats++; lastMove = t; if (trace) console.log('  stopped at x', b.x.toFixed(1), '- going back for a run-up'); }
     top = Math.max(top, b.speed()); if (boss) { boss.step(b, STEP); if (boss.events.includes('erupt')) { erupts++; if (trace) console.log('  eruption at x', b.x.toFixed(1), 't', t.toFixed(1)); } }
     if (trace > 2 && Math.round(t / STEP) % 60 === 0) console.log('   ', t.toFixed(2), 'x', b.x.toFixed(2), 'y', b.y.toFixed(2), 'v', b.vx.toFixed(1), b.vy.toFixed(1), 'move', inp.move, b.grounded ? 'ground' : 'air', b.inJet.toFixed(2));
     if (trace > 1) for (const e of b.events) if (e === 'land') console.log('   land at', b.x.toFixed(2), 'y', b.y.toFixed(2), 'impact', b.impact.toFixed(1));

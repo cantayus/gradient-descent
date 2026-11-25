@@ -28,7 +28,7 @@ function tile(kind, seed) {
   else for (let i = 0; i < 380; i++) dab(r.chance(0.5) ? '#ffffff' : '#000000', r.range(0.04, 0.14), r.range(0.7, 1.8), r.range(0.7, 1.8), 0);   // sand: a fine speckle
   return c;
 }
-const TILE_OF = { tuff: 'sand', rose: 'sand', honey: 'sand', dust: 'sand', vine: 'grass', cap: 'rock', drum: 'sand', meadow: 'grass', moss: 'grass', snow: 'snow', ice: 'ice', sand: 'sand', hot: 'sand', rock: 'rock', basalt: 'rock', wet: 'rock' };
+const TILE_OF = { lava: 'rock', beach: 'sand', scoria: 'sand', green: 'grass', carpet: 'grass', wetrock: 'rock', tuff: 'sand', rose: 'sand', honey: 'sand', dust: 'sand', vine: 'grass', cap: 'rock', drum: 'sand', meadow: 'grass', moss: 'grass', snow: 'snow', ice: 'ice', sand: 'sand', hot: 'sand', rock: 'rock', basalt: 'rock', wet: 'rock' };
 
 export class Scene {
   constructor(theme, level, timeKey = 'day') {
@@ -292,15 +292,17 @@ export class Scene {
       const top = (x) => -w.y - Math.sin(x * 1.7 + t * 1.6) * 0.035 - Math.sin(x * 0.6 - t * 0.9) * 0.03;
       ctx.beginPath(); ctx.moveTo(a, top(a)); for (let x = a; x <= b; x += 0.3) ctx.lineTo(x, top(x)); ctx.lineTo(b, top(b)); ctx.lineTo(b, -w.y + 12); ctx.lineTo(a, -w.y + 12); ctx.closePath();
       if (!front) { const g = ctx.createLinearGradient(0, -w.y, 0, -w.y + 5); g.addColorStop(0, lighten(col, 0.25)); g.addColorStop(0.25, col); g.addColorStop(1, darken(col, 0.45)); ctx.fillStyle = g; ctx.fill(); }
-      else { ctx.save(); ctx.clip(); ctx.fillStyle = rgba(col, 0.38); ctx.fillRect(a, -w.y - 0.2, b - a, 12); ctx.strokeStyle = 'rgba(255,255,255,0.55)'; ctx.lineWidth = 0.04; for (let x = Math.floor(a); x < b; x += 1.7) { const ph = Math.sin(t * 1.3 + x * 2.1); ctx.globalAlpha = 0.25 + 0.3 * ph * ph; ctx.beginPath(); ctx.moveTo(x, top(x) + 0.12 + 0.05 * ph); ctx.lineTo(x + 0.6 + 0.3 * ph, top(x + 0.6) + 0.12 + 0.05 * ph); ctx.stroke(); } ctx.restore(); ctx.globalAlpha = 1;
-        ctx.beginPath(); ctx.moveTo(a, top(a)); for (let x = a; x <= b; x += 0.3) ctx.lineTo(x, top(x)); ctx.strokeStyle = 'rgba(255,255,255,0.7)'; ctx.lineWidth = 0.05; ctx.stroke(); } }
+      else { // the veil of water in front of whatever is in it: only down to the bed, never over the cut earth
+        ctx.beginPath(); ctx.moveTo(a, top(a)); for (let x = a; x <= b; x += 0.3) ctx.lineTo(x, top(x)); ctx.lineTo(b, top(b)); for (let x = b; x >= a; x -= 0.3) ctx.lineTo(x, Math.max(top(x), -this.T.h(x))); ctx.closePath();
+        ctx.save(); ctx.clip(); ctx.fillStyle = rgba(col, 0.38); ctx.fillRect(a, -w.y - 0.2, b - a, 12); ctx.strokeStyle = 'rgba(255,255,255,0.55)'; ctx.lineWidth = 0.04; for (let x = Math.floor(a); x < b; x += 1.7) { const ph = Math.sin(t * 1.3 + x * 2.1); ctx.globalAlpha = 0.25 + 0.3 * ph * ph; ctx.beginPath(); ctx.moveTo(x, top(x) + 0.12 + 0.05 * ph); ctx.lineTo(x + 0.6 + 0.3 * ph, top(x + 0.6) + 0.12 + 0.05 * ph); ctx.stroke(); } ctx.restore(); ctx.globalAlpha = 1;
+        ctx.beginPath(); let pen = false; for (let x = a; x <= b; x += 0.3) { if (-this.T.h(x) > top(x)) { pen ? ctx.lineTo(x, top(x)) : ctx.moveTo(x, top(x)); pen = true; } else pen = false; } ctx.strokeStyle = 'rgba(255,255,255,0.7)'; ctx.lineWidth = 0.05; ctx.stroke(); } }      // the bright line of the surface, only where there is water under it
   }
 
   // ledges, geysers, seeds, the goal, the animals
   _things(ctx, x0, x1, A) {
-    const T = this.T, t = this.t, th = this.theme;
-    for (const p of T.platforms) { const st = p.move ? p.move(t) : p, y0 = st.y0 ?? p.y0, y1 = st.y1 ?? p.y1; if (p.x1 < x0 || p.x0 > x1) continue; const w = p.x1 - p.x0, key = Math.round(w * 4) + ':' + (p.kind || 'slab'); let s = this.slabs.get(key); if (!s) { s = th.slab(w, p.kind || 'slab', this.time); this.slabs.set(key, s); }
-      stamp(ctx, s, (p.x0 + p.x1) / 2, -(y0 + y1) / 2, 1, -Math.atan2(y1 - y0, w)); }
+    const T = this.T, t = this.pt ?? this.t, th = this.theme;
+    for (const p of T.platforms) { const st = p.move ? p.move(t) : p, y0 = st.y0 ?? p.y0, y1 = st.y1 ?? p.y1, px0 = st.x0 ?? p.x0, px1 = st.x1 ?? p.x1; if (px1 < x0 - 4 || px0 > x1 + 4) continue; const w = p.x1 - p.x0, key = Math.round(w * 4) + ':' + (p.kind || 'slab'); let s = this.slabs.get(key); if (!s) { s = th.slab(w, p.kind || 'slab', this.time); this.slabs.set(key, s); }
+      stamp(ctx, s, (px0 + px1) / 2, -(y0 + y1) / 2, 1, -Math.atan2(y1 - y0, w), p.dir ? p.dir(t) < 0 : false); }
     for (const j of T.jets) { if (j.x < x0 - 3 || j.x > x1 + 3) continue; const on = j.on ? j.on(t) : 1, gy = T.h(j.x); if (this.spr.vent && !j.raw) stamp(ctx, this.spr.vent[0], j.x, -gy + 0.12, 1);
       if (on > 0.02) { const hh = j.top * on, g = ctx.createLinearGradient(0, -gy, 0, -gy - hh); g.addColorStop(0, 'rgba(255,255,255,0.9)'); g.addColorStop(0.6, 'rgba(200,236,255,0.55)'); g.addColorStop(1, 'rgba(255,255,255,0)'); ctx.fillStyle = g; ctx.beginPath(); const ww = j.w * 0.55; ctx.moveTo(j.x - ww * 0.6, -gy); for (let k = 0; k <= 10; k++) { const u = k / 10; ctx.lineTo(j.x - ww * (0.6 + u * 0.7) + Math.sin(t * 14 + k) * 0.06, -gy - hh * u); } for (let k = 10; k >= 0; k--) { const u = k / 10; ctx.lineTo(j.x + ww * (0.6 + u * 0.7) + Math.sin(t * 11 + k * 2) * 0.06, -gy - hh * u); } ctx.closePath(); ctx.fill(); } }
     // a balloon with its basket, waiting or in flight

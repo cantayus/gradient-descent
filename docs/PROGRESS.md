@@ -53,6 +53,19 @@ After the last world a sandbox opens: pick a landscape, set learning rate, momen
   deep dust that slows a roll, Mu the bird (`Mu` in play.js), the balloon ride (`js/game/ride.js`, stroke option `ride: { at, to, up }`),
   music in nine-eight after the makam Hüseyni, five notebook pages (momentum, local minimum, over the rim, where you start, too much momentum).
   Every level now ends in a cliff past the goal, and the goal is the lowest point of the last bowl.
+- Galápagos (`js/art/worlds/galapagos.js`, six hours incl. the garúa mist): lava and red cinder, white beaches, prickly-pear trees, sesuvium, the sea with
+  islets and boats, tortoises, marine iguanas, boobies, sea lions, crabs. Five levels and a boss, all finished by the scripted player.
+  Tide and surf (`js/game/tide.js`, stroke options `water` + `tide`), rafts afloat (`float`), sea turtles that swim to and fro (`walk`),
+  lagoons (dry is the fast line, falling in only costs time) and tide basins (stand on the raft, the tide lifts it, hop out). Music in six-eight, five pages
+  (a handful at a time, a noisy slope, stochastic gradient descent, shaken loose, settling).
+- The story (`js/data/story.js`, owner: "there should be a story about why the hero travels to these locations"). A seed of light will grow only in the
+  lowest valley in the world, and nobody knows where that is. Each country is somebody's answer, fails for the reason that country teaches, and whoever
+  lives there knows where to try next: Iceland (too new, still boiling) → Cappadocia (all hollows, all on a high plateau) → Galápagos (the edge of the sea,
+  but the tide takes it back) → Namib (where a river stops: flat and dry) → Zhangjiajie (deep ravines, no sky) → Patagonia (ice-cut valleys, too violent)
+  → Yakushima (the old forest: the seed takes root where things planted long ago still grow). A chapter is shown before the first level of each country
+  (`showTale`), and all read chapters are under "The story" on the title. Chapters for countries not yet built are already written.
+- `js/art/worlds/kit.js`: the stock sprites every theme shares (`stock(time, tag, palette)`), `tones`, `lamps`. New themes should start from it.
+- Fairy chimneys were redrawn from the real ones at the owner's request (`P.chimney`, `P.badland`; `dist/dev/chimneys.html` lays them out to inspect).
 - Screens (`js/ui/ui.js`, `css/app.css`): cinematic title with "press any key", text menu with keyboard movement, level list, pause, finish card with
   the run as a loss curve and medals, notebook with five pages, how to play, settings (volumes, picture, motion, text size, assist, contrast),
   "Also play this!", credits. Level name card at the start of each level, with a wide opening look before the first step.
@@ -64,7 +77,8 @@ After the last world a sandbox opens: pick a landscape, set learning rate, momen
 
 ## Not built yet
 
-- Worlds 3 to 7 (themes, music, mechanics, bosses, notebook pages). Next: Galápagos (stochastic gradient descent; surf and tide move the ground).
+- Worlds 4 to 7 (themes, music, mechanics, bosses, notebook pages). Next: Namib (plateaus, learning-rate schedules; long flats, oryx, dead camel-thorn trees, sand on the wind).
+- An ending scene for the last chapter of the story.
 - Cappadocia still wants: a scene in which Mu joins (like the opening scene), a boss with something of its own (now it is a hard run of hollows), a play-through by hand for feel, better poplars.
 - The wordless story scenes, Sort! bonus stages, the daily valley, endless mode, the lab with sliders, the teacher page, the share card.
 - Key rebinding screen (the hooks exist in `input.js`), high-contrast palette (the setting exists, the palette does not), a larger landing margin for assist.

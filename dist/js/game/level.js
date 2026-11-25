@@ -45,8 +45,8 @@ export function build(spec) {
     if (type === 'gap') pits.push({ x0, x1, y: Math.min(y0, y) });
     if (type === 'bowl') marks.push({ kind: 'goal', x: at(0.5) });      // the goal is the lowest point of the last bowl
     if (opt.surf) surfs.push({ x0, x1, type: opt.surf });
-    if (opt.water != null) waters.push({ x0: at(opt.water[0] ?? 0), x1: at(opt.water[1] ?? 1), y: y0 + (opt.water[2] ?? -0.4), hot: !!opt.hot });
-    for (const p of opt.plat || []) platforms.push({ x0: at(p.at) - p.w / 2, x1: at(p.at) + p.w / 2, y0: y0 + p.up, y1: y0 + p.up + (p.tilt || 0), type: p.type || 'rock', kind: p.kind || 'slab', ...(p.bob ? bob(y0 + p.up, p.bob, at(p.at)) : {}) });
+    if (opt.water != null) { const wy = y0 + (opt.water[2] ?? -0.4); waters.push({ x0: at(opt.water[0] ?? 0), x1: at(opt.water[1] ?? 1), y: wy, y0: wy, hot: !!opt.hot, tide: opt.tide || null }); }
+    for (const p of opt.plat || []) platforms.push({ x0: at(p.at) - p.w / 2, x1: at(p.at) + p.w / 2, y0: y0 + p.up, y1: y0 + p.up + (p.tilt || 0), type: p.type || 'rock', kind: p.kind || 'slab', ...(p.bob ? bob(y0 + p.up, p.bob, at(p.at)) : {}), ...moving(p.float && opt.tide ? afloat(y0 + p.up, opt.tide) : null, p.walk ? walk(at(p.at) - p.w / 2, at(p.at) + p.w / 2, p.walk, at(p.at)) : null) });
     for (const j of opt.jets || []) jets.push({ x: at(j.at), w: j.w || 1.3, top: j.top || 9, v: j.v || 17, every: j.every || 0, phase: j.phase || 0, on: j.every ? pulse(j.every, j.phase || 0, j.len || 1.6) : null });
     for (const w of opt.wind || []) winds.push({ x0: at(w.from ?? 0), x1: at(w.to ?? 1), y0: -1e9, y1: 1e9, wx: w.wx || 0, wy: w.wy || 0, gust: w.gusty ? (t) => 0.55 + 0.45 * Math.sin(t * 1.3 + x0) : null });
     if (opt.seeds) { const list = Array.isArray(opt.seeds) ? opt.seeds : Array.from({ length: opt.seeds }, (_, i) => ({ at: (i + 1) / (opt.seeds + 1) })); for (const s of list) seeds.push({ x: at(s.at), up: s.up ?? 1.3, i0 }); }
@@ -85,6 +85,10 @@ export function build(spec) {
 }
 
 // a platform that rides up and down, as a balloon or a floating rock does
+// a thing afloat rises and falls with the water under it; a thing that walks goes to and fro
+function afloat(y, td) { const k = (2 * Math.PI) / td.per; return { move: (t) => { const o = td.amp * Math.sin(t * k + (td.ph || 0)); return { y0: y + o, y1: y + o }; }, vy: (t) => td.amp * k * Math.cos(t * k + (td.ph || 0)) }; }
+function walk(x0, x1, wk, seed) { const k = (2 * Math.PI) / (wk.per || 8), ph = (seed * 0.61) % 6.28, d = wk.dist || 3; return { move: (t) => { const o = d * Math.sin(t * k + ph); return { x0: x0 + o, x1: x1 + o }; }, vx: (t) => d * k * Math.cos(t * k + ph), dir: (t) => Math.cos(t * k + ph) }; }
+const moving = (fl, wk) => (fl && wk ? { move: (t) => ({ ...fl.move(t), ...wk.move(t) }), vy: fl.vy, vx: wk.vx, dir: wk.dir } : fl || wk || {});
 function bob(y, b, seed) { const amp = b.amp || 1, per = b.per || 4, ph = (seed * 0.37) % 6.28; return { move: (t) => { const o = amp * Math.sin((t * 2 * Math.PI) / per + ph); return { y0: y + o, y1: y + o }; }, vy: (t) => amp * ((2 * Math.PI) / per) * Math.cos((t * 2 * Math.PI) / per + ph) }; }
 // a geyser that comes and goes: quiet, then a rise, a hold and a fall
 function pulse(every, phase, len) { return (t) => { const u = ((t + phase) % every + every) % every; return u < 0.35 ? u / 0.35 : u < len ? 1 : u < len + 0.5 ? 1 - (u - len) / 0.5 : 0; }; }

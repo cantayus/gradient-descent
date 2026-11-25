@@ -244,6 +244,41 @@ export const P = {
     const g = ctx.createLinearGradient(0, 0, w, 0); g.addColorStop(0, lit); g.addColorStop(1, col); ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(w * 0.38, h * 0.06); ctx.lineTo(w * 0.62, h * 0.06); ctx.lineTo(w * 0.6, h * 0.2); ctx.bezierCurveTo(w * 1.02, h * 0.34, w * 0.95, h * 0.86, w * 0.66, h); ctx.lineTo(w * 0.34, h); ctx.bezierCurveTo(w * 0.05, h * 0.86, w * -0.02, h * 0.34, w * 0.4, h * 0.2); ctx.closePath(); ctx.fill();
     ctx.fillStyle = col; ctx.fillRect(w * 0.33, 0, w * 0.34, h * 0.08); ctx.strokeStyle = band; ctx.lineWidth = h * 0.03; ctx.beginPath(); ctx.moveTo(w * 0.17, h * 0.46); ctx.quadraticCurveTo(w / 2, h * 0.52, w * 0.83, h * 0.46); ctx.stroke();
   },
+  // a prickly pear grown into a tree, as they have on the Galápagos: a trunk the colour of rust and a crown of flat green pads
+  cactus(ctx, w, h, r, { trunk = '#b8683a', trunkLit = '#e09a62', pad = '#5f8f45', padLit = '#a8cc6a', bloom = '#ffd23c' } = {}) {
+    const g = ctx.createLinearGradient(w * 0.4, 0, w * 0.6, 0); g.addColorStop(0, trunkLit); g.addColorStop(1, trunk); ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(w * 0.42, h); ctx.lineTo(w * 0.45, h * 0.45); ctx.lineTo(w * 0.55, h * 0.45); ctx.lineTo(w * 0.58, h); ctx.closePath(); ctx.fill();
+    for (let i = 0; i < 16; i++) { const a = r.range(-Math.PI, 0), d = Math.sqrt(r.u()), x = w / 2 + Math.cos(a) * d * w * 0.38, y = h * 0.42 + Math.sin(a) * d * h * 0.34, pw = w * r.range(0.1, 0.16), ph = pw * r.range(1.2, 1.6), rot = r.range(-0.7, 0.7); ctx.fillStyle = mix(pad, padLit, clamp(0.5 - (x - w / 2) / w + r.range(-0.2, 0.2), 0, 1)); ctx.beginPath(); ctx.ellipse(x, y, pw, ph, rot, 0, TAU); ctx.fill(); ctx.fillStyle = rgba('#ffffff', 0.35); for (let k = 0; k < 4; k++) ctx.fillRect(x + r.range(-0.6, 0.6) * pw, y + r.range(-0.6, 0.6) * ph, 0.02, 0.02); if (bloom && r.chance(0.3)) { ctx.fillStyle = bloom; ctx.beginPath(); ctx.arc(x + Math.sin(rot) * ph, y - Math.cos(rot) * ph, pw * 0.3, 0, TAU); ctx.fill(); } }
+  },
+  // a giant tortoise, facing right: a high domed shell in plates, a long neck, legs like pillars
+  tortoise(ctx, w, h, r, { shell = '#5a5248', shellLit = '#8a8070', skin = '#4a463e' } = {}) {
+    ctx.fillStyle = skin; for (const lx of [0.2, 0.34, 0.6, 0.72]) ctx.fillRect(lx * w, h * 0.66, w * 0.09, h * 0.34);
+    ctx.strokeStyle = skin; ctx.lineWidth = h * 0.13; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(w * 0.72, h * 0.6); ctx.quadraticCurveTo(w * 0.84, h * 0.56, w * 0.88, h * 0.36); ctx.stroke(); ctx.fillStyle = skin; ctx.beginPath(); ctx.ellipse(w * 0.91, h * 0.33, w * 0.075, h * 0.1, 0.2, 0, TAU); ctx.fill(); ctx.fillStyle = '#1c1a18'; ctx.beginPath(); ctx.arc(w * 0.935, h * 0.31, w * 0.012, 0, TAU); ctx.fill();
+    const g = ctx.createLinearGradient(0, 0, w * 0.6, h); g.addColorStop(0, shellLit); g.addColorStop(1, shell); ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(w * 0.08, h * 0.72); ctx.bezierCurveTo(w * 0.06, h * 0.2, w * 0.3, 0, w * 0.46, 0); ctx.bezierCurveTo(w * 0.66, 0, w * 0.82, h * 0.3, w * 0.8, h * 0.72); ctx.closePath(); ctx.fill(); ctx.save(); ctx.clip();
+    ctx.strokeStyle = rgba('#1c1a18', 0.3); ctx.lineWidth = w * 0.012; for (let i = 0; i < 4; i++) { ctx.beginPath(); ctx.arc(w * (0.2 + i * 0.17), h * 0.5, w * 0.13, 0, TAU); ctx.stroke(); ctx.beginPath(); ctx.arc(w * (0.28 + i * 0.17), h * 0.18, w * 0.11, 0, TAU); ctx.stroke(); } ctx.restore();
+  },
+  // a marine iguana, facing right: dark as the lava it lies on, a crest of spines down the back, salt on its head
+  iguana(ctx, w, h, r, { col = '#33302c', lit = '#6a645c' } = {}) {
+    ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(0, h * 0.86); ctx.quadraticCurveTo(w * 0.2, h * 0.7, w * 0.36, h * 0.6); ctx.quadraticCurveTo(w * 0.6, h * 0.36, w * 0.8, h * 0.4); ctx.quadraticCurveTo(w, h * 0.42, w, h * 0.56); ctx.quadraticCurveTo(w * 0.9, h * 0.7, w * 0.76, h * 0.72); ctx.quadraticCurveTo(w * 0.5, h * 0.92, w * 0.3, h * 0.9); ctx.quadraticCurveTo(w * 0.1, h * 0.96, 0, h * 0.86); ctx.fill();
+    for (let i = 0; i < 12; i++) { const u = 0.26 + i * 0.045, y = h * (0.66 - (u - 0.26) * 0.55); ctx.beginPath(); ctx.moveTo(u * w, y); ctx.lineTo((u + 0.012) * w, y - h * 0.16); ctx.lineTo((u + 0.035) * w, y - h * 0.01); ctx.fill(); }
+    ctx.fillRect(w * 0.4, h * 0.8, w * 0.05, h * 0.2); ctx.fillRect(w * 0.66, h * 0.66, w * 0.05, h * 0.34); ctx.fillStyle = rgba('#ffffff', 0.5); ctx.beginPath(); ctx.ellipse(w * 0.88, h * 0.44, w * 0.06, h * 0.05, 0, 0, TAU); ctx.fill(); ctx.fillStyle = lit; ctx.fillRect(w * 0.45, h * 0.62, w * 0.25, h * 0.04);
+  },
+  // a blue-footed booby, standing
+  booby(ctx, w, h, r, { foot = '#3fa8e0' } = {}) {
+    ctx.fillStyle = foot; ctx.beginPath(); ctx.ellipse(w * 0.4, h * 0.95, w * 0.17, h * 0.05, 0, 0, TAU); ctx.ellipse(w * 0.66, h * 0.95, w * 0.17, h * 0.05, 0, 0, TAU); ctx.fill(); ctx.fillRect(w * 0.37, h * 0.78, w * 0.06, h * 0.16); ctx.fillRect(w * 0.6, h * 0.78, w * 0.06, h * 0.16);
+    ctx.fillStyle = '#5a4636'; ctx.beginPath(); ctx.ellipse(w * 0.44, h * 0.56, w * 0.3, h * 0.27, -0.25, 0, TAU); ctx.fill(); ctx.fillStyle = '#f6f2ea'; ctx.beginPath(); ctx.ellipse(w * 0.54, h * 0.58, w * 0.2, h * 0.24, -0.15, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#e4d8c4'; ctx.beginPath(); ctx.ellipse(w * 0.56, h * 0.24, w * 0.17, h * 0.15, 0, 0, TAU); ctx.fill(); ctx.strokeStyle = rgba('#5a4636', 0.5); ctx.lineWidth = w * 0.02; for (let i = 0; i < 4; i++) { ctx.beginPath(); ctx.moveTo(w * (0.46 + i * 0.05), h * 0.13); ctx.lineTo(w * (0.44 + i * 0.05), h * 0.3); ctx.stroke(); }
+    ctx.fillStyle = '#6a7a8a'; ctx.beginPath(); ctx.moveTo(w * 0.7, h * 0.18); ctx.lineTo(w, h * 0.3); ctx.lineTo(w * 0.7, h * 0.31); ctx.closePath(); ctx.fill(); ctx.fillStyle = '#ffd23c'; ctx.beginPath(); ctx.arc(w * 0.63, h * 0.21, w * 0.035, 0, TAU); ctx.fill(); ctx.fillStyle = '#1c1a18'; ctx.beginPath(); ctx.arc(w * 0.635, h * 0.21, w * 0.016, 0, TAU); ctx.fill();
+  },
+  // a sea lion hauled out on the rock, head up
+  sealion(ctx, w, h, r, { col = '#7a5a40', lit = '#b08a62' } = {}) {
+    const g = ctx.createLinearGradient(0, 0, 0, h); g.addColorStop(0, lit); g.addColorStop(1, col); ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(0, h * 0.9); ctx.quadraticCurveTo(w * 0.1, h * 0.62, w * 0.4, h * 0.6); ctx.quadraticCurveTo(w * 0.62, h * 0.56, w * 0.7, h * 0.2); ctx.quadraticCurveTo(w * 0.78, 0, w * 0.9, h * 0.1); ctx.quadraticCurveTo(w, h * 0.2, w * 0.92, h * 0.3); ctx.quadraticCurveTo(w * 0.9, h * 0.8, w * 0.72, h); ctx.lineTo(w * 0.1, h); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = col; ctx.beginPath(); ctx.ellipse(w * 0.62, h * 0.95, w * 0.2, h * 0.07, -0.2, 0, TAU); ctx.ellipse(w * 0.06, h * 0.92, w * 0.1, h * 0.06, 0.4, 0, TAU); ctx.fill(); ctx.fillStyle = '#1c1a18'; ctx.beginPath(); ctx.arc(w * 0.87, h * 0.17, w * 0.016, 0, TAU); ctx.arc(w * 0.975, h * 0.2, w * 0.02, 0, TAU); ctx.fill();
+  },
+  // a Sally Lightfoot crab: the brightest thing on a black shore
+  crab(ctx, w, h, r, { col = '#e8442a', lit = '#ffb04a' } = {}) {
+    ctx.strokeStyle = col; ctx.lineWidth = h * 0.11; ctx.lineCap = 'round'; for (const sd of [-1, 1]) for (let i = 0; i < 3; i++) { ctx.beginPath(); ctx.moveTo(w / 2 + sd * w * 0.2, h * 0.55); ctx.quadraticCurveTo(w / 2 + sd * w * (0.34 + i * 0.06), h * (0.2 + i * 0.12), w / 2 + sd * w * (0.4 + i * 0.045), h * 0.98); ctx.stroke(); }
+    const g = ctx.createLinearGradient(0, h * 0.2, 0, h * 0.8); g.addColorStop(0, lit); g.addColorStop(1, col); ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(w / 2, h * 0.55, w * 0.26, h * 0.3, 0, 0, TAU); ctx.fill(); ctx.fillStyle = '#7fd0e8'; ctx.beginPath(); ctx.ellipse(w / 2, h * 0.7, w * 0.16, h * 0.12, 0, 0, TAU); ctx.fill(); ctx.fillStyle = '#1c1a18'; ctx.fillRect(w * 0.42, h * 0.22, w * 0.04, h * 0.14); ctx.fillRect(w * 0.54, h * 0.22, w * 0.04, h * 0.14);
+  },
 };
 
 // Make `n` different sprites with one painter.

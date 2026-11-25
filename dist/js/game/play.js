@@ -6,6 +6,7 @@ import { Scene } from '../art/scene.js';
 import { clamp, lerp, smooth } from '../art/paint.js';
 import { Geyser } from './boss.js';
 import { Rides } from './ride.js';
+import { tides } from './tide.js';
 
 export class Camera {
   constructor(x, y) { this.x = x; this.y = y; this.vh = 11.6; this.vw = 22; this.lx = 3; this.ly = 0.9; }
@@ -105,6 +106,7 @@ export class Play {
       this.acc = advance(b, this.T, { move: 0, jump: false, jumpNow: false, tuck: false }, this.acc, dt);
     }
     const v = this.view, m = this.dead > 0 || b.px == null ? 1 : b.mix ?? 1; v.x = b.px == null ? b.x : b.px + (b.x - b.px) * m; v.y = b.py == null ? b.y : b.py + (b.y - b.py) * m; v.vx = b.vx; v.vy = b.vy; v.face = b.face; v.fast = clamp((b.speed() - 13) / 14, 0, 1);
+    this.scene.pt = b.t - (1 - m) * STEP;      // the physics clock, for everything in the picture that the physics also moves
     const pose = this.rig.update(b, dt, inp);
     pose.seed = (0.7 + 0.3 * clamp((this.level.hi - b.y) / Math.max(1, this.level.hi - this.level.lo), 0, 1)) * this.seedGlow;   // the seed glows warmer the lower Theta gets
     if (this.mu) { this.mu.update(v, dt, this.t, this.weather.wind); const f = this.flyers[this.flyers.length - 1]; f.x = this.mu.x; f.y = this.mu.y; }
@@ -121,7 +123,7 @@ export class Play {
   }
 
   _onStep() {
-    const b = this.b, L = this.level;
+    const b = this.b, L = this.level; tides(this.T, b.t);
     for (const e of b.events) this.hooks.event?.(e, b);
     if (this.boss) { this.boss.step(b, STEP); for (const e of this.boss.events) { this.hooks.event?.(e, b, this.boss.p); if (e === 'erupt') { this.scene.shake = 0.6; this.rig.dizzy = 3.2; } else this.scene.emit('steam', b.x, b.y - 0.3, 3, { speed: 1.2, life: 1.2, size: 0.5, col: '#ffffff', g: -1.2, drag: 0.6 }); } }
     if (b.grounded && Math.abs(this.T.dh(b.x)) < 0.35) { const c = L.checkFor(b.x); if (c.x > this.check.x) this.check = c; }
@@ -135,7 +137,7 @@ export class Play {
   // dust, spray and streaks: small things that say what the body is doing
   _effects(dt) {
     const b = this.b, sc = this.scene, T = this.T, sp = b.speed(), gy = b.y - b.r, z = sc.zoneAt(b.x);
-    const soil = { tuff: '#f2e2c4', rose: '#f0c0b4', honey: '#f0d898', dust: '#e0cca8', vine: '#b4d07a', cap: '#a89888', snow: '#ffffff', ice: '#dff6ff', sand: '#5a5d6a', moss: '#a9c94f', meadow: '#9cc267', hot: '#e0b070', rock: '#8a90a0', basalt: '#8a90a0', wet: '#bfd9ea' }[z] || '#bbbbbb';
+    const soil = { lava: '#6a6a78', beach: '#fff4dc', scoria: '#dc8458', green: '#aadc62', carpet: '#f48c5c', wetrock: '#8ab0c8', tuff: '#f2e2c4', rose: '#f0c0b4', honey: '#f0d898', dust: '#e0cca8', vine: '#b4d07a', cap: '#a89888', snow: '#ffffff', ice: '#dff6ff', sand: '#5a5d6a', moss: '#a9c94f', meadow: '#9cc267', hot: '#e0b070', rock: '#8a90a0', basalt: '#8a90a0', wet: '#bfd9ea' }[z] || '#bbbbbb';
     for (const e of b.events) {
       if (e === 'jump') sc.emit('dust', b.x, gy, 6, { speed: 2.2, spread: 2.6, life: 0.4, size: 0.11, col: soil, g: 3 });
       if (e === 'land') { const n = Math.round(clamp(b.impact * 0.9, 3, 16)); sc.emit('dust', b.x, gy, n, { speed: clamp(b.impact * 0.3, 1.5, 5), spread: 3.1, dir: Math.PI / 2, life: 0.5, size: 0.13, col: soil, g: 2 }); if (b.impact > 13) sc.shake = Math.min(0.5, b.impact * 0.02); }

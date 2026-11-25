@@ -3,6 +3,7 @@
 // `par` is the time a good first run takes; the medal times are set from it (see medals()).
 import { iceland } from '../art/worlds/iceland.js';
 import { cappadocia } from '../art/worlds/cappadocia.js';
+import { galapagos } from '../art/worlds/galapagos.js';
 
 const m = 'meadow', g = 'grass';
 const ICE = [
@@ -88,12 +89,52 @@ const CAP = [
       run(30, -12, T2), ...hollow(28, 12, 3.8, 5.4, { zone: R2 }, 4), land(R2), run(26, -9, H2), ['flat', 12, { zone: R2 }], ['bowl', 22, 4.6, 4.4, { zone: R2 }]] },
 ];
 
+// ---- Galápagos: a noisy slope, and what chance is good for ----
+const LV = 'lava', BE = 'beach', SC = 'scoria', GR = 'green', CP = 'carpet', WR = 'wetrock';
+const surf = { amp: 0.3, per: 4.2 }, swell = { amp: 0.55, per: 6 };
+const raft = (at, w = 2.6) => ({ at, up: -0.12, w, float: true, kind: 'raft' });
+const turtle = (at, dist = 3.5, per = 9) => ({ at, up: -0.1, w: 1.9, float: true, kind: 'tortoise', walk: { dist, per } });
+// A lagoon: clear water over a dip in the beach, with driftwood afloat on it. Staying dry is the fast line; falling in costs only time, since Theta floats and can paddle.
+const lagoon = (L, depth, td, things, o = {}) => ['valley', L, depth, 0, { zone: BE, surf: 'sand', water: [0.08, 0.92, -0.42], tide: td, plat: things, seeds: things.map((p) => ({ at: p.at, up: 0.75 })), ...o }];
+// A tide basin: rock walls too high to roll or jump out of, with the sea coming and going in it through the rock, and a raft of driftwood afloat.
+// Stand on the raft. The tide lifts it, and near the top a hop clears the rim. Fall in and nothing is lost: at low water the raft can be boarded again from the floor.
+// The walls stand higher than the highest tide, so the water never has anywhere to spill.
+const basin = (per = 9, o = {}) => [['flat', 6, { zone: WR, ...o }], ['line', 2.6, -7, { zone: WR }], ['flat', 9, { zone: WR, water: [-0.27, 1.27, 3.5], tide: { amp: 2.9, per }, plat: [{ at: 0.76, up: 3.8, w: 4, float: true, kind: 'raft' }], seeds: [{ at: 0.76, up: 6.2 }, { at: 0.76, up: 7.4 }] }], ['line', 2.6, 7, { zone: WR }], ['flat', 16, { zone: LV, seeds: 2 }]];
+const GAL = [
+  { id: '3-1', name: 'A Handful', time: 'dawn', card: 'batch', par: 45,
+    strokes: [['flat', 10, { zone: LV }], run(30, -10, LV), ['flat', 8, { zone: BE, surf: 'sand', mark: 'hint', text: 'raft' }], lagoon(22, 2, surf, [raft(0.3), raft(0.5), raft(0.7)]), land(BE, 12), run(30, -11, CP, 4), ...hollow(24, 9, 3, 3, { zone: SC }), land(SC),
+      run(28, -9, GR, 3, g), lagoon(26, 2.2, surf, [raft(0.26), raft(0.44), raft(0.62), raft(0.8)]), land(BE, 12), run(34, -12, LV, 4), ['waves', 30, 1.2, 3, -5, { zone: CP, seeds: 3 }], dustFlat(8), lagoon(24, 2, surf, [raft(0.3, 2.2), raft(0.52, 2.2), raft(0.74, 2.2)]),
+      land(BE, 12), run(30, -10, SC), ...hollow(24, 9, 3.2, 3.2, { zone: LV }), land(LV), run(28, -9, GR, 3, g), ['flat', 10, { zone: GR, surf: g }], ['bowl', 22, 4, 4, { zone: GR, surf: g }]] },
+  { id: '3-2', name: 'A Noisy Slope', time: 'day', card: 'noise', par: 50,
+    strokes: [['flat', 10, { zone: BE, surf: 'sand' }], run(32, -11, CP, 4), lagoon(26, 2.2, swell, [raft(0.26), turtle(0.52), raft(0.8)]), land(BE, 12), run(30, -10, LV), ['flat', 4, { zone: LV }], ['line', 3, 2.8, { zone: SC }], land(SC, 18), run(28, -10, SC),
+      lagoon(30, 2.4, swell, [raft(0.2, 2.2), raft(0.38, 2.2), turtle(0.6, 3), raft(0.84, 2.2)]), land(BE, 12), run(34, -13, GR, 4, g), ['waves', 32, 1.3, 3, -6, { zone: LV, seeds: 3 }], dustFlat(8), ['gap', 4, -1], land(LV, 12), run(26, -9, CP),
+      lagoon(28, 2.2, swell, [turtle(0.3, 3), raft(0.56), turtle(0.8, 2.5, 7)]), land(BE, 12), run(30, -11, SC), ...hollow(26, 10, 3.2, 3.6, { zone: LV }), land(LV), run(28, -9, GR, 3, g), ['flat', 10, { zone: BE, surf: 'sand' }], ['bowl', 22, 4.2, 4, { zone: GR, surf: g }]] },
+  { id: '3-3', name: 'By Chance', time: 'golden', card: 'sgd', par: 47,
+    strokes: [['flat', 10, { zone: SC }], run(36, -14, SC, 4), ['flat', 3, { zone: LV }], ['line', 3, 2.6, { zone: LV }], land(LV, 18), lagoon(30, 2.4, swell, [raft(0.2, 2), turtle(0.42, 3), raft(0.64, 2), raft(0.84, 2)]), land(BE, 12), run(30, -11, CP, 4), ['flat', 4, { zone: LV }], ['kicker', 6, 2, { zone: LV }], ['gap', 8, -4],
+      land(LV, 18), run(28, -10, GR, 3, g), lagoon(26, 2.2, { amp: 0.7, per: 5 }, [turtle(0.3, 3, 8), turtle(0.7, 3, 6)]), land(BE, 12), run(32, -12, SC, 4), ...hollow(28, 12, 3.4, 4, { zone: SC }, 4), land(SC), ['waves', 30, 1.4, 3, -6, { zone: CP, seeds: 3 }], dustFlat(8),
+      lagoon(32, 2.4, { amp: 0.7, per: 5 }, [raft(0.18, 2), raft(0.36, 2), turtle(0.56, 2.5, 7), raft(0.8, 2)]), land(BE, 12), run(30, -11, LV), ['flat', 10, { zone: GR, surf: g }], ['bowl', 22, 4.2, 4, { zone: GR, surf: g }]] },
+  { id: '3-4', name: 'Shaken Loose', time: 'mist', card: 'shake', par: 64,
+    strokes: [['flat', 10, { zone: LV }], run(30, -10, LV), ...basin(9, { mark: 'hint', text: 'tide', at: 0.3 }), run(30, -11, CP, 4), lagoon(24, 2.2, swell, [raft(0.3), raft(0.52), raft(0.74)]), land(BE, 12), run(28, -10, SC), ...hollow(24, 9, 3, 3.2, { zone: SC }), land(SC),
+      run(30, -11, GR, 3, g), ...basin(8), run(32, -12, LV, 4), ['waves', 30, 1.2, 3, -5, { zone: CP, seeds: 3 }], dustFlat(8), lagoon(26, 2.2, swell, [turtle(0.32, 3), turtle(0.7, 3, 7)]), land(BE, 12), run(28, -10, SC), ...basin(8),
+      run(28, -9, GR, 3, g), ['flat', 10, { zone: GR, surf: g }], ['bowl', 22, 4.2, 4, { zone: GR, surf: g }]] },
+  { id: '3-5', name: 'Settling', time: 'dusk', card: 'settle', par: 56,
+    strokes: [['flat', 10, { zone: CP }], run(34, -13, CP, 4), lagoon(30, 2.4, { amp: 0.8, per: 4.6 }, [raft(0.2, 1.8), raft(0.36, 1.8), raft(0.52, 1.8), raft(0.68, 1.8), raft(0.84, 1.8)]), land(BE, 12), run(30, -11, LV), ['flat', 3, { zone: LV }], ['line', 3, 2.8, { zone: SC }], land(SC, 18),
+      run(28, -10, SC), lagoon(28, 2.2, { amp: 0.6, per: 5 }, [turtle(0.26, 2.5, 6), raft(0.5, 1.8), turtle(0.76, 2.5, 7)]), land(BE, 12), run(32, -12, GR, 4, g), ...hollow(26, 11, 3.4, 3.8, { zone: LV }), land(LV), dustFlat(8), ['gap', 4], land(LV, 12),
+      run(28, -10, CP), lagoon(28, 2.2, { amp: 0.4, per: 5.5 }, [raft(0.22, 1.7), raft(0.4, 1.7), raft(0.6, 1.7), raft(0.8, 1.7)]), land(BE, 12), run(30, -11, SC), lagoon(24, 2, { amp: 0.15, per: 6 }, [raft(0.3, 1.6), raft(0.52, 1.6), raft(0.74, 1.6)]), land(BE, 12),
+      run(26, -8, GR, 3, g), ['flat', 10, { zone: GR, surf: g }], ['bowl', 22, 4.2, 4.2, { zone: GR, surf: g }]] },
+  { id: '3-B', name: 'The Tide', time: 'night', boss: 'tide', par: 66, music: 'boss',
+    strokes: [['flat', 10, { zone: LV }], run(32, -12, LV), ...basin(8), run(28, -10, SC), lagoon(30, 2.4, { amp: 0.9, per: 5 }, [raft(0.2, 2), turtle(0.44, 3, 7), raft(0.68, 2), raft(0.86, 2)]), land(BE, 12), run(30, -12, CP, 4), ['flat', 3, { zone: LV }], ['line', 3.2, 3.4, { zone: LV }], land(LV, 18),
+      ...basin(7), run(32, -13, SC, 4), lagoon(28, 2.2, { amp: 0.9, per: 4.6 }, [turtle(0.28, 2.5, 6), turtle(0.56, 2.5, 7), raft(0.82, 1.8)]), land(BE, 12), run(28, -10, LV), ...hollow(26, 11, 3.6, 4.4, { zone: LV }), land(LV), ...basin(7),
+      run(30, -11, CP), ['flat', 12, { zone: BE, surf: 'sand' }], ['bowl', 22, 4.4, 4.4, { zone: BE, surf: 'sand' }]] },
+];
+
 // the ground behind the title: a mossy ledge above a long green slope
 export const TITLE = (z1, z2) => ({ id: 'title', name: '', time: 'golden', strokes: [['flat', 6, { zone: z1 }], ['hill', 8, 0.9, -0.4, { zone: z2, surf: g }], ['slope', 13, -9, { zone: z2, surf: g }], ['slope', 30, -9, { zone: z1 }], ['waves', 30, 1.2, 2, -6, { zone: z2, surf: g }], ['bowl', 20, 3, 3, { zone: z2, surf: g }]] });
 
 export const WORLDS = [
   { id: 'iceland', n: 1, name: 'Iceland', theme: iceland, music: 'iceland', can: { slide: true, roll: false, spread: true }, title: ['moss', 'meadow'], levels: ICE },
   { id: 'cappadocia', n: 2, name: 'Cappadocia', theme: cappadocia, music: 'cappadocia', can: { slide: true, roll: true, spread: true, mu: true }, title: ['tuff', 'vine'], levels: CAP },
+  { id: 'galapagos', n: 3, name: 'Galápagos', theme: galapagos, music: 'galapagos', can: { slide: true, roll: true, spread: true, mu: true }, title: ['lava', 'green'], levels: GAL },
 ];
 export const levelById = (id) => { for (const w of WORLDS) for (const l of w.levels) if (l.id === id) return { world: w, spec: l }; return null; };
 export const ALL = WORLDS.flatMap((w) => w.levels.map((l) => l.id));

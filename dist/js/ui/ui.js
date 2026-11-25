@@ -2,6 +2,7 @@
 import { save, store, resetSave, record, ghostFor } from '../core/save.js';
 import { WORLDS, levelById, ALL, nextLevel, medals } from '../data/worlds.js';
 import { CARDS, HINTS } from '../data/notebook.js';
+import { STORY, ROUTE } from '../data/story.js';
 import { audio, initAudio, setVolumes, playMusic, sfx, mute } from '../core/audio.js';
 import { input } from '../core/input.js';
 import { drawTheta, POSE } from '../game/theta.js';
@@ -29,7 +30,7 @@ const emblem = () => el('div.emblem', { html: '<svg viewBox="0 0 64 64" aria-hid
 export function showTitle() {
   clear(); api.attract(); hud.hidden = true; document.getElementById('touch').hidden = true; if (awake) playMusic('title');
   const next = ALL.find((id) => !save.levels[id]?.done) || ALL[0], any = Object.keys(save.levels).length > 0;
-  const items = [[any ? 'Continue' : 'New game', () => play(next)], any && ['Levels', showLevels], ['Notebook', showNotebook], ['How to play', showHow], ['Settings', () => showSettings(showTitle)], ['Also play this!', showAlso], ['Credits', showCredits]].filter(Boolean);
+  const items = [[any ? 'Continue' : 'New game', () => play(next)], any && ['Levels', showLevels], any && ['The story', showStory], ['Notebook', showNotebook], ['How to play', showHow], ['Settings', () => showSettings(showTitle)], ['Also play this!', showAlso], ['Credits', showCredits]].filter(Boolean);
   const menu = el('nav.tmenu', { 'aria-label': 'Menu' }, items.map(([t, f], i) => el('button.titem', { type: 'button', style: `--i:${i}`, on: { click: () => { sfx.ui(true); f(); }, mouseenter: (e) => e.target.focus() } }, t)));
   const root = el('div.cine' + (awake ? '.awake.seen' : ''), {}, el('div.veil'), el('div.logo', {}, emblem(), el('h1', { text: 'Gradient Descent' }), el('div.rule')), el('p.press', { text: 'ontouchstart' in window ? 'Tap to begin' : framed ? 'Click to begin' : 'Press any key' }), menu);
   ui.append(root);
@@ -52,7 +53,8 @@ export function showLevels() {
 
 // ---- playing ----
 let run = null, hintT = 0;
-export function play(id) {
+export function play(id, told = false) {
+  if (STORY[id] && !told && (!save.seen['story' + id] || api.forceIntro)) return showTale(id, () => play(id, true));
   clear(); hud.hidden = false; const f = levelById(id); run = { id, f, shown: null };
   const intro = !!f.spec.intro && (!save.seen.intro || api.forceIntro);
   const p = api.startLevel(id, { ghost: ghostFor(id), intro }); if (!p) return showTitle();
@@ -77,6 +79,26 @@ export function pause() {
 }
 export function restart() { if (run && !hud.hidden) play(run.id); }
 
+// ---- the story ----
+// The road so far, drawn as a line going down, with the place the chapter is about lit.
+function route(at) {
+  const c = el('canvas.route', { width: 900, height: 150 }), x = c.getContext('2d'), n = ROUTE.length, px = (i) => 70 + (760 * i) / (n - 1), py = (i) => 34 + 62 * (i / (n - 1)) + 10 * Math.sin(i * 1.9);
+  x.lineWidth = 2; x.setLineDash([3, 8]); x.lineCap = 'round'; x.strokeStyle = 'rgba(255,255,255,0.35)'; x.beginPath(); for (let i = 0; i < n; i++) (i ? x.lineTo(px(i), py(i)) : x.moveTo(px(i), py(i))); x.stroke();
+  x.setLineDash([]); x.strokeStyle = '#ffd87a'; x.lineWidth = 3; x.beginPath(); for (let i = 0; i <= at; i++) (i ? x.lineTo(px(i), py(i)) : x.moveTo(px(i), py(i))); x.stroke();
+  x.textAlign = 'center'; x.font = '400 17px Nunito, sans-serif';
+  for (let i = 0; i < n; i++) { x.fillStyle = i <= at ? '#ffd87a' : 'rgba(255,255,255,0.4)'; x.beginPath(); x.arc(px(i), py(i), i === at ? 8 : 5, 0, 7); x.fill(); if (i === at) { x.strokeStyle = 'rgba(255,216,122,0.5)'; x.lineWidth = 2; x.beginPath(); x.arc(px(i), py(i), 14, 0, 7); x.stroke(); } x.fillStyle = i === at ? '#fff' : i < at ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.35)'; x.fillText(ROUTE[i], px(i), py(i) + 36); }
+  return c;
+}
+export function showTale(key, then) {
+  const ch = STORY[key]; if (!ch) return then(); clear(); hud.hidden = true; api.attract(); playMusic('title'); sfx.page(); save.seen['story' + key] = true; store();
+  const go = () => { sfx.ui(true); then(); };
+  ui.append(el('div.tale', {}, el('div.inner', {}, el('small', { text: 'The story' }), el('h2', { text: ch.title }), route(ch.at), ...ch.lines.map((t, i) => el('p', { style: `--i:${i}`, text: t })), el('div.row', { style: `--i:${ch.lines.length}` }, el('button.btn.big', { type: 'button', on: { click: go } }, then === showTitle || then === showStory ? 'Back' : 'Go on')))));
+}
+export function showStory() {
+  clear(); hud.hidden = true; api.attract(); document.body.classList.add('dim'); const keys = Object.keys(STORY).filter((k) => save.seen['story' + k]);
+  ui.append(sheet('The story', showTitle, keys.length ? null : el('p.note', { text: 'It begins when you do.' }), el('div.pages', {}, keys.map((k) => el('button.stone.chapter', { type: 'button', on: { click: () => showTale(k, showStory) } }, el('span.num', { text: String(STORY[k].at + 1) }), el('span.nm', { text: STORY[k].title }), el('span.tm', { text: STORY[k].lines[0] }))))));
+}
+
 // ---- the card after a run ----
 export function showFinish(res) {
   const f = run.f, mt = medals(f.spec), out = record(run.id, res, mt, save.settings.assist), s = save.levels[run.id];
@@ -90,6 +112,7 @@ export function showFinish(res) {
         el('p.sub', { text: `Seeds ${res.seeds} of ${res.seedsAll}` + (res.falls ? ` · ${res.falls} ${res.falls === 1 ? 'fall' : 'falls'}` : '') })), medalRow),
       el('div.chartwrap', {}, chart, el('p.cap', { text: 'Your run as a loss curve: how high you stood, moment by moment. Lower is better.' })),
       card ? el('div.note' + (fresh ? '.fresh' : ''), {}, cardArt(card.draw), el('div', {}, el('h3', { text: (fresh ? 'New in the notebook: ' : '') + card.name }), ...card.text.slice(0, fresh ? 3 : 1).map((t) => el('p', { text: t })))) : null,
+      !nx && run.id !== '7-B' ? el('p.note', { text: 'That is as far as the road is built. The next country is being made.' }) : null,
       el('div.row', {}, nx ? btn('Next', () => play(nx), 'big') : btn('Levels', showLevels, 'big'), btn('Again', () => play(run.id)), nx ? btn('Levels', showLevels) : null)));
     drawCurve(chart, res.curve, out.bestBefore != null && !out.newBest ? s.curve : null, res.top, res.bottom);
   }, 1500);
@@ -129,6 +152,8 @@ function cardArt(kind) {
   else if (kind === 'gradient') { fill(slope); const u = 0.42, px = u * 240, py = slope(u); hero(px, py - 2, 28); arrow(px + 20, py + 14, px + 78, py + 62); }
   else if (kind === 'rate') { fill(bowl); x.strokeStyle = teal; x.lineWidth = 3; x.setLineDash([2, 7]); x.lineCap = 'round'; for (const [a, b, h] of [[0.08, 0.2, 26], [0.2, 0.32, 24]]) { x.beginPath(); x.moveTo(a * 240, bowl(a) - 6); x.quadraticCurveTo((a + b) * 120, bowl(a) - h - 14, b * 240, bowl(b) - 6); x.stroke(); } x.strokeStyle = gold; x.beginPath(); x.moveTo(0.08 * 240, bowl(0.08) - 6); x.quadraticCurveTo(0.3 * 240, -14, 0.52 * 240, bowl(0.52) - 6); x.stroke(); x.setLineDash([]); hero(0.08 * 240, bowl(0.08) - 2, 24); }
   else if (kind === 'overshoot') { fill(vee); x.strokeStyle = gold; x.lineWidth = 3; x.setLineDash([2, 7]); x.lineCap = 'round'; const P = [0.3, 0.76, 0.2, 0.86]; for (let i = 0; i < 3; i++) { x.beginPath(); x.moveTo(P[i] * 240, vee(P[i]) - 6); x.quadraticCurveTo(120, vee(P[i]) - 70 + i * 6, P[i + 1] * 240, vee(P[i + 1]) - 6); x.stroke(); } x.setLineDash([]); hero(P[3] * 240, vee(P[3]) - 2, 24, { expr: 'worry' }); }
+  else if (kind === 'batch') { const rr = (n) => { const v = Math.sin(n * 91.7) * 43758.5; return v - Math.floor(v); }; for (let i = 0; i < 70; i++) { const px = 16 + rr(i) * 208, py = 16 + rr(i + 200) * 148, on = i % 9 === 0; x.fillStyle = on ? gold : '#b9cfd2'; x.beginPath(); x.arc(px, py, on ? 7 : 4, 0, 7); x.fill(); if (on) { x.strokeStyle = ink; x.lineWidth = 2; x.stroke(); } } }
+  else if (kind === 'noisy') { fill(slope); x.strokeStyle = teal; x.lineWidth = 3; x.lineJoin = 'round'; x.beginPath(); for (let i = 0; i <= 14; i++) { const u = 0.08 + (0.8 * i) / 14, y = slope(u) - 12 + (i % 2 ? -9 : 7) * (1 - i / 16); i ? x.lineTo(u * 240, y) : x.moveTo(u * 240, y); } x.stroke(); x.setLineDash([4, 6]); x.strokeStyle = gold; x.beginPath(); x.moveTo(0.08 * 240, slope(0.08) - 12); x.lineTo(0.88 * 240, slope(0.88) - 12); x.stroke(); x.setLineDash([]); hero(0.9 * 240, slope(0.9) - 2, 24, { expr: 'joy' }); }
   else if (kind === 'local' || kind === 'momentum' || kind === 'start') { // a hollow part-way down, and the deeper valley beyond its rim
     const two = (u) => 40 + 30 * u + 52 * Math.sin(Math.min(1, u / 0.5) * Math.PI) ** 1.3 * (u < 0.5 ? 1 : 0) + (u >= 0.5 ? 26 + 82 * Math.sin(((u - 0.5) / 0.5) * Math.PI) ** 1.2 : 0) - (u >= 0.5 ? 26 * (1 - (u - 0.5) * 2) : 0); fill(two);
     if (kind === 'local') { hero(0.25 * 240, two(0.25) - 2, 24, { expr: 'worry' }); x.fillStyle = teal; x.font = '700 15px Nunito, sans-serif'; x.fillText('lower', 0.66 * 240, two(0.75) - 14); }

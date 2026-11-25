@@ -70,6 +70,18 @@ p { margin: 0.35em 0; line-height: 1.45; }
 @media (max-aspect-ratio: 1/1) { .tmenu { right: auto; left: 50%; top: auto; bottom: 5%; transform: translateX(-50%); align-items: center; } .titem { padding: 0.45em 1em; } .cine::after { background: linear-gradient(to top, rgba(6, 10, 22, 0.6), rgba(6, 10, 22, 0) 55%); } .logo h1 { letter-spacing: 0.2em; margin-right: -0.2em; } }
 @media (prefers-reduced-motion: reduce) { .veil, .emblem, .logo h1, .rule, .press, .titem { animation-duration: 0.01s !important; animation-delay: 0s !important; } }
 
+/* ---- the story ---- */
+.tale { position: absolute; inset: 0; display: grid; place-items: center; background: radial-gradient(ellipse at 50% 40%, rgba(8, 12, 26, 0.78), rgba(4, 6, 14, 0.94)); color: #fff; animation: taleIn 1.2s ease-out; overflow: auto; }
+@keyframes taleIn { from { opacity: 0; } }
+.tale .inner { width: min(46rem, 90vw); text-align: center; padding: 1.5rem 0; }
+.tale small { display: block; font: 400 0.85rem Nunito, sans-serif; letter-spacing: 0.44em; margin-right: -0.44em; text-transform: uppercase; color: #ffd87a; }
+.tale h2 { font: 400 clamp(1.5rem, 3.2vw, 2.6rem) Nunito, sans-serif; letter-spacing: 0.22em; margin: 0.5rem -0.22em 0.4rem 0; text-transform: uppercase; color: #fff; }
+.route { width: 100%; height: auto; display: block; margin: 0.4rem 0 0.8rem; opacity: 0; animation: fadeUp 1.2s 0.5s forwards; }
+.tale p { font: 400 1.22rem/1.6 Nunito, sans-serif; color: #eef2f6; margin: 0.9rem auto; max-width: 38rem; opacity: 0; animation: fadeUp 1.4s calc(var(--i) * 1.5s + 1.2s) forwards; }
+.tale .row { justify-content: center; margin-top: 1.8rem; opacity: 0; animation: fadeUp 1s calc(var(--i) * 1.5s + 1.2s) forwards; }
+.stone.chapter { grid-template-columns: 2.2rem 1fr; width: 100%; } .stone.chapter .tm { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+@media (prefers-reduced-motion: reduce) { .tale, .tale p, .tale .row, .route { animation-duration: 0.01s !important; animation-delay: 0s !important; } }
+
 /* ---- levels ---- */
 .world h3 { margin-top: 0.3rem; }
 .stones { display: grid; grid-template-columns: repeat(auto-fill, minmax(12.5rem, 1fr)); gap: 0.6rem; margin-top: 0.5rem; }

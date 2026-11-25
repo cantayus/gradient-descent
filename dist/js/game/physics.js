@@ -172,7 +172,7 @@ export function step(b, T, inp, dt = STEP) {
     const s = T.dh(b.x), inv = 1 / Math.hypot(1, s), nx = -s * inv, ny = inv, gap = (b.y - T.h(b.x)) * ny - b.r;
     const vt = b.vx * ny - b.vy * nx, kappa = -T.ddh(b.x) * inv * inv * inv;
     const vn = b.vx * nx + b.vy * ny;
-    if (gap < 0.2 && gap >= 0 && vn < 0.4 && !b.inJet && vt * vt * Math.max(0, kappa) <= G * ny) { b.x -= nx * gap; b.y -= ny * gap; b.vx -= vn * nx; b.vy -= vn * ny; b.grounded = true; b.nx = nx; b.ny = ny; b.surf = T.surfAt(b.x); }
+    if (gap < 0.2 && gap >= 0 && vn < 0.4 && !b.inJet && b.inWater <= FLOATS && vt * vt * Math.max(0, kappa) <= G * ny) { b.x -= nx * gap; b.y -= ny * gap; b.vx -= vn * nx; b.vy -= vn * ny; b.grounded = true; b.nx = nx; b.ny = ny; b.surf = T.surfAt(b.x); }
   }
   if (b.grounded) { if (!was && b.airT > 0.08) b.events.push('land'); b.airT = 0; b.groundT += dt; } else { b.airT += dt; b.groundT = 0; }
   if (b.inWater > 0.3 && !b._wet) { b._wet = true; b.events.push('splash'); } else if (b.inWater === 0) b._wet = false;
