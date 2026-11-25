@@ -47,6 +47,12 @@ After the last world a sandbox opens: pick a landscape, set learning rate, momen
   and turns as the run goes on (except places marked `early`). Rain and wind are heard. The title and all menus sit over the same live scene.
 - Iceland: five levels and the boss (`js/data/worlds.js`), all finished by the scripted player (`scripts/bot.mjs`, `tests/levels.test.mjs`).
   The Geyser (`js/game/boss.js`): crust ground whose pressure rises with hard landings and erupts under the hero.
+- Cappadocia (`js/art/worlds/cappadocia.js`, six hours: dawn, day, golden, dusk, night, winter): fairy chimneys with rooms and lamps, poplars, apricot
+  trees, vineyards, the red river, Mount Erciyes, a tableland in beds of colour, balloons in the sky (`theme.sky`), strata of ash in every cut bank.
+  Five levels and a boss, all finished by the scripted player. Rolling (the ball), hollows with rims too steep to walk (`hollow()` in worlds.js),
+  deep dust that slows a roll, Mu the bird (`Mu` in play.js), the balloon ride (`js/game/ride.js`, stroke option `ride: { at, to, up }`),
+  music in nine-eight after the makam Hüseyni, five notebook pages (momentum, local minimum, over the rim, where you start, too much momentum).
+  Every level now ends in a cliff past the goal, and the goal is the lowest point of the last bowl.
 - Screens (`js/ui/ui.js`, `css/app.css`): cinematic title with "press any key", text menu with keyboard movement, level list, pause, finish card with
   the run as a loss curve and medals, notebook with five pages, how to play, settings (volumes, picture, motion, text size, assist, contrast),
   "Also play this!", credits. Level name card at the start of each level, with a wide opening look before the first step.
@@ -58,7 +64,8 @@ After the last world a sandbox opens: pick a landscape, set learning rate, momen
 
 ## Not built yet
 
-- Worlds 2 to 7 (themes, music, mechanics, bosses, notebook pages). Next: Cappadocia, with rolling, Mu the bird, balloons in the sky and the balloon ride.
+- Worlds 3 to 7 (themes, music, mechanics, bosses, notebook pages). Next: Galápagos (stochastic gradient descent; surf and tide move the ground).
+- Cappadocia still wants: a scene in which Mu joins (like the opening scene), a boss with something of its own (now it is a hard run of hollows), a play-through by hand for feel, better poplars.
 - The wordless story scenes, Sort! bonus stages, the daily valley, endless mode, the lab with sliders, the teacher page, the share card.
 - Key rebinding screen (the hooks exist in `input.js`), high-contrast palette (the setting exists, the palette does not), a larger landing margin for assist.
 - Iceland still wants: a visible great geyser behind the boss level, an arctic fox, richer detail in the cut earth.

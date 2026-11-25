@@ -12,6 +12,8 @@ const RIDGE = {
   table: (u, s) => { const v = fbm(u, s, 3); return smooth(clamp((v - 0.36) * 4.2, 0, 1)) * 0.72 + fbm(u * 3.1, s + 5, 2) * 0.1 + v * 0.18; },
   dune: (u, s) => { const v = noise1(u, s), w = noise1(u * 2.3 + 4, s + 3); return Math.pow(v, 1.6) * 0.75 + w * 0.25; },
   cone: (u, s) => { const c = Math.abs(((u * 0.5 + hash1(Math.floor(u * 0.5), s)) % 1) - 0.5) * 2; return Math.pow(1 - c, 2.2) * (0.5 + 0.5 * hash1(Math.floor(u * 0.5), s + 1)) * 0.8 + fbm(u * 2, s, 2) * 0.2; },
+  // one great volcano standing alone on the horizon, with low country either side of it
+  volc: (u, s) => { const d = Math.abs(u - 0.35 - (s % 7) * 0.05); return Math.pow(Math.max(0, 1 - d * 0.95), 1.7) * 0.92 * (1 + (fbm(u * 6, s, 2) - 0.5) * 0.12) + fbm(u * 1.3, s + 4, 2) * 0.1; },
   pillar: (u, s) => { const k = Math.floor(u * 1.7), f = u * 1.7 - k, on = hash1(k, s) > 0.42, hh = hash1(k, s + 2); return (on ? smooth(clamp(Math.min(f, 1 - f) * 7, 0, 1)) * (0.45 + 0.55 * hh) : 0) * 0.85 + fbm(u * 0.6, s + 7, 2) * 0.2; },
 };
 
@@ -26,7 +28,7 @@ function tile(kind, seed) {
   else for (let i = 0; i < 380; i++) dab(r.chance(0.5) ? '#ffffff' : '#000000', r.range(0.04, 0.14), r.range(0.7, 1.8), r.range(0.7, 1.8), 0);   // sand: a fine speckle
   return c;
 }
-const TILE_OF = { drum: 'sand', meadow: 'grass', moss: 'grass', snow: 'snow', ice: 'ice', sand: 'sand', hot: 'sand', rock: 'rock', basalt: 'rock', wet: 'rock' };
+const TILE_OF = { tuff: 'sand', rose: 'sand', honey: 'sand', dust: 'sand', vine: 'grass', cap: 'rock', drum: 'sand', meadow: 'grass', moss: 'grass', snow: 'snow', ice: 'ice', sand: 'sand', hot: 'sand', rock: 'rock', basalt: 'rock', wet: 'rock' };
 
 export class Scene {
   constructor(theme, level, timeKey = 'day') {
@@ -93,6 +95,7 @@ export class Scene {
     this._water(ctx, x0, x1, true);
     this._lives(ctx, x0, x1);
     this._actors(ctx, actors, S);
+    for (const r of this.rides || []) { if (r.bx < x0 - 3 || r.bx > x1 + 3) continue; const g = ctx.createLinearGradient(0, -r.by - 0.62, 0, -r.by + 0.1); g.addColorStop(0, '#9a7448'); g.addColorStop(1, '#6a4a30'); ctx.fillStyle = g; ctx.beginPath(); ctx.roundRect(r.bx - 0.75, -r.by - 0.62, 1.5, 0.72, [0, 0, 0.12, 0.12]); ctx.fill(); ctx.fillStyle = '#b8905c'; ctx.fillRect(r.bx - 0.8, -r.by - 0.68, 1.6, 0.1); }      // the near side of a basket, in front of whoever stands in it
     this._parts(ctx, x0, x1);
     this._fore(ctx, cam, S, ox, oy);
     ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -123,6 +126,7 @@ export class Scene {
     // the highest cloud is thin and fast; the heaped cloud below it is slower
     const ci = this.spr.cirrus; if (ci && this.q) for (let i = 0; i < 5; i++) { const u = (((hash1(i, 13) + this.cloudX * 1.9 * (0.8 + hash1(i, 15) * 0.4)) % 1.5) + 1.5) % 1.5 - 0.25; ctx.globalAlpha = (time.cirrus ?? 0.55) * (0.5 + 0.5 * hash1(i, 17)) * (1 - cov * 0.6); stamp(ctx, ci[i % ci.length], u * W, (0.03 + hash1(i, 19) * 0.2) * H, H / 9 * (0.7 + hash1(i, 21) * 0.8), -0.06); } ctx.globalAlpha = 1;
     const cl = this.spr.cloud; if (cl && time.cloud !== 0) for (let i = 0, n = 5 + Math.round(cov * 11); i < n; i++) { const u = (((hash1(i, 3) + this.cloudX * (0.7 + hash1(i, 5) * 0.8)) % 1.3) + 1.3) % 1.3 - 0.15, y = (0.05 + hash1(i, 7) * 0.36) * H, sc = (0.5 + hash1(i, 9) + cov * 0.5) * H / 620; ctx.globalAlpha = Math.min(1, (time.cloud ?? 0.8) + cov * 0.3) * (0.5 + hash1(i, 11) * 0.5) * (i < 5 ? 1 : Math.min(1, cov * 11 - (i - 5))); stamp(ctx, cl[i % cl.length], u * W, y, sc * 60); } ctx.globalAlpha = 1;
+    if (this.theme.sky) this.theme.sky(ctx, this);      // whatever else this country has in its sky
     this._birds(ctx);
   }
   _aurora(ctx, k = 1) {
@@ -299,6 +303,11 @@ export class Scene {
       stamp(ctx, s, (p.x0 + p.x1) / 2, -(y0 + y1) / 2, 1, -Math.atan2(y1 - y0, w)); }
     for (const j of T.jets) { if (j.x < x0 - 3 || j.x > x1 + 3) continue; const on = j.on ? j.on(t) : 1, gy = T.h(j.x); if (this.spr.vent && !j.raw) stamp(ctx, this.spr.vent[0], j.x, -gy + 0.12, 1);
       if (on > 0.02) { const hh = j.top * on, g = ctx.createLinearGradient(0, -gy, 0, -gy - hh); g.addColorStop(0, 'rgba(255,255,255,0.9)'); g.addColorStop(0.6, 'rgba(200,236,255,0.55)'); g.addColorStop(1, 'rgba(255,255,255,0)'); ctx.fillStyle = g; ctx.beginPath(); const ww = j.w * 0.55; ctx.moveTo(j.x - ww * 0.6, -gy); for (let k = 0; k <= 10; k++) { const u = k / 10; ctx.lineTo(j.x - ww * (0.6 + u * 0.7) + Math.sin(t * 14 + k) * 0.06, -gy - hh * u); } for (let k = 10; k >= 0; k--) { const u = k / 10; ctx.lineTo(j.x + ww * (0.6 + u * 0.7) + Math.sin(t * 11 + k * 2) * 0.06, -gy - hh * u); } ctx.closePath(); ctx.fill(); } }
+    // a balloon with its basket, waiting or in flight
+    for (const r of this.rides || []) { if (r.bx < x0 - 8 || r.bx > x1 + 8) continue; const bl = this.spr.balloon, sw = Math.sin(t * 0.9 + r.x) * 0.04 * (r.t > 0 && !r.done ? 1 : 0.4); ctx.save(); ctx.translate(r.bx, -r.by); ctx.rotate(sw); if (bl) stamp(ctx, bl[Math.floor(r.x) % bl.length], 0, -4.4, 6.6);
+      ctx.strokeStyle = 'rgba(70,50,36,0.9)'; ctx.lineWidth = 0.04; ctx.beginPath(); for (const sx of [-0.62, -0.2, 0.2, 0.62]) { ctx.moveTo(sx, -0.95); ctx.lineTo(sx * 0.55, -3.1); } ctx.stroke();
+      if (r.t > 0 && !r.done && Math.sin(t * 9) > -0.2) { ctx.globalCompositeOperation = 'lighter'; stamp(ctx, this.fx.warm, 0, -2.7, 1.5); ctx.globalCompositeOperation = 'source-over'; }
+      const g = ctx.createLinearGradient(0, -1, 0, 0.1); g.addColorStop(0, '#9a7448'); g.addColorStop(1, '#6a4a30'); ctx.fillStyle = g; ctx.beginPath(); ctx.roundRect(-0.75, -0.95, 1.5, 1.05, 0.12); ctx.fill(); ctx.strokeStyle = 'rgba(40,26,16,0.5)'; ctx.lineWidth = 0.03; for (let i = 1; i < 4; i++) { ctx.beginPath(); ctx.moveTo(-0.75, -0.95 + i * 0.26); ctx.lineTo(0.75, -0.95 + i * 0.26); ctx.stroke(); } ctx.fillStyle = '#b8905c'; ctx.fillRect(-0.8, -1, 1.6, 0.12); ctx.restore(); }
     // the goal: a bed of light at the lowest point, with a beam that can be seen from far up the slope
     const g = this.level.goal; if (g.x > x0 - 30 && g.x < x1 + 30) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; const pul = 0.75 + 0.25 * Math.sin(t * 2.2), beam = ctx.createLinearGradient(0, -g.y, 0, -g.y - 34); beam.addColorStop(0, `rgba(255,224,130,${0.5 * pul})`); beam.addColorStop(1, 'rgba(255,224,130,0)'); ctx.fillStyle = beam; ctx.beginPath(); ctx.moveTo(g.x - 0.7, -g.y); ctx.lineTo(g.x - 2.6, -g.y - 34); ctx.lineTo(g.x + 2.6, -g.y - 34); ctx.lineTo(g.x + 0.7, -g.y); ctx.closePath(); ctx.fill(); stamp(ctx, this.fx.warm, g.x, -g.y - 0.2, 7 * pul); ctx.restore();
       if (this.spr.nest) stamp(ctx, this.spr.nest[0], g.x, -g.y + 0.1, 1); for (let i = 0; i < 6; i++) { const a = t * 0.8 + i * 1.047, rr = 1.2 + 0.3 * Math.sin(t * 1.5 + i); ctx.globalAlpha = 0.8; stamp(ctx, this.fx.warm, g.x + Math.cos(a) * rr, -g.y - 1.2 - Math.sin(a * 1.3) * 0.6 - i * 0.25, 0.35); } ctx.globalAlpha = 1; }

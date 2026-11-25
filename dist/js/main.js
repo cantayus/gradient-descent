@@ -34,7 +34,8 @@ function attract() {
   if (G.mode === 'title' && G.play) return G.play;
   const h = new Date().getHours(), time = q.get('time') || (h < 5 ? 'night' : h < 8 ? 'dawn' : h < 16 ? 'day' : h < 19 ? 'golden' : h < 22 ? 'dusk' : 'night');
   const reached = WORLDS.findLast((w) => w.levels.some((l) => save.levels[l.id]?.done)) || WORLDS[0];
-  G.play = new Play({ spec: { ...TITLE, time }, theme: reached.theme, can: reached.can, cine: true, hooks: {} });
+  const world = WORLDS.find((w) => w.id === q.get('world')) || reached;
+  G.play = new Play({ spec: { ...TITLE(...world.title), time: world.theme.times[time] ? time : 'day' }, theme: world.theme, can: world.can, cine: true, hooks: {} });
   G.play.scene.q = G.gfx; G.play.resize(G.W, G.H); G.mode = 'title'; G.paused = false; S.reset(); return G.play;
 }
 function greet() { const p = G.play; if (!p || G.mode !== 'title') return; p.rig.feel('joy', 1.8); p.rig.sq.kick(5); setTimeout(() => voice.trill(), 350); }
@@ -55,6 +56,9 @@ G.hooks = {
     else if (name === 'back') { sfx.back(); setTimeout(() => voice.grumble(), 250); }
     else if (name === 'goal') { sfx.goal(); setTimeout(() => voice.trill(), 300); }
     else if (name === 'thump') sfx.drum(extra);
+    else if (name === 'tuck') say(() => voice.hup(0.2), 0.3);
+    else if (name === 'lift') { sfx.geyser(); say(() => voice.eep(), 0); setTimeout(() => voice.whee(1), 900); }
+    else if (name === 'down') { sfx.land(6, true); setTimeout(() => voice.giggle(), 200); }
     else if (name === 'intro') { if (extra === 'fall') sfx.wake(); else if (extra === 'land') sfx.seed(); else if (extra === 'wake') voice.hm(); else if (extra === 'take') { sfx.goal(); setTimeout(() => voice.trill(), 250); } else if (extra === 'end') UI.introDone(); }
     else if (name === 'erupt') { sfx.geyser(); sfx.drum(1); say(() => voice.eep(), 0); setTimeout(() => voice.whee(1), 600); }
   },

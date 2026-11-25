@@ -86,6 +86,15 @@ const TRACKS = {
     line('bell', 0.1, 0, T('77 . . 81 . . 84 . 79 . . 76 . . . . 77 . . 74 . . 81 . 77 . . 74 . . . .')),
   ] },
 };
+// Cappadocia: nine quick beats to the bar, counted two, two, two, three, as much Anatolian dance music is. The tune sits on D with its second and sixth
+// degrees a little flat (written here as fractions of a semitone), after the makam Hüseyni; a plucked string carries it over a drone.
+TRACKS.cappadocia = { bpm: 82, len: 72, parts: [
+  chords(0.15, [[50, 57, 62], [50, 57, 62], [48, 55, 60], [50, 57, 62], [50, 57, 65], [48, 55, 60], [46.65, 53, 58.65], [50, 57, 62]], 9),
+  line('pluck', 0.2, 0, T('69 . 69 . 67 . 69 . . 72 . 70.65 . 69 . 67 . . 69 . 67 . 65 . 67 . . 65 . 63.65 . 62 . . . . 74 . 72 . 70.65 . 72 . . 72 . 70.65 . 69 . 67 . 69 67 . 65 . 63.65 . 65 . 67 65 . 63.65 . 62 . . . .')),
+  line('flute', 0.09, 0.3, T('. . . . . . 81 . . . . . . . . 79 . . . . . . . . 77 . . . . . . . . 74 . . . . . . . . 86 . . . . . . . . 81 . . . . . . . . 77 . . . . . . . . 74 . .')),
+  line('bass', 0.2, 0.4, T(Array.from({ length: 8 }, (_, b) => { const r = [38, 38, 36, 38, 38, 36, 34.65, 38][b]; return `${r} . . . ${r} . ${r + 7} . .`; }).join(' '))),
+  beat('tom', 0.16, 0.5, 'o.x.o.x..', 8), beat('tick', 0.035, 0.7, 'x.xxx.xxx', 8), beat('shake', 0.04, 0.85, '..x...x.x', 8),
+] };
 export const trackNames = () => Object.keys(TRACKS);
 export function addTrack(name, def) { TRACKS[name] = def; }
 export const tk = { T, line, chords, beat };

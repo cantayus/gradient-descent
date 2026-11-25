@@ -32,7 +32,7 @@ const STROKES = {
 
 export function build(spec) {
   const r = new RNG(spec.seed || spec.id || 'level');
-  const ys = [], surfs = [], platforms = [], waters = [], jets = [], winds = [], pits = [], seeds = [], marks = [], zones = [];
+  const ys = [], surfs = [], platforms = [], waters = [], jets = [], winds = [], pits = [], seeds = [], marks = [], zones = [], rides = [];
   let x = 0, y = spec.y0 ?? 0;
   const lead = 14; for (let i = 0; i < lead / DX; i++) ys.push(y); x = lead;            // a run-in behind the start
   const start = { x: lead - 3, y };
@@ -43,6 +43,7 @@ export function build(spec) {
     y = fn((len, f) => { const n = Math.round(len / DX); for (let i = 0; i < n; i++) ys.push(f((i + 0.5) / n)); x += n * DX; }, L, args, y);
     const x1 = x, at = (t) => x0 + (x1 - x0) * t;
     if (type === 'gap') pits.push({ x0, x1, y: Math.min(y0, y) });
+    if (type === 'bowl') marks.push({ kind: 'goal', x: at(0.5) });      // the goal is the lowest point of the last bowl
     if (opt.surf) surfs.push({ x0, x1, type: opt.surf });
     if (opt.water != null) waters.push({ x0: at(opt.water[0] ?? 0), x1: at(opt.water[1] ?? 1), y: y0 + (opt.water[2] ?? -0.4), hot: !!opt.hot });
     for (const p of opt.plat || []) platforms.push({ x0: at(p.at) - p.w / 2, x1: at(p.at) + p.w / 2, y0: y0 + p.up, y1: y0 + p.up + (p.tilt || 0), type: p.type || 'rock', kind: p.kind || 'slab', ...(p.bob ? bob(y0 + p.up, p.bob, at(p.at)) : {}) });
@@ -51,9 +52,11 @@ export function build(spec) {
     if (opt.seeds) { const list = Array.isArray(opt.seeds) ? opt.seeds : Array.from({ length: opt.seeds }, (_, i) => ({ at: (i + 1) / (opt.seeds + 1) })); for (const s of list) seeds.push({ x: at(s.at), up: s.up ?? 1.3, i0 }); }
     if (opt.mark) marks.push({ x: at(opt.at ?? 0.5), kind: opt.mark, text: opt.text });
     if (opt.zone) zones.push({ x0, x1, kind: opt.zone });
+    if (opt.ride) rides.push({ x: at(opt.ride.at ?? 0.5), x1: at(opt.ride.at ?? 0.5) + opt.ride.to, up: opt.ride.up ?? 12 });
     if (type === 'bowl') marks.push({ x: at(0.5), kind: 'goal' });
   }
-  for (let i = 0; i < 30 / DX; i++) ys.push(y);                                          // and a wall of ground past the end
+  // Past the end the ground stands up as a cliff, so that nothing that overshoots the last bowl can leave the level: it meets the wall and comes back down.
+  for (let i = 0; i < 5 / DX; i++) ys.push(y + 16 * ease((i + 1) / (5 / DX))); for (let i = 0; i < 25 / DX; i++) ys.push(y + 16);
   // Smooth the joins between strokes. Pits keep their edges.
   const pit = ys.map((v) => Number.isNaN(v));
   let last = spec.y0 ?? 0; for (let i = 0; i < ys.length; i++) { if (pit[i]) ys[i] = last; else last = ys[i]; }
@@ -73,7 +76,7 @@ export function build(spec) {
     if (Math.abs(T.dh(cx)) < 0.3 && !pits.some((p) => cx > p.x0 - 3 && cx < p.x1 + 3) && !T.waterAt(cx)) checks.push({ x: cx, y: gy(cx) });
   }
   return {
-    spec, T, start: { x: start.x, y: gy(start.x) }, goal, checks, pits, zones, marks,
+    spec, T, start: { x: start.x, y: gy(start.x) }, goal, checks, pits, zones, marks, rides,
     seeds: seeds.map((s, i) => ({ id: i, x: s.x, y: gy(s.x) + s.up, got: false })),
     lo, hi, length: goal.x - start.x, rng: r,
     fell: (b) => b.y < T.floor + 30 || pits.some((p) => b.x > p.x0 && b.x < p.x1 && b.y < p.y - 9),

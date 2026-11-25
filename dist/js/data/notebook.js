@@ -12,10 +12,25 @@ export const CARDS = {
   descent: { name: 'Gradient descent', draw: 'descent', who: 'Augustin-Louis Cauchy, 1847',
     text: ['Look at the slope. Take a step downhill. Look again.', 'That is the whole method, and it is called gradient descent. Augustin-Louis Cauchy, a French mathematician, described it in 1847. Most machines that learn today are still trained this way.'],
     math: 'θ ← θ − η ∇L(θ)', key: 'θ is where you stand, η is the length of the step, and ∇L(θ) is the slope there.' },
+  // ---- Cappadocia ----
+  momentum: { name: 'Momentum', draw: 'momentum', who: 'Boris Polyak, 1964',
+    text: ['A ball rolling downhill does not forget how fast it was going. It carries some of that speed into the next stretch of ground.', 'Plain gradient descent has no such memory: it steps, stops and looks again. In 1964 the mathematician Boris Polyak gave it one, and compared the result to a heavy ball rolling. The remembered speed is called momentum.', 'Mu, the bird, is named for the Greek letter μ, which is how momentum is usually written.'],
+    math: 'v ← μv − η ∇L(θ),   θ ← θ + v', key: 'v is the speed carried over from before, and μ says how much of it to keep.' },
+  local: { name: 'Local minimum', draw: 'local',
+    text: ['A hollow is the lowest ground nearby. It is not the lowest ground there is.', 'A walker who only ever steps downhill stops in the first hollow and thinks the journey is over. Such a place is called a local minimum.'] },
+  carry: { name: 'Over the rim', draw: 'momentum',
+    text: ['Speed gained on the way down can carry you over the rim of a hollow and on toward lower ground.', 'That is what momentum is for. If you stop in a hollow, go back up the way you came and take a run at it.'] },
+  start: { name: 'Where you start', draw: 'start',
+    text: ['Two travellers who set out from different places can finish in different valleys, even if both always go downhill.', 'So where you start matters. When nobody knows the best place to begin, people try several starts and keep the one that ends lowest.'] },
+  heavy: { name: 'Too much momentum', draw: 'overshoot',
+    text: ['Keep too much speed and you sail past the valley you wanted and have to come back for it.', 'So μ is kept a little under 1. A value of 0.9 is a common choice: nine tenths of the old speed is kept on every step.'] },
 };
 export const HINTS = {
   move: { key: 'Press → or D to run.', touch: 'Slide your left thumb to run.', pad: 'Push the stick to run.' },
   jump: { key: 'Space jumps. Tap for a hop, hold for a leap.', touch: 'The upper button jumps. Tap for a hop, hold for a leap.', pad: 'A jumps. Tap for a hop, hold for a leap.' },
   slide: { key: 'On ice and snow, hold Shift to slide.', touch: 'On ice and snow, hold the lower button to slide.', pad: 'On ice and snow, hold B to slide.' },
+  roll: { key: 'Hold Shift to tuck in and roll.', touch: 'Hold the lower button to tuck in and roll.', pad: 'Hold B to tuck in and roll.' },
+  rim: { key: 'Too steep to walk up. Roll down the slope behind you and let the speed carry you over.', touch: 'Too steep to walk up. Roll down the slope behind you and let the speed carry you over.', pad: 'Too steep to walk up. Roll down the slope behind you and let the speed carry you over.' },
+  ride: { key: 'Stand still in the basket.', touch: 'Stand still in the basket.', pad: 'Stand still in the basket.' },
   jet: { key: 'Stand in the geyser and let it carry you up.', touch: 'Stand in the geyser and let it carry you up.', pad: 'Stand in the geyser and let it carry you up.' },
 };

@@ -124,12 +124,12 @@ export const P = {
   },
   glow(ctx, w, h, r, { col = '#ffffff', a = 1 } = {}) { const g = ctx.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, w / 2); g.addColorStop(0, rgba(col, a)); g.addColorStop(0.35, rgba(col, a * 0.35)); g.addColorStop(1, rgba(col, 0)); ctx.fillStyle = g; ctx.fillRect(0, 0, w, h); },
   // a small house with a pitched roof, gable end on. `turf` grows grass on the roof; `spire` gives it a tower and makes it a country church
-  house(ctx, w, h, r, { wall = '#f4f1ea', roof = '#c8483a', trim = '#3a3f4a', win = '#2c3644', turf = null, spire = false } = {}) {
-    const bw = spire ? w * 0.6 : w * 0.86, bx = spire ? w * 0.36 : w * 0.07, wh = h * (spire ? 0.32 : 0.44), top = h - wh, ridge = top - h * (spire ? 0.2 : 0.36);
+  house(ctx, w, h, r, { wall = '#f4f1ea', roof = '#c8483a', trim = '#3a3f4a', win = '#2c3644', turf = null, spire = false, flat = false } = {}) {
+    const bw = spire ? w * 0.6 : w * 0.86, bx = spire ? w * 0.36 : w * 0.07, wh = h * (spire ? 0.32 : flat ? 0.8 : 0.44), top = h - wh, ridge = top - h * (spire ? 0.2 : 0.36);
     ctx.fillStyle = wall; ctx.fillRect(bx, top, bw, wh); ctx.fillStyle = rgba('#000000', 0.12); ctx.fillRect(bx + bw * 0.62, top, bw * 0.38, wh);
-    ctx.fillStyle = turf || roof; ctx.beginPath(); ctx.moveTo(bx - w * 0.05, top + h * 0.01); ctx.lineTo(bx + bw / 2, ridge); ctx.lineTo(bx + bw + w * 0.05, top + h * 0.01); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = turf || roof; if (flat) ctx.fillRect(bx - w * 0.03, top - h * 0.05, bw + w * 0.06, h * 0.07); else { ctx.beginPath(); ctx.moveTo(bx - w * 0.05, top + h * 0.01); ctx.lineTo(bx + bw / 2, ridge); ctx.lineTo(bx + bw + w * 0.05, top + h * 0.01); ctx.closePath(); ctx.fill(); }
     if (turf) { ctx.strokeStyle = lighten(turf, 0.25); ctx.lineWidth = w * 0.012; ctx.lineCap = 'round'; for (let i = 0; i < 26; i++) { const u = r.u(), x = bx + bw * u, y = lerp(ridge, top, Math.abs(u - 0.5) * 2) + r.range(-0.01, 0.02) * h; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + r.range(-0.02, 0.02) * w, y - r.range(0.03, 0.08) * h); ctx.stroke(); } }
-    ctx.fillStyle = win; ctx.fillRect(bx + bw * 0.16, top + wh * 0.28, bw * 0.17, wh * 0.36); ctx.fillRect(bx + bw * 0.67, top + wh * 0.28, bw * 0.17, wh * 0.36); if (!spire) ctx.fillRect(bx + bw * 0.44, lerp(ridge, top, 0.55), bw * 0.12, wh * 0.26);
+    ctx.fillStyle = win; ctx.fillRect(bx + bw * 0.16, top + wh * 0.28, bw * 0.17, wh * 0.36); ctx.fillRect(bx + bw * 0.67, top + wh * 0.28, bw * 0.17, wh * 0.36); if (!spire && !flat) ctx.fillRect(bx + bw * 0.44, lerp(ridge, top, 0.55), bw * 0.12, wh * 0.26);
     ctx.fillStyle = trim; ctx.fillRect(bx + bw * 0.42, top + wh * 0.36, bw * 0.16, wh * 0.64);
     if (spire) { ctx.fillStyle = wall; ctx.fillRect(w * 0.1, h * 0.36, w * 0.27, h * 0.64); ctx.fillStyle = roof; ctx.beginPath(); ctx.moveTo(w * 0.06, h * 0.37); ctx.lineTo(w * 0.235, 0); ctx.lineTo(w * 0.41, h * 0.37); ctx.closePath(); ctx.fill(); ctx.fillStyle = win; ctx.fillRect(w * 0.19, h * 0.5, w * 0.09, h * 0.14); }
   },
@@ -168,6 +168,42 @@ export const P = {
     ctx.fillStyle = '#f0752a'; ctx.beginPath(); ctx.moveTo(w * 0.72, h * 0.16); ctx.lineTo(w * 0.99, h * 0.28); ctx.lineTo(w * 0.72, h * 0.39); ctx.closePath(); ctx.fill();
     ctx.fillStyle = '#4a6a92'; ctx.beginPath(); ctx.moveTo(w * 0.72, h * 0.16); ctx.lineTo(w * 0.81, h * 0.2); ctx.lineTo(w * 0.81, h * 0.355); ctx.lineTo(w * 0.72, h * 0.39); ctx.closePath(); ctx.fill();
     ctx.fillStyle = '#1c1e24'; if (blink) ctx.fillRect(w * 0.58, h * 0.245, w * 0.09, h * 0.018); else { ctx.beginPath(); ctx.arc(w * 0.625, h * 0.25, w * 0.038, 0, TAU); ctx.fill(); }
+  },
+  // a fairy chimney: a cone of soft pale rock under a cap of harder, darker stone. People have cut rooms into many of them, so some have a door and windows.
+  chimney(ctx, w, h, r, { col = '#e6d2ae', lit = '#fbeecf', shade = '#b89a80', cap = '#6a5a52', capLit = '#9a8878', win = null, rooms = 0 } = {}) {
+    const top = h * 0.2, bw = w * r.range(0.4, 0.48), nw = w * r.range(0.11, 0.16), bulge = r.range(0.02, 0.07) * w;
+    ctx.beginPath(); ctx.moveTo(w / 2 - bw, h); ctx.bezierCurveTo(w / 2 - bw * 0.8 - bulge, h * 0.62, w / 2 - nw * 1.6, h * 0.4, w / 2 - nw, top); ctx.lineTo(w / 2 + nw, top); ctx.bezierCurveTo(w / 2 + nw * 1.6, h * 0.4, w / 2 + bw * 0.8 + bulge, h * 0.62, w / 2 + bw, h); ctx.closePath();
+    const g = ctx.createLinearGradient(w / 2 - bw, 0, w / 2 + bw, 0); g.addColorStop(0, lit); g.addColorStop(0.45, col); g.addColorStop(1, shade); ctx.fillStyle = g; ctx.fill(); ctx.save(); ctx.clip();
+    // the rock is laid down in beds, and rain has cut flutes down it
+    for (let i = 0; i < 5; i++) { ctx.fillStyle = rgba(i % 2 ? '#ffffff' : shade, 0.16); const y = top + (h - top) * r.range(0.1, 0.95); ctx.beginPath(); ctx.ellipse(w / 2, y, w, h * r.range(0.012, 0.03), r.range(-0.05, 0.05), 0, TAU); ctx.fill(); }
+    ctx.strokeStyle = rgba(shade, 0.5); ctx.lineWidth = w * 0.012; ctx.lineCap = 'round'; for (let i = 0; i < 9; i++) { const x = w / 2 + r.range(-1, 1) * bw * 0.8, y0 = top + (h - top) * r.range(0.15, 0.6); ctx.beginPath(); ctx.moveTo(x, y0); ctx.quadraticCurveTo(x + r.range(-0.03, 0.03) * w, (y0 + h) / 2, x + (x - w / 2) * 0.25, h); ctx.stroke(); }
+    if (rooms) { const dark = win || '#3a2c2a'; ctx.fillStyle = dark; const dw = w * 0.11, dh = h * 0.13; ctx.beginPath(); ctx.roundRect(w / 2 - dw / 2 + r.range(-0.08, 0.08) * w, h - dh, dw, dh * 1.2, [dw / 2, dw / 2, 0, 0]); ctx.fill();
+      for (let i = 0; i < rooms; i++) { const y = h * r.range(0.42, 0.78), x = w / 2 + r.range(-0.5, 0.5) * bw * (y / h), s = w * r.range(0.05, 0.075); ctx.beginPath(); ctx.roundRect(x - s / 2, y - s * 0.7, s, s * 1.3, [s / 2, s / 2, 0, 0]); ctx.fill(); }
+      ctx.fillStyle = rgba(shade, 0.8); for (let i = 0; i < 6; i++) ctx.fillRect(w / 2 + r.range(-0.3, 0.3) * bw, h * r.range(0.3, 0.42), w * 0.022, w * 0.022); }      // pigeon holes, high up
+    ctx.restore();
+    // the cap
+    const cw = nw * r.range(1.9, 2.6), ch = h * r.range(0.15, 0.2); ctx.beginPath(); ctx.moveTo(w / 2 - cw, top + ch * 0.25); ctx.quadraticCurveTo(w / 2 - cw * 0.9, top - ch * 0.5, w / 2 + r.range(-0.2, 0.2) * cw, top - ch); ctx.quadraticCurveTo(w / 2 + cw * 0.9, top - ch * 0.5, w / 2 + cw, top + ch * 0.25); ctx.quadraticCurveTo(w / 2, top + ch * 0.5, w / 2 - cw, top + ch * 0.25); ctx.closePath();
+    const cg = ctx.createLinearGradient(w / 2 - cw, 0, w / 2 + cw, 0); cg.addColorStop(0, capLit); cg.addColorStop(1, cap); ctx.fillStyle = cg; ctx.fill();
+  },
+  // a poplar: the tall thin tree that lines every stream and field edge in Anatolia
+  poplar(ctx, w, h, r, { col = '#5f8a3f', lit = '#b4d06a', trunk = '#6a5a48' } = {}) {
+    ctx.fillStyle = trunk; ctx.fillRect(w / 2 - w * 0.04, h * 0.7, w * 0.08, h * 0.3);
+    for (let i = 0; i < 140; i++) { const v = r.u(), y = h * (0.02 + v * 0.8), half = w * 0.46 * Math.sin(Math.min(1, v * 1.25 + 0.12) * Math.PI) ** 0.7, x = w / 2 + r.range(-1, 1) * half; ctx.fillStyle = mix(col, lit, clamp(0.5 - (x - w / 2) / w + r.range(-0.25, 0.25), 0, 1)); ctx.beginPath(); ctx.ellipse(x, y, w * 0.07, w * 0.12, r.range(-0.4, 0.4), 0, TAU); ctx.fill(); }
+  },
+  // a hot-air balloon
+  balloon(ctx, w, h, r, { cols = ['#e8503a', '#f6e7c4'], basket = '#6a4a30', n = 0 } = {}) {
+    const cx = w / 2, R = w * 0.48, cy = R, by = h * 0.74; ctx.beginPath(); ctx.moveTo(cx - w * 0.07, by); ctx.bezierCurveTo(cx - R * 0.5, by - h * 0.14, cx - R, cy + R * 0.55, cx - R, cy); ctx.arc(cx, cy, R, Math.PI, 0); ctx.bezierCurveTo(cx + R, cy + R * 0.55, cx + R * 0.5, by - h * 0.14, cx + w * 0.07, by); ctx.closePath(); ctx.save(); ctx.clip();
+    const gores = n || r.pick([6, 8, 10]), style = r.int(0, 2);
+    for (let i = 0; i < gores; i++) { const a0 = -1 + (2 * i) / gores, a1 = -1 + (2 * (i + 1)) / gores; ctx.fillStyle = cols[i % cols.length]; ctx.beginPath(); ctx.moveTo(cx + Math.sin((a0 * Math.PI) / 2) * w * 0.07, by); ctx.bezierCurveTo(cx + Math.sin((a0 * Math.PI) / 2) * R * 1.05, cy + R * 0.6, cx + Math.sin((a0 * Math.PI) / 2) * R * 1.05, cy - R * 0.5, cx + a0 * R * 0.1, 0); ctx.lineTo(cx + a1 * R * 0.1, 0); ctx.bezierCurveTo(cx + Math.sin((a1 * Math.PI) / 2) * R * 1.05, cy - R * 0.5, cx + Math.sin((a1 * Math.PI) / 2) * R * 1.05, cy + R * 0.6, cx + Math.sin((a1 * Math.PI) / 2) * w * 0.07, by); ctx.closePath(); ctx.fill(); }
+    if (style === 1) { ctx.fillStyle = cols[cols.length - 1]; ctx.fillRect(0, cy - R * 0.12, w, R * 0.3); } else if (style === 2) { ctx.strokeStyle = cols[0]; ctx.lineWidth = R * 0.16; ctx.beginPath(); ctx.moveTo(0, cy + R * 0.5); ctx.lineTo(w, cy - R * 0.6); ctx.stroke(); }
+    const sh = ctx.createLinearGradient(0, 0, w, 0); sh.addColorStop(0, 'rgba(255,255,255,0.28)'); sh.addColorStop(0.4, 'rgba(255,255,255,0)'); sh.addColorStop(1, 'rgba(20,10,30,0.3)'); ctx.fillStyle = sh; ctx.fillRect(0, 0, w, h); ctx.restore();
+    ctx.strokeStyle = rgba(basket, 0.9); ctx.lineWidth = w * 0.012; ctx.beginPath(); ctx.moveTo(cx - w * 0.07, by); ctx.lineTo(cx - w * 0.055, h * 0.88); ctx.moveTo(cx + w * 0.07, by); ctx.lineTo(cx + w * 0.055, h * 0.88); ctx.stroke();
+    ctx.fillStyle = basket; ctx.beginPath(); ctx.roundRect(cx - w * 0.075, h * 0.88, w * 0.15, h * 0.12, w * 0.02); ctx.fill(); ctx.fillStyle = rgba('#000000', 0.2); ctx.fillRect(cx - w * 0.075, h * 0.93, w * 0.15, h * 0.015);
+  },
+  // a clay jar, such as the potters of Avanos have made from the red river clay for a very long time
+  jar(ctx, w, h, r, { col = '#b8643a', lit = '#e09a62', band = '#f1e2c4' } = {}) {
+    const g = ctx.createLinearGradient(0, 0, w, 0); g.addColorStop(0, lit); g.addColorStop(1, col); ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(w * 0.38, h * 0.06); ctx.lineTo(w * 0.62, h * 0.06); ctx.lineTo(w * 0.6, h * 0.2); ctx.bezierCurveTo(w * 1.02, h * 0.34, w * 0.95, h * 0.86, w * 0.66, h); ctx.lineTo(w * 0.34, h); ctx.bezierCurveTo(w * 0.05, h * 0.86, w * -0.02, h * 0.34, w * 0.4, h * 0.2); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = col; ctx.fillRect(w * 0.33, 0, w * 0.34, h * 0.08); ctx.strokeStyle = band; ctx.lineWidth = h * 0.03; ctx.beginPath(); ctx.moveTo(w * 0.17, h * 0.46); ctx.quadraticCurveTo(w / 2, h * 0.52, w * 0.83, h * 0.46); ctx.stroke();
   },
 };
 

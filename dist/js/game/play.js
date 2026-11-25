@@ -1,10 +1,11 @@
 // One run of one level: the body, the rig, the camera, the clock, the ghost, and everything that happens along the way.
-import { Body, advance, R, STEP } from './physics.js';
+import { Body, advance, step, R, STEP } from './physics.js';
 import { build } from './level.js';
 import { Rig, POSE } from './theta.js';
 import { Scene } from '../art/scene.js';
 import { clamp, lerp, smooth } from '../art/paint.js';
 import { Geyser } from './boss.js';
+import { Rides } from './ride.js';
 
 export class Camera {
   constructor(x, y) { this.x = x; this.y = y; this.vh = 11.6; this.vw = 22; this.lx = 3; this.ly = 0.9; }
@@ -35,6 +36,21 @@ class Eta {
     ctx.fillStyle = '#4a3a20'; ctx.beginPath(); ctx.ellipse(0, 0, 0.045, 0.075, 0.3, 0, 7); ctx.fill(); ctx.fillStyle = '#fff6b0'; ctx.beginPath(); ctx.arc(0.012, 0.045, 0.045, 0, 7); ctx.fill(); }
 }
 
+// Mu, the bird: momentum. Mu rides the air behind Theta, close when the going is slow and strung far out behind, wings set, when it is fast.
+class Mu {
+  constructor(x, y) { this.x = x; this.y = y; this.vx = 0; this.vy = 0; this.glide = 0; this.dir = 1; }
+  update(b, dt, t, wind) { const sp = b.speed(), back = 1.1 + clamp(sp * 0.13, 0, 3.4), tx = b.x - b.face * back + Math.sin(t * 1.7) * 0.2, ty = b.y + 1.5 + clamp(sp * 0.04, 0, 0.8) + Math.sin(t * 2.6) * 0.18, k = 1 - Math.exp(-dt * 3.2);
+    // Mu has weight: it does not turn the moment Theta does, it swings wide and comes round
+    this.vx += ((tx - this.x) * 9 - this.vx * 4.2) * dt; this.vy += ((ty - this.y) * 9 - this.vy * 4.2) * dt; this.x += (this.vx + wind * 0.2) * dt; this.y += this.vy * dt; this.x += (tx - this.x) * k * 0.15; this.y += (ty - this.y) * k * 0.15;
+    this.glide += (clamp((sp - 8) / 8, 0, 1) - this.glide) * (1 - Math.exp(-dt * 4)); if (Math.abs(b.vx) > 0.5) this.dir = b.vx > 0 ? 1 : -1; }
+  draw(ctx, t) { const g = this.glide, f = Math.sin(t * 17) * (1 - g) * 0.9 - g * 0.25; ctx.scale(this.dir, 1); ctx.rotate(clamp(-this.vy * 0.05, -0.5, 0.5));
+    ctx.fillStyle = '#e8785a'; ctx.beginPath(); ctx.moveTo(-0.3, 0.02); ctx.lineTo(-0.52, -0.1); ctx.lineTo(-0.44, 0.03); ctx.lineTo(-0.52, 0.14); ctx.closePath(); ctx.fill();           // the forked tail
+    for (const s of [0.55, 1]) { ctx.fillStyle = s < 1 ? '#c9583f' : '#f08c68'; ctx.beginPath(); ctx.moveTo(-0.08, 0); ctx.quadraticCurveTo(-0.12, -0.34 * f * s - 0.06, -0.3 - g * 0.12, -0.5 * f * s - 0.03); ctx.quadraticCurveTo(0.0, -0.2 * f * s, 0.14, 0); ctx.closePath(); ctx.fill(); }
+    ctx.fillStyle = '#f6a27e'; ctx.beginPath(); ctx.ellipse(0, 0.02, 0.24, 0.13, -0.1, 0, 7); ctx.fill(); ctx.fillStyle = '#fff3e4'; ctx.beginPath(); ctx.ellipse(0.04, 0.07, 0.15, 0.07, -0.1, 0, 7); ctx.fill();
+    ctx.fillStyle = '#f08c68'; ctx.beginPath(); ctx.arc(0.2, -0.05, 0.105, 0, 7); ctx.fill(); ctx.fillStyle = '#ffc23d'; ctx.beginPath(); ctx.moveTo(0.29, -0.08); ctx.lineTo(0.42, -0.04); ctx.lineTo(0.29, 0); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#23434d'; ctx.beginPath(); ctx.arc(0.23, -0.07, 0.026, 0, 7); ctx.fill(); }
+}
+
 export class Play {
   constructor({ spec, theme, can = {}, ghost = null, hooks = {}, cine = false, intro = false }) {
     this.cine = cine; this.intro = intro ? { t: 0, stage: 0 } : null; this.seedGlow = intro ? 0 : 1; this.etaIn = intro ? 0 : 1; this.star = null; this.spec = spec; this.theme = theme; this.level = build(spec); this.T = this.level.T; this.hooks = hooks;
@@ -47,6 +63,8 @@ export class Play {
     this.view = { x: this.b.x, y: this.b.y, r: R, vx: 0, vy: 0, face: 1, speed: () => this.b.speed() };      // the body as drawn: between the last two physics steps
     this.flyers = [{ x: 0, y: 0, draw: (ctx, t) => { if (this.etaIn > 0.02) { ctx.scale(this.etaIn, this.etaIn); this.eta.draw(ctx, t, this.scene.fx.warm); } } },
       { x: 0, y: 0, draw: (ctx, t) => { if (!this.star) return; const fx = this.scene.fx.warm, s = 2.2 + Math.sin(t * 7) * 0.25; ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.drawImage(fx.c, -s / 2, -s / 2, s, s); ctx.restore(); ctx.rotate(Math.sin(t * 2) * 0.2); ctx.fillStyle = '#fff3b8'; ctx.strokeStyle = '#c9861a'; ctx.lineWidth = 0.03; ctx.beginPath(); ctx.moveTo(0, -0.2); ctx.bezierCurveTo(0.16, -0.06, 0.13, 0.15, 0, 0.17); ctx.bezierCurveTo(-0.13, 0.15, -0.16, -0.06, 0, -0.2); ctx.fill(); ctx.stroke(); } }];
+    if (can.mu) { this.mu = new Mu(this.b.x - 1.5, this.b.y + 1.5); this.flyers.push({ x: 0, y: 0, draw: (ctx, t) => this.mu.draw(ctx, t) }); }
+    this.rides = new Rides(this.level, this.T); if (this.rides.list.length) this.scene.rides = this.rides.list;
     // one weather for the picture and the physics
     this.weather = this.scene.wx; this.scene.own = false; this.T.air = (t) => this.weather.windAt(t);
     if (spec.boss === 'geyser') { this.boss = new Geyser(this.level, this.T); this.scene.overlay = (ctx, x0, x1) => this.boss.draw(ctx, x0, x1, this.t, this.scene.time.hot); }
@@ -79,7 +97,9 @@ export class Play {
     this.weather.set(b.t + (this.cine ? this.t : 0), dt); this.rig.wind = this.weather.wind; this.rig.rain = this.weather.rain * (1 - this.scene.coldNow);
     if (this.dead > 0) { this.dead -= dt; if (this.dead <= 0) this._respawn(); }
     else if (!this.done) {
-      this.acc = advance(b, this.T, inp, this.acc, dt, () => this._onStep());
+      if (this.rides.on || this.rides.list.length) { // a balloon carries the hero step by step in place of the ordinary physics
+        this.acc += Math.min(dt, 0.1); while (this.acc >= STEP) { b.px = b.x; b.py = b.y; if (this.rides.step(b, STEP)) { b.events.length = 0; } else step(b, this.T, inp, STEP); for (const e of this.rides.events) { this.hooks.event?.(e, b); if (e === 'lift') this.rig.feel('wow', 1.4); else this.rig.feel('joy', 1.5); } this._onStep(); inp.jumpNow = false; this.acc -= STEP; } b.mix = this.acc / STEP;
+      } else this.acc = advance(b, this.T, inp, this.acc, dt, () => this._onStep());
       if (this.started) this.clock += dt;
     } else { // at the goal the hero is let down gently and the level is over
       this.acc = advance(b, this.T, { move: 0, jump: false, jumpNow: false, tuck: false }, this.acc, dt);
@@ -87,8 +107,9 @@ export class Play {
     const v = this.view, m = this.dead > 0 || b.px == null ? 1 : b.mix ?? 1; v.x = b.px == null ? b.x : b.px + (b.x - b.px) * m; v.y = b.py == null ? b.y : b.py + (b.y - b.py) * m; v.vx = b.vx; v.vy = b.vy; v.face = b.face; v.fast = clamp((b.speed() - 13) / 14, 0, 1);
     const pose = this.rig.update(b, dt, inp);
     pose.seed = (0.7 + 0.3 * clamp((this.level.hi - b.y) / Math.max(1, this.level.hi - this.level.lo), 0, 1)) * this.seedGlow;   // the seed glows warmer the lower Theta gets
+    if (this.mu) { this.mu.update(v, dt, this.t, this.weather.wind); const f = this.flyers[this.flyers.length - 1]; f.x = this.mu.x; f.y = this.mu.y; }
     this.eta.update(v, dt, this.t); this.flyers[0].x = this.eta.x; this.flyers[0].y = this.eta.y; if (this.star) { this.flyers[1].x = this.star.x; this.flyers[1].y = this.star.y; }
-    if (this.cine) this._cine(dt); else this.cam.update(v, dt, this.W / this.H, false, this.intro ? 'close' : !this.started); sc.update(dt, this.cam);
+    if (this.cine) this._cine(dt); else this.cam.update(v, dt, this.W / this.H, false, this.intro ? 'close' : !this.started || !!this.rides.on); sc.update(dt, this.cam);
     this._effects(dt);
     // the record of the run: where the hero was (for the ghost) and how high (for the loss curve)
     if (this.started && !this.done) {
@@ -114,7 +135,7 @@ export class Play {
   // dust, spray and streaks: small things that say what the body is doing
   _effects(dt) {
     const b = this.b, sc = this.scene, T = this.T, sp = b.speed(), gy = b.y - b.r, z = sc.zoneAt(b.x);
-    const soil = { snow: '#ffffff', ice: '#dff6ff', sand: '#5a5d6a', moss: '#a9c94f', meadow: '#9cc267', hot: '#e0b070', rock: '#8a90a0', basalt: '#8a90a0', wet: '#bfd9ea' }[z] || '#bbbbbb';
+    const soil = { tuff: '#f2e2c4', rose: '#f0c0b4', honey: '#f0d898', dust: '#e0cca8', vine: '#b4d07a', cap: '#a89888', snow: '#ffffff', ice: '#dff6ff', sand: '#5a5d6a', moss: '#a9c94f', meadow: '#9cc267', hot: '#e0b070', rock: '#8a90a0', basalt: '#8a90a0', wet: '#bfd9ea' }[z] || '#bbbbbb';
     for (const e of b.events) {
       if (e === 'jump') sc.emit('dust', b.x, gy, 6, { speed: 2.2, spread: 2.6, life: 0.4, size: 0.11, col: soil, g: 3 });
       if (e === 'land') { const n = Math.round(clamp(b.impact * 0.9, 3, 16)); sc.emit('dust', b.x, gy, n, { speed: clamp(b.impact * 0.3, 1.5, 5), spread: 3.1, dir: Math.PI / 2, life: 0.5, size: 0.13, col: soil, g: 2 }); if (b.impact > 13) sc.shake = Math.min(0.5, b.impact * 0.02); }
