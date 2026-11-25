@@ -72,7 +72,7 @@ function sounds(p, dt) {
 
 function frame(now) {
   requestAnimationFrame(frame);
-  let dt = Math.min(0.05, (now - G.last) / 1000 || 0.016); G.last = now; G.fps += (1 / Math.max(dt, 0.001) - G.fps) * 0.05;
+  let dt = Math.min(0.05, (now - G.last) / 1000 || 0.016); G.last = now; for (const hz of [60, 120, 144, 90, 75, 165, 240]) if (Math.abs(dt - 1 / hz) < 0.0011) { dt = 1 / hz; break; } G.fps += (1 / Math.max(dt, 0.001) - G.fps) * 0.05;
   const inp = readInput(), p = G.play;
   if (p) {
     if (!G.paused) {

@@ -29,6 +29,7 @@ export const POSE = () => ({
   spread: 0,      // limbs flung wide, with the flaps open
   slide: 0,       // on the belly
   crouch: 0,
+  side: 1,        // 1 in profile, 0 at the moment of turning round, when the hero faces the viewer
   earL: 0, earR: 0, tail: 0,   // what the springs have done to the ears and tail
   lookX: 0, lookY: 0, blink: 0, lid: 0,
   expr: 'smile',  // smile | joy | effort | worry | wow | proud | squint | sleepy | dizzy | sulk | glee
@@ -116,7 +117,7 @@ export function drawTheta(ctx, p) {
   const runA = p.runAmt * up, ph = p.run, air = p.air * up, spr = p.spread * up, sl = p.slide * up;
 
   // tail
-  if (!ghost) { ctx.save(); ctx.translate(lerp(-0.4, -0.3, tk), lerp(0.25, 0.26, tk)); ctx.rotate(p.tail * up); ell(ctx, -0.07, 0, 0.115, 0.105); ctx.fillStyle = COL.body; ctx.fill(); ctx.strokeStyle = line; ctx.lineWidth = 0.028; ctx.stroke(); ell(ctx, -0.115, -0.02, 0.055, 0.05); ctx.fillStyle = COL.band; ctx.fill(); ctx.restore(); }
+  if (!ghost) { ctx.save(); ctx.translate(lerp(-0.4, -0.3, tk) * (0.2 + 0.8 * (p.side ?? 1)), lerp(0.25, 0.26, tk)); ctx.rotate(p.tail * up); ell(ctx, -0.07, 0, 0.115, 0.105); ctx.fillStyle = COL.body; ctx.fill(); ctx.strokeStyle = line; ctx.lineWidth = 0.028; ctx.stroke(); ell(ctx, -0.115, -0.02, 0.055, 0.05); ctx.fillStyle = COL.band; ctx.fill(); ctx.restore(); }
 
   // limbs: where each foot and hand is
   const foot = (side) => {
@@ -184,20 +185,24 @@ export function drawTheta(ctx, p) {
 }
 
 // ---- the rig: from what the body is doing to a pose ----
-class Spring { constructor(k = 120, d = 12) { this.x = 0; this.v = 0; this.k = k; this.d = d; } step(target, dt) { this.v += ((target - this.x) * this.k - this.v * this.d) * dt; this.x += this.v * dt; return this.x; } kick(v) { this.v += v; } }
+class Spring { constructor(k = 120, d = 12) { this.x = 0; this.v = 0; this.k = k; this.d = d; } step(target, dt) { const n = Math.max(1, Math.ceil(dt * 240)), h = dt / n; for (let i = 0; i < n; i++) { this.v += ((target - this.x) * this.k - this.v * this.d) * h; this.x += this.v * h; } return this.x; } kick(v) { this.v += v; } }
 
 export class Rig {
   constructor() {
     this.p = POSE(); this.sq = new Spring(260, 14); this.sq.x = 1; this.lean = new Spring(90, 14);
     this.earL = new Spring(70, 7); this.earR = new Spring(64, 6.4); this.tail = new Spring(80, 8);
-    this.tuck = 0; this.run = 0; this.blinkT = 2; this.idle = 0; this.mood = null; this.moodT = 0; this.lookX = 0; this.lookY = 0; this.pvx = 0; this.pvy = 0; this.spin = 0; this.dizzy = 0; this.wind = 0; this.rain = 0; this.awake = false;
+    this.tuck = 0; this.run = 0; this.blinkT = 2; this.idle = 0; this.mood = null; this.moodT = 0; this.lookX = 0; this.lookY = 0; this.pvx = 0; this.pvy = 0; this.spin = 0; this.dizzy = 0; this.wind = 0; this.rain = 0; this.awake = false; this.head = 1; this.ax = 0; this.expr = 'smile'; this.exprT = 1;
   }
   feel(expr, secs = 1) { this.mood = expr; this.moodT = secs; }     // an expression that holds for a while: pride at the goal, a sulk after a fall
   update(b, dt, inp = {}) {
-    const p = this.p, sp = Math.hypot(b.vx, b.vy), tx = b.ny, ty = -b.nx, vt = b.grounded ? b.vx * tx + b.vy * ty : b.vx;
-    p.t += dt; p.face = b.face;
-    const ball = b.mode === 'ball'; this.tuck += ((ball ? 1 : 0) - this.tuck) * Math.min(1, dt * 16); p.tuck = this.tuck;
-    if (ball) { p.roll += b.w * dt; this.spin += Math.abs(b.w) * dt; } else { p.roll += (Math.round(p.roll / TAU) * TAU - p.roll) * Math.min(1, dt * 14); this.spin = Math.max(0, this.spin - dt * 20); }
+    // (for the animation the hero counts as on the ground through the few hundredths of a second it leaves it on a bump, so the pose does not flicker)
+    const gnd = b.grounded || b.airT < 0.07, ease = (k) => 1 - Math.exp(-k * dt);
+    const p = this.p, sp = Math.hypot(b.vx, b.vy), tx = b.ny, ty = -b.nx, vt = gnd ? b.vx * tx + b.vy * ty : b.vx;
+    p.t += dt;
+    // turning round goes through the front view: the features slide to the middle, the body mirrors there where nothing shows, and they slide out the other way
+    this.head += clamp(b.face - this.head, -dt * 11, dt * 11); p.face = this.head >= 0 ? 1 : -1; p.side = Math.abs(this.head);
+    const ball = b.mode === 'ball'; this.tuck += ((ball ? 1 : 0) - this.tuck) * ease(16); p.tuck = this.tuck;
+    if (ball) { p.roll += b.w * dt; this.spin += Math.abs(b.w) * dt; } else { p.roll += (Math.round(p.roll / TAU) * TAU - p.roll) * ease(14); this.spin = Math.max(0, this.spin - dt * 20); }
     // what just happened
     for (const e of b.events) {
       if (e === 'jump') this.sq.kick(5.5);
@@ -206,43 +211,45 @@ export class Rig {
     }
     if (b.impact > 4 && ball) this.sq.kick(-clamp(b.impact * 0.3, 0, 6));
     // stretch with speed in the air; press flat when sliding
-    const airStretch = b.grounded ? 0 : clamp(Math.abs(b.vy) * 0.012, 0, 0.2), want = 1 + airStretch - (b.mode === 'slide' ? 0.28 : 0) + (inp.tuck && !ball && b.grounded && b.mode !== 'slide' ? -0.12 : 0);
+    const airStretch = gnd ? 0 : clamp(Math.abs(b.vy) * 0.012, 0, 0.2), want = 1 + airStretch - (b.mode === 'slide' ? 0.28 : 0) + (inp.tuck && !ball && gnd && b.mode !== 'slide' ? -0.12 : 0);
     p.sy = this.sq.step(want, dt);
     // lean: into the slope when standing on one, into the motion when running, along the path when in the air
-    const slope = Math.atan2(-b.nx, b.ny), ax = (b.vx - this.pvx) / dt; this.pvx = b.vx; this.pvy = b.vy;
+    const slope = Math.atan2(-b.nx, b.ny); this.ax += ((b.vx - this.pvx) / Math.max(dt, 0.004) - this.ax) * ease(14); const ax = this.ax; this.pvx = b.vx; this.pvy = b.vy;
     let wantLean = 0;
-    if (b.grounded) wantLean = slope * 0.75 + clamp(vt * 0.022, -0.3, 0.3) + clamp(ax * 0.0035, -0.25, 0.25) * (b.mode === 'run' ? 1 : 0);
+    if (gnd) wantLean = slope * 0.75 + clamp(vt * 0.022, -0.3, 0.3) + clamp(ax * 0.0035, -0.25, 0.25) * (b.mode === 'run' ? 1 : 0);
     else wantLean = clamp(b.vx * 0.02, -0.4, 0.4) * (b.spread ? 2.2 : 1) - (b.spread ? 0 : clamp(b.vy * 0.012, -0.25, 0.25) * b.face);
     if (b.mode === 'slide') wantLean = slope + 1.15 * b.face;
     p.lean = this.lean.step(wantLean, dt);
     // legs
-    const running = b.grounded && b.mode === 'run' && Math.abs(vt) > 0.4;
-    this.run += Math.abs(vt) * dt * 2.3; p.run = this.run; p.runAmt += ((running ? clamp(Math.abs(vt) / 4, 0.3, 1) : 0) - p.runAmt) * Math.min(1, dt * 12);
-    const airT = b.grounded || b.inWater > 0.3 ? 0 : clamp(b.vy / 8, -1, 1); p.air += (airT - p.air) * Math.min(1, dt * 14);
-    p.spread += ((b.spread ? 1 : 0) - p.spread) * Math.min(1, dt * 12);
-    p.slide += ((b.mode === 'slide' ? 1 : 0) - p.slide) * Math.min(1, dt * 12);
-    p.turn += ((Math.abs(vt) > 0.3 || !b.grounded ? 0.9 : 0.35) - p.turn) * Math.min(1, dt * 6);
+    const running = gnd && b.mode === 'run' && Math.abs(vt) > 0.4;
+    this.run += Math.abs(vt) * dt * 2.3; p.run = this.run; p.runAmt += ((running ? clamp(Math.abs(vt) / 4, 0.3, 1) : 0) - p.runAmt) * ease(12);
+    const airT = gnd || b.inWater > 0.3 ? 0 : clamp(b.vy / 8, -1, 1); p.air += (airT - p.air) * ease(14);
+    p.spread += ((b.spread ? 1 : 0) - p.spread) * ease(12);
+    p.slide += ((b.mode === 'slide' ? 1 : 0) - p.slide) * ease(12);
+    this.turnT = (this.turnT ?? 0.5) + ((Math.abs(vt) > 0.3 || !gnd ? 0.9 : 0.35) - (this.turnT ?? 0.5)) * ease(6); p.turn = this.turnT * p.side;
     // ears and tail trail behind whatever the body does, and answer the air as it passes, wind included
     const drag = clamp(-(b.vx - this.wind) * b.face * 0.03, -0.9, 0.9), lift = clamp(b.vy * 0.035, -0.6, 0.6);
     p.earL = this.earL.step(-drag * 0.9 * b.face - lift * 0.5 - 0.1 * Math.sin(p.t * 1.7), dt) * b.face; p.earR = this.earR.step(-drag * b.face + lift * 0.5 + 0.08 * Math.sin(p.t * 1.3 + 1), dt) * b.face;
-    if (!b.grounded && this.earL) { this.earL.kick(0); }
+    if (!gnd && this.earL) { this.earL.kick(0); }
     p.tail = this.tail.step(clamp(b.vy * 0.05, -0.8, 0.8) + Math.sin(p.t * (running ? 14 : 2.2)) * (running ? 0.3 : 0.12), dt);
     // eyes
     this.blinkT -= dt; if (this.blinkT < 0) this.blinkT = 2.2 + Math.random() * 3.2; p.blink = this.blinkT < 0.13 ? 1 : 0;
-    const still = b.grounded && sp < 0.2; this.idle = still ? this.idle + dt : 0;
+    const still = gnd && sp < 0.2; this.idle = still ? this.idle + dt : 0;
     const lx = still ? Math.sin(p.t * 0.6) * (this.idle > 3 ? 0.9 : 0.2) : clamp(b.vx * 0.12 * b.face, -1, 1), ly = still ? 0 : clamp(-b.vy * 0.08, -1, 1);
-    this.lookX += (lx - this.lookX) * Math.min(1, dt * 6); this.lookY += (ly - this.lookY) * Math.min(1, dt * 6); p.lookX = this.lookX; p.lookY = this.lookY;
+    this.lookX += (lx - this.lookX) * ease(6); this.lookY += (ly - this.lookY) * ease(6); p.lookX = this.lookX; p.lookY = this.lookY;
     // the face
     this.moodT -= dt; this.dizzy = Math.max(0, this.dizzy - dt);
     let e = 'smile';
-    if (this.idle > 14 && !this.awake) { e = 'sleepy'; p.lid += (1 - p.lid) * dt * 0.6; } else { p.lid += (0 - p.lid) * Math.min(1, dt * 8); }
+    if (this.idle > 14 && !this.awake) { e = 'sleepy'; p.lid += (1 - p.lid) * dt * 0.6; } else { p.lid += (0 - p.lid) * ease(8); }
     if (ball) e = sp > 9 ? 'glee' : 'smile';
     else if (b.mode === 'slide') e = 'glee';
-    else if (!b.grounded) e = b.spread ? 'effort' : b.vy > 2 ? 'joy' : b.vy < -16 ? 'wow' : b.vy < -6 ? 'worry' : 'joy';
+    else if (!gnd) e = b.spread ? 'effort' : b.vy > 2 ? 'joy' : b.vy < -16 ? 'wow' : b.vy < -6 ? 'worry' : 'joy';
     else if (running) e = Math.abs(vt) > 7 ? 'joy' : 'smile';
     if (b.impact > 12) this.feel('squint', 0.45);
     if (this.dizzy > 0) e = 'dizzy';
     if (this.moodT > 0 && this.mood) e = this.mood;
+    // a face holds for a moment before it changes, so that it never flickers between two looks
+    this.exprT += dt; if (e !== this.expr && (this.exprT > 0.14 || this.moodT > 0 || e === 'squint')) { this.expr = e; this.exprT = 0; } e = this.expr;
     p.expr = e; p.wet += ((b.inWater > 0.2 || this.rain > 0.3 ? 1 : 0) - p.wet) * Math.min(1, dt * (b.inWater > 0.2 ? 6 : 0.4));
     return p;
   }

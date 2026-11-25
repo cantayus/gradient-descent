@@ -254,6 +254,7 @@ export class Scene {
       if (!ghost) { const gy = T.h(b.x), hgt = Math.max(0, b.y - b.r - gy), sh = clamp(1 - hgt / 9, 0, 1); if (sh > 0.02 && !this.level.pits.some((p) => b.x > p.x0 && b.x < p.x1)) { ctx.fillStyle = `rgba(20,16,30,${0.28 * sh})`; ctx.beginPath(); ctx.ellipse(b.x, -gy + 0.02, 0.42 * (0.6 + 0.4 * sh), 0.085 * sh, -Math.atan(T.dh(b.x)), 0, TAU); ctx.fill(); }
         // a soft light the hero carries, so that nothing in the scenery can hide it
         ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = this.time.aura ?? 0.3; stamp(ctx, this.fx.glow, b.x, -b.y, 3.1); ctx.restore(); }
+      if (!ghost && b.fast > 0.02) { const sp = Math.hypot(b.vx, b.vy) || 1, ux = b.vx / sp, uy = -b.vy / sp, len = 0.7 + b.fast * 1.7, g = ctx.createLinearGradient(b.x, -b.y, b.x - ux * len, -b.y - uy * len); g.addColorStop(0, `rgba(255,255,255,${0.3 * b.fast})`); g.addColorStop(1, 'rgba(255,255,255,0)'); ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(b.x - uy * 0.4, -b.y + ux * 0.4); ctx.lineTo(b.x - ux * len, -b.y - uy * len); ctx.lineTo(b.x + uy * 0.4, -b.y - ux * 0.4); ctx.closePath(); ctx.fill(); }      // speed, drawn the way a brush would draw it
       ctx.save(); ctx.translate(b.x, -b.y); drawTheta(ctx, ghost ? { ...pose, ghost: true } : pose); ctx.restore();
     };
     if (A.ghost) one(A.ghost.b, A.ghost.pose, true);

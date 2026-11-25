@@ -230,6 +230,7 @@ function resolve(b, c, inp, dt, first) {
 // Run the fixed step as many times as real time asks for. Returns how far into the next step we are, for smooth drawing.
 export function advance(b, T, inp, acc, dtReal, onStep) {
   acc += Math.min(dtReal, 0.1);
-  while (acc >= STEP) { step(b, T, inp, STEP); if (onStep) onStep(b); inp.jumpNow = false; acc -= STEP; }
+  while (acc >= STEP) { b.px = b.x; b.py = b.y; step(b, T, inp, STEP); if (onStep) onStep(b); inp.jumpNow = false; acc -= STEP; }
+  b.mix = acc / STEP;      // how far the picture is past the last step: play.js draws the body there, between the last two steps, so motion is even at any frame rate
   return acc;
 }

@@ -24,14 +24,14 @@ export function initUI(a) { api = a; hud.replaceChildren(el('div.h-name', {}, el
 // ---- title ----
 // A wide, quiet look at the country with the name over it and one line asking for a key; the menu comes only after that.
 // (A browser will not play sound before the player has touched something, so the first key is also what starts the music.)
-let awake = false;
+let awake = false, framed = false; try { framed = window.self !== window.top; } catch (e) { framed = true; }      // inside a frame the keyboard is not ours until the player has clicked
 const emblem = () => el('div.emblem', { html: '<svg viewBox="0 0 64 64" aria-hidden="true"><ellipse cx="32" cy="32" rx="19" ry="26" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M13.5 27 C 24 27, 27 38, 38 38 S 47 36, 50.5 36" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="38" cy="38" r="2.6" fill="#ffd76a"/></svg>' });
 export function showTitle() {
   clear(); api.attract(); hud.hidden = true; document.getElementById('touch').hidden = true; if (awake) playMusic('title');
   const next = ALL.find((id) => !save.levels[id]?.done) || ALL[0], any = Object.keys(save.levels).length > 0;
   const items = [[any ? 'Continue' : 'New game', () => play(next)], any && ['Levels', showLevels], ['Notebook', showNotebook], ['How to play', showHow], ['Settings', () => showSettings(showTitle)], ['Also play this!', showAlso], ['Credits', showCredits]].filter(Boolean);
   const menu = el('nav.tmenu', { 'aria-label': 'Menu' }, items.map(([t, f], i) => el('button.titem', { type: 'button', style: `--i:${i}`, on: { click: () => { sfx.ui(true); f(); }, mouseenter: (e) => e.target.focus() } }, t)));
-  const root = el('div.cine' + (awake ? '.awake.seen' : ''), {}, el('div.veil'), el('div.logo', {}, emblem(), el('h1', { text: 'Gradient Descent' }), el('div.rule')), el('p.press', { text: 'ontouchstart' in window ? 'Tap to begin' : 'Press any key' }), menu);
+  const root = el('div.cine' + (awake ? '.awake.seen' : ''), {}, el('div.veil'), el('div.logo', {}, emblem(), el('h1', { text: 'Gradient Descent' }), el('div.rule')), el('p.press', { text: 'ontouchstart' in window ? 'Tap to begin' : framed ? 'Click to begin' : 'Press any key' }), menu);
   ui.append(root);
   if (awake) { menu.firstChild.focus(); return; }
   const wake = (e) => { if (!root.isConnected) return off(); if (e.type === 'keydown' && /^(F\d+|Tab|Meta|Control|Alt|Shift)/.test(e.key)) return; off(); awake = true; initAudio(); playMusic('title'); sfx.wake(); root.classList.add('awake'); api.greet(); setTimeout(() => menu.firstChild.focus(), 60); e.preventDefault?.(); };
@@ -130,6 +130,7 @@ function cardArt(kind) {
 }
 
 // ---- the rest ----
+function forget(back) { let armed = 0; const b = btn('Forget my progress', () => { if (Date.now() - armed < 5000) { resetSave(); showSettings(back); } else { armed = Date.now(); b.textContent = 'Press again to forget everything'; setTimeout(() => { if (b.isConnected) b.textContent = 'Forget my progress'; }, 5000); } }, 'ghost'); return b; }
 function sheet(title, back, ...kids) { return el('div.card.sheet', {}, el('header', {}, el('h2', { text: title }), btn('Back', back, 'ghost')), el('div.body', {}, ...kids)); }
 export function showHow() {
   clear(); document.body.classList.add('dim');
@@ -146,7 +147,7 @@ export function showSettings(back) {
     pick('Picture', 'gfx', [[-1, 'Auto'], [0, 'Plain'], [1, 'Good'], [2, 'Full']], api.applyGfx), pick('Motion', 'motion', [[true, 'Full'], [false, 'Reduced']]), pick('Text', 'text', [[1, 'Normal'], [1.2, 'Larger'], [1.4, 'Largest']], api.applyText),
     pick('Assist', 'assist', [[false, 'Off'], [true, 'On']]), el('p.note', { text: 'Assist slows the game by a fifth. Times set with it are kept apart and win no medals.' }),
     pick('Colours', 'safe', [[false, 'Standard'], [true, 'High contrast']], api.applyGfx),
-    el('div.row', {}, btn('Forget my progress', () => { if (confirm('Forget every time, medal and notebook page?')) { resetSave(); showSettings(back); } }, 'ghost'))));
+    el('div.row', {}, forget(back))));
 }
 export function showAlso() {
   clear(); document.body.classList.add('dim');

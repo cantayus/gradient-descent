@@ -6,9 +6,10 @@ const midi = (n) => 440 * Math.pow(2, (n - 69) / 12);
 const now = () => A.ctx.currentTime;
 
 export function initAudio() {
-  if (A.ctx) { if (A.ctx.state === 'suspended') A.ctx.resume(); return; }
+  // (a browser may refuse sound, or allow it only later; the game must run the same without it)
+  if (A.ctx) { if (A.ctx.state === 'suspended') A.ctx.resume().catch(() => {}); return; }
   const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
-  const c = (A.ctx = new AC());
+  let c; try { c = new AC(); } catch (e) { return; } A.ctx = c; if (c.state === 'suspended') c.resume().catch(() => {});
   A.master = c.createGain(); const comp = c.createDynamicsCompressor(); comp.threshold.value = -14; comp.ratio.value = 3; A.master.connect(comp); comp.connect(c.destination);
   for (const k of ['music', 'sfx', 'voice']) { A[k] = c.createGain(); A[k].connect(A.master); }
   // a little room: two echoes fed back, shared by everything
