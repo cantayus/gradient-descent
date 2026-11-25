@@ -7,6 +7,7 @@ import { galapagos } from '../art/worlds/galapagos.js';
 import { namib } from '../art/worlds/namib.js';
 import { zhangjiajie } from '../art/worlds/zhangjiajie.js';
 import { patagonia } from '../art/worlds/patagonia.js';
+import { yakushima } from '../art/worlds/yakushima.js';
 
 const m = 'meadow', g = 'grass';
 const ICE = [
@@ -230,6 +231,45 @@ const PAT = [
       ...hollow(28, 12, 3.6, 4.2, { zone: MR }, 4), land(MR, 18), blow(34, 14), scree(28, -11, 3, PM), drift(16), grass(10), ['bowl', 24, 4.6, 4.4, { zone: PM, surf: g }]] },
 ];
 
+// ---- Yakushima: what was learned by heart, and what holds on ground not yet walked ----
+const MS = 'moss', CE = 'cedar', RT = 'root', SR = 'stream';
+const roots = (L, n = 3, dy = -1, seeds = 2) => ['waves', L, 0.7, n, dy, { zone: RT, seeds }];                 // roots across the path
+const mossy = (L, dy, seeds = 3) => ['slope', L, dy, { zone: MS, surf: 'moss', seeds }];
+const duff = (L, seeds = 2, o = {}) => ['flat', L, { zone: CE, seeds, ...o }];                                // the forest floor under the cedars
+const fall = (L, dy, seeds = 3) => ['slope', L, dy, { zone: CE, seeds }];
+// A stream across the path, with boulders to cross by. Wading costs time and nothing else. In flood the water comes and goes over the boulders' heads.
+const boulder = (at, w = 1.9) => ({ at, up: 0.12, w, kind: 'stone', type: 'wet' });
+const brook = (L, depth = 1.5, at = [0.3, 0.52, 0.74], o = {}) => ['valley', L, depth, 0, { zone: SR, surf: 'wet', water: [0.1, 0.9, -0.35], plat: at.map((a) => boulder(a)), seeds: at.map((a) => ({ at: a, up: 0.9 })), ...o }];
+const flood = (L, depth = 1.7, at = [0.28, 0.5, 0.72], o = {}) => brook(L, depth, at, { tide: { amp: 0.42, per: 5.5 }, ...o });
+// A gully with a fallen cedar across it. A hop from the rim puts you on the log; miss it, and the way is down and up again.
+const gully = (L, depth, log = true, o = {}) => ['valley', L, depth, 0, { zone: RT, seeds: [{ at: 0.5, up: 0.9 - depth }, { at: 0.5, up: 1.3 }], ...(log ? { plat: [{ at: 0.5, up: 0.3, w: L * 0.86, kind: 'log', type: 'wood' }] } : {}), ...o }];
+// One verse of the path: roots, a brook, a drop, a log, a crack, a mossy slope. Three times over and it is known by heart.
+// The fourth time something has changed, and the seeds still lie where they lay before.
+const verse = (o = {}) => [roots(18, 3, -1), brook(16, 1.5, o.stones || [0.3, 0.52, 0.74], { seeds: [0.3, 0.52, 0.74].map((a) => ({ at: a, up: 0.9 })) }), fall(22, -8), gully(14, 3.4, o.log !== false), duff(10, 1, o.memo ? { mark: 'memo' } : {}), ['gap', o.gap || 3], duff(10, 1), mossy(20, -7)];
+// The shelf where the light is, and the deeper ground beyond it where nothing is: the place to stop is not the lowest place.
+const shelf = (depth = 2.4) => [['bowl', 18, depth, depth - 0.4, { zone: MS, surf: 'moss' }], ['slope', 14, -11, { zone: RT }], ['gap', 16, -8], ['flat', 12, { zone: RT }]];
+const YAK = [
+  { id: '7-1', name: 'The Old Forest', time: 'dawn', card: 'general', par: 41, zone: RT,
+    strokes: [duff(10), fall(26, -9), roots(18, 3, -1), ['flat', 8, { zone: CE, mark: 'hint', text: 'brook' }], brook(16), mossy(24, -9), ['flat', 8, { zone: RT, mark: 'hint', text: 'log' }], gully(14, 3.4), fall(24, -8), roots(16, 3, -1), ['gap', 3], duff(10),
+      mossy(26, -10), brook(18, 1.6), fall(22, -8), gully(16, 3.8), duff(10), roots(18, 3, -1), mossy(22, -8), brook(16), fall(20, -7), duff(10), ['bowl', 22, 4, 4, { zone: MS, surf: 'moss' }]] },
+  { id: '7-2', name: 'By Heart', time: 'day', card: 'overfit', par: 62, zone: RT,
+    strokes: [duff(10, 0, { mark: 'hint', text: 'heart' }), ...verse(), ...verse(), ...verse(), ...verse({ stones: [0.2, 0.62], log: false, gap: 5.5 }), duff(10), ['bowl', 22, 4, 4, { zone: MS, surf: 'moss' }]] },
+  { id: '7-3', name: 'Kept Aside', time: 'golden', card: 'valid', par: 59, zone: RT,
+    strokes: [duff(10), ...verse(), fall(20, -7), flood(18), ...verse({ stones: [0.3, 0.52, 0.74] }), duff(8, 0, { mark: 'hint', text: 'aside' }), roots(18, 3, -1), flood(18, 1.7, [0.22, 0.5, 0.8]), fall(22, -8), gully(18, 4, false), duff(10), ['gap', 4.5], duff(10, 1),
+      mossy(22, -8), ...hollow(26, 10, 3.2, 3.6, { zone: MS }), land(MS, 16), brook(16, 1.5, [0.26, 0.6]), fall(20, -7), duff(10), ['bowl', 22, 4, 4, { zone: MS, surf: 'moss' }]] },
+  { id: '7-4', name: 'Stop Here', time: 'dusk', card: 'early', par: 46, zone: RT,
+    strokes: [duff(10), mossy(28, -11, 4), ['valley', 14, 1.8, 0, { zone: MS, surf: 'moss', seeds: 1 }], fall(24, -9), gully(14, 3.4), mossy(26, -11, 4), ['valley', 14, 2, 0, { zone: MS, surf: 'moss', seeds: 1 }], roots(18, 3, -1), brook(16), fall(24, -9), ['gap', 3.4], duff(10, 1),
+      mossy(28, -12, 4), ['valley', 16, 2.2, 0, { zone: MS, surf: 'moss', seeds: 1 }], gully(16, 3.8), fall(22, -8), roots(16, 3, -1), flood(18), mossy(26, -11, 4), ['valley', 14, 2, 0, { zone: MS, surf: 'moss', seeds: 1 }], fall(20, -7), gully(14, 3.4), duff(9, 1), ['gap', 4], duff(10, 1), mossy(24, -10, 4), duff(14, 0, { mark: 'hint', text: 'stop', at: 0.1 }), ...shelf()] },
+  { id: '7-5', name: 'Less', time: 'mist', card: 'regular', par: 46, zone: RT,
+    strokes: [duff(10), fall(26, -9), gully(16, 3.6), duff(8, 0), gully(18, 4), roots(18, 3, -1), flood(18), mossy(24, -9), gully(14, 3.4), duff(8, 0), gully(16, 3.8), duff(9, 1), ['gap', 3.6], duff(10, 1), fall(24, -9), flood(20, 1.8, [0.24, 0.5, 0.76]), roots(16, 3, -1),
+      mossy(24, -9), gully(20, 4.4), fall(22, -8), brook(16, 1.5, [0.28, 0.62]), duff(10), mossy(20, -7), duff(12), ...shelf(2.6)] },
+  { id: '7-B', name: 'The Memorizer', time: 'night', boss: 'memorizer', par: 103, music: 'boss', zone: RT,
+    strokes: [duff(12, 0, { mark: 'hint', text: 'memo', at: 0.2 }), ...verse({ memo: true }), ...verse({ memo: true }), ...verse({ memo: true }), ...verse({ memo: true, stones: [0.2, 0.62], gap: 5 }), ...verse({ memo: true, log: false, stones: [0.36, 0.7] }), flood(18), fall(22, -8),
+      ...verse({ memo: true, stones: [0.24, 0.5, 0.8], gap: 5.5, log: false }), mossy(24, -10, 4), duff(14), ...shelf(2.6)] },
+];
+// where the story ends: a hollow in the moss, among the old trees
+export const ENDING = { id: 'ending', name: '', time: 'dawn', items: false, zone: MS, strokes: [['slope', 14, -2.5, { zone: MS, surf: 'moss' }], ['valley', 26, 1.6, 0, { zone: MS, surf: 'moss' }], ['slope', 16, 2, { zone: CE }], ['bowl', 20, 3, 3, { zone: MS, surf: 'moss' }]] };
+
 // ---- the practice slope: a short lesson, one thing at a time, on which nothing can be lost ----
 export const TUTORIAL = { id: 'T', name: 'The Practice Slope', time: 'day', tutorial: true, par: 60, li: 6, items: 'own', zone: 'moss', checkEvery: 14,
   strokes: [['flat', 14, { zone: 'moss', surf: g, mark: 'tutor', text: 'run', at: 0 }], ['slope', 16, -4, { zone: m, surf: g, seeds: 2 }],
@@ -251,6 +291,7 @@ export const WORLDS = [
   { id: 'namib', n: 4, name: 'Namib', theme: namib, music: 'namib', can: { slide: true, roll: true, spread: true, mu: true }, title: ['gravel', 'grassy'], levels: NAM },
   { id: 'zhangjiajie', n: 5, name: 'Zhangjiajie', theme: zhangjiajie, music: 'zhangjiajie', can: { slide: true, roll: true, spread: true, mu: true }, title: ['ledge', 'forest'], cautious: true, levels: ZHA },
   { id: 'patagonia', n: 6, name: 'Patagonia', theme: patagonia, music: 'patagonia', can: { slide: true, roll: true, spread: true, mu: true }, title: ['pampa', 'lenga'], levels: PAT },
+  { id: 'yakushima', n: 7, name: 'Yakushima', theme: yakushima, music: 'yakushima', can: { slide: true, roll: true, spread: true, mu: true }, title: ['moss', 'cedar'], cautious: true, levels: YAK },
 ];
 export const levelById = (id) => { if (id === 'T') return { world: WORLDS[0], spec: TUTORIAL }; for (const w of WORLDS) for (const l of w.levels) if (l.id === id) return { world: w, spec: l }; return null; };
 export const ALL = WORLDS.flatMap((w) => w.levels.map((l) => l.id));

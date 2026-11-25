@@ -216,3 +216,12 @@ canvas.stamp { display: block; width: 100%; height: auto; filter: drop-shadow(0 
 @media (max-width: 720px) { .h-tutor { bottom: 30%; grid-template-columns: 1fr; } .h-tutor span { font-size: 0.92rem; } }
 
 .h-hint { white-space: normal; width: max-content; max-width: min(46rem, 92vw); text-align: center; border-radius: 1.3rem; line-height: 1.35; }
+
+/* the ending: the last chapter told over its own scene, low on the screen so the hollow and the sapling stay in view */
+.tale.ending { background: linear-gradient(to top, rgba(4, 8, 14, 0.9), rgba(4, 8, 14, 0.5) 34%, rgba(4, 8, 14, 0) 62%); place-items: end center; animation: none; }
+.tale.ending .inner { padding: 0 0 2.2rem; } .tale.ending small, .tale.ending h2 { opacity: 0; animation: fadeUp 1.6s 1s forwards; }
+.tale.ending p { margin: 0.5rem auto; text-shadow: 0 1px 0.5em rgba(0, 0, 0, 0.7); animation: fadeUp 1.8s calc(var(--i) * 1s) forwards; } .tale.ending .row { animation: fadeUp 1.4s calc(var(--i) * 1s) forwards; margin-top: 1rem; }
+.tale.ending .fin { font: 400 0.95rem Nunito, sans-serif; letter-spacing: 0.5em; margin-right: -0.5em; text-transform: uppercase; color: #ffd87a; margin-top: 1.1rem; } .tale.ending .note { font-size: 0.95rem; color: #c8d4de; }
+
+.tale.ending { align-items: end; background: linear-gradient(to top, rgba(4, 8, 14, 0.92), rgba(4, 8, 14, 0.6) 30%, rgba(4, 8, 14, 0) 52%); } .tale.ending .inner { padding: 0 0 1.4rem; width: min(52rem, 92vw); }
+.tale.ending small { opacity: 0; animation: fadeUp 1.6s 1s forwards; margin-bottom: 0.5rem; } .tale.ending p { font-size: 1.08rem; line-height: 1.45; margin: 0.3rem auto; max-width: 48rem; } .tale.ending .fin { margin-top: 0.8rem; } .tale.ending .note { font-size: 0.88rem; }

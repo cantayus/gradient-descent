@@ -58,7 +58,7 @@ class Mu {
 export class Play {
   // The rules. A level is won by bringing the seed to the lowest valley. It is lost if the seed's lights all go out (each fall puts one out, and so does
   // being thrown by the Geyser), or if its light fades before the valley is reached (the time limit). A lost level starts again from the top.
-  constructor({ spec, theme, can = {}, ghost = null, hooks = {}, cine = false, intro = false, lights = 3, limit = Infinity }) {
+  constructor({ spec, theme, can = {}, ghost = null, hooks = {}, cine = false, intro = false, ending = false, lights = 3, limit = Infinity }) {
     this.lights = this.lightsAll = lights; this.limit = limit; this.failed = null;
     // Sparks: Eta's gift. One to begin with, another for every five seeds, three at most. A spark is a turbo when asked for, and a rescue when Theta falls with one in hand.
     this.sparks = 1; this.sparksAll = 3; this.turboT = 0; this.turboCd = 0;
@@ -72,7 +72,16 @@ export class Play {
     this.view = { x: this.b.x, y: this.b.y, r: R, vx: 0, vy: 0, face: 1, speed: () => this.b.speed() };      // the body as drawn: between the last two physics steps
     this.flyers = [{ x: 0, y: 0, draw: (ctx, t) => { if (this.etaIn > 0.02) { ctx.scale(this.etaIn, this.etaIn); this.eta.draw(ctx, t, this.scene.fx.warm); } } },
       { x: 0, y: 0, draw: (ctx, t) => { if (!this.star) return; const fx = this.scene.fx.warm, s = 2.2 + Math.sin(t * 7) * 0.25; ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.drawImage(fx.c, -s / 2, -s / 2, s, s); ctx.restore(); ctx.rotate(Math.sin(t * 2) * 0.2); ctx.fillStyle = '#fff3b8'; ctx.strokeStyle = '#c9861a'; ctx.lineWidth = 0.03; ctx.beginPath(); ctx.moveTo(0, -0.2); ctx.bezierCurveTo(0.16, -0.06, 0.13, 0.15, 0, 0.17); ctx.bezierCurveTo(-0.13, 0.15, -0.16, -0.06, 0, -0.2); ctx.fill(); ctx.stroke(); } }];
-    if (can.mu) { this.mu = new Mu(this.b.x - 1.5, this.b.y + 1.5); this.flyers.push({ x: 0, y: 0, draw: (ctx, t) => this.mu.draw(ctx, t) }); }
+    if (can.mu) { this.mu = new Mu(this.b.x - 1.5, this.b.y + 1.5); this.muF = { x: this.b.x - 1.5, y: this.b.y + 1.5, draw: (ctx, t) => this.mu.draw(ctx, t) }; this.flyers.push(this.muF); }
+    // the old macaque who knows the path by heart: he is waiting at the same place in every verse of it
+    this.critters = this.level.marks.filter((k) => k.kind === 'memo').map((k) => ({ x: k.x, y: this.T.h(k.x), s: 'elder', size: 1 }));
+    // the end of the story: the seed set down in the moss, and what comes of it
+    if (ending) { const b = this.b; b.x = b.px = 14 + 14 + 11.5; b.y = b.py = this.T.h(b.x) + R; this.end = { t: 0, x: b.x + 1.7 }; this.end.y = this.T.h(this.end.x);
+      this.flyers.push({ x: this.end.x, y: this.end.y, draw: (ctx, t) => { const g = smooth(clamp((this.end.t - 3) / 16, 0, 1)), fx = this.scene.fx.warm, top = -1.9 * g - 0.12;
+        ctx.save(); ctx.globalCompositeOperation = 'lighter'; const s = 1.6 + 6.5 * g + 0.25 * Math.sin(t * 2); ctx.globalAlpha = clamp(this.end.t / 3, 0, 1); ctx.drawImage(fx.c, -s / 2, top - s / 2, s, s); ctx.restore();
+        ctx.strokeStyle = '#7fc850'; ctx.lineWidth = 0.05 + 0.04 * g; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(0, 0.1); ctx.quadraticCurveTo(0.14 * Math.sin(t * 0.7) * g, top * 0.5, 0, top + 0.1); ctx.stroke();
+        for (let i = 0; i < 5; i++) { const u = clamp((g - 0.1 - i * 0.16) / 0.2, 0, 1); if (u <= 0) continue; const y = top * (0.22 + i * 0.17); for (const sd of [-1, 1]) { ctx.save(); ctx.translate(0, y); ctx.rotate(sd * (1 - 0.14 * Math.sin(t * 1.3 + i + sd))); ctx.scale(u * (1 - i * 0.1), u * (1 - i * 0.1)); ctx.fillStyle = (i + (sd > 0 ? 1 : 0)) % 2 ? '#b8f060' : '#7fc850'; ctx.beginPath(); ctx.moveTo(0, 0); ctx.quadraticCurveTo(0.17, -0.22, 0, -0.56); ctx.quadraticCurveTo(-0.17, -0.22, 0, 0); ctx.fill(); ctx.restore(); } }
+        ctx.translate(0, top); ctx.rotate(Math.sin(t * 1.4) * 0.15); ctx.fillStyle = '#fff3b8'; ctx.strokeStyle = '#c9861a'; ctx.lineWidth = 0.03; ctx.beginPath(); ctx.moveTo(0, -0.2); ctx.bezierCurveTo(0.16, -0.06, 0.13, 0.15, 0, 0.17); ctx.bezierCurveTo(-0.13, 0.15, -0.16, -0.06, 0, -0.2); ctx.fill(); ctx.stroke(); } }); }
     this.rides = new Rides(this.level, this.T); if (this.rides.list.length) this.scene.rides = this.rides.list;
     // one weather for the picture and the physics
     this.weather = this.scene.wx; this.scene.own = false; this.T.air = (t) => this.weather.windAt(t);
@@ -96,6 +105,11 @@ export class Play {
     return out;
   }
   // the title's camera: a wide, slow look across the country, the hero small in one corner of it
+  _ending(dt) { const e = this.end, sc = this.scene, c = this.cam, a = (this.W || 16) / (this.H || 9); e.t += dt; this.seedGlow = clamp(1 - e.t / 2.5, 0, 1); this.b.face = 1;
+    if (e.t > 3 && Math.random() < dt * (3 + 9 * clamp((e.t - 3) / 16, 0, 1))) sc.emit('spark', e.x + (Math.random() - 0.5) * 1.6, e.y + 0.3 + Math.random() * 1.6, 1, { speed: 0.7, dir: Math.PI / 2, spread: 0.8, life: 2.2, size: 0.09, g: -0.5 });
+    if (!e.a && e.t > 2.6) { e.a = 1; this.rig.feel('wow', 2.4); this.rig.sq.kick(4); } if (e.a === 1 && e.t > 8) { e.a = 2; this.rig.feel('proud', 6); } if (e.a === 2 && e.t > 16) { e.a = 3; this.rig.feel('joy', 30); this.rig.sq.kick(5); }
+    // the picture begins close on the two of them and draws slowly back until the trees are in it
+    const k = smooth(clamp(e.t / 26, 0, 1)); c.vh = (8.2 + 7 * k) * (a < 1 ? 1.35 : 1); c.vw = c.vh * a; c.x = this.b.x + 0.9 + c.vw * 0.05 * k; c.y = this.b.y - c.vh * (0.12 - 0.03 * k); }
   _cine(dt) { const c = this.cam, b = this.view || this.b, a = (this.W || 16) / (this.H || 9), t = this.t; c.vh = (16.5 + Math.sin(t * 0.05) * 0.6) * (a < 1 ? 1.35 : 1); c.vw = c.vh * a; c.x = b.x + c.vw * 0.21 + Math.sin(t * 0.06) * 1.8; c.y = b.y + c.vh * 0.25 + Math.sin(t * 0.045) * 0.3; }
   resize(W, H) { this.W = W; this.H = H; this.scene.resize(W, H); }
 
@@ -122,9 +136,10 @@ export class Play {
     this.scene.pt = b.t - (1 - m) * STEP;      // the physics clock, for everything in the picture that the physics also moves
     const pose = this.rig.update(b, dt, inp);
     pose.seed = (0.7 + 0.3 * clamp((this.level.hi - b.y) / Math.max(1, this.level.hi - this.level.lo), 0, 1)) * this.seedGlow;   // the seed glows warmer the lower Theta gets
-    if (this.mu) { this.mu.update(v, dt, this.t, this.weather.wind); const f = this.flyers[this.flyers.length - 1]; f.x = this.mu.x; f.y = this.mu.y; }
+    if (this.mu) { this.mu.update(v, dt, this.t, this.weather.wind); const f = this.muF; f.x = this.mu.x; f.y = this.mu.y; }
     this.eta.update(v, dt, this.t); this.flyers[0].x = this.eta.x; this.flyers[0].y = this.eta.y; if (this.star) { this.flyers[1].x = this.star.x; this.flyers[1].y = this.star.y; }
-    if (this.cine) this._cine(dt); else this.cam.update(v, dt, this.W / this.H, false, this.intro ? 'close' : !this.started || !!this.rides.on); sc.update(dt, this.cam);
+    for (const m of this.critters) { const near = Math.abs(m.x - this.b.x) < 7; m.s = near && Math.sin(this.t * 5) > -0.3 ? 'elderB' : 'elder'; m.flip = this.b.x < m.x - 0.5; }
+    if (this.end) this._ending(dt); else if (this.cine) this._cine(dt); else this.cam.update(v, dt, this.W / this.H, false, this.intro ? 'close' : !this.started || !!this.rides.on); sc.update(dt, this.cam);
     this._effects(dt);
     // the record of the run: where the hero was (for the ghost) and how high (for the loss curve)
     if (this.started && !this.done && !this.failed) {
@@ -179,5 +194,5 @@ export class Play {
     if (b.inJet > 0.2 && Math.random() < 0.6) sc.emit('drop', b.x, b.y - 0.3, 2, { speed: 4, spread: 2.6, life: 0.5, size: 0.08, col: '#eaf7ff', g: 20 });
   }
 
-  draw(ctx) { this.scene.draw(ctx, this.cam, { hero: this.dead > 0 ? null : { b: this.view, pose: this.rig.p }, ghost: this.ghost && this.ghost.show ? this.ghost : null, flyers: this.flyers }); }
+  draw(ctx) { this.scene.draw(ctx, this.cam, { hero: this.dead > 0 ? null : { b: this.view, pose: this.rig.p }, ghost: this.ghost && this.ghost.show ? this.ghost : null, flyers: this.flyers, critters: this.critters }); }
 }

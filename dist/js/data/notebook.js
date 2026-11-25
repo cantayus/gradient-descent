@@ -69,6 +69,16 @@ export const CARDS = {
     text: ['One cure for a signal that is too large is plain: set a limit. If the slope calls for a step longer than the limit, take a step of the limit’s length, in the same direction.', 'This is gradient clipping. Razvan Pascanu, Tomas Mikolov and Yoshua Bengio set it out in 2013.'] },
   skip: { name: 'The short way', draw: 'skip', who: 'Kaiming He, Xiangyu Zhang, Shaoqing Ren and Jian Sun, 2015',
     text: ['Another cure is to give the signal a way round. A skip connection carries it past a group of layers untouched, so it arrives whole however long the chain.', 'Kaiming He, Xiangyu Zhang, Shaoqing Ren and Jian Sun built networks this way in 2015, and trained ones more than a hundred layers deep.'] },
+  general: { name: 'Ground not yet walked', draw: 'general',
+    text: ['Everything so far has been about getting down one slope: the one made from the examples the model was given.', 'What counts is how the model does on examples it has never seen. Doing well there is called generalising, and it is the whole point of training.'] },
+  overfit: { name: 'By heart', draw: 'overfit',
+    text: ['A model with room enough can learn its examples by heart: every one of them, with every accident and mistake they happen to contain.', 'Its loss on those examples goes on falling. On new ones it begins to rise. This is overfitting.'] },
+  valid: { name: 'Kept aside', draw: 'valid',
+    text: ['The cure begins with a habit. Keep some of the examples aside, and never train on them.', 'They are called the validation set. Loss measured on them says what the training loss cannot: how the model will do on ground it has not walked.'] },
+  early: { name: 'Stop here', draw: 'early',
+    text: ['Watch the two losses together. For a while both fall. Then the training loss goes on down, and the validation loss turns and starts to climb.', 'The place to stop is at that turn, though the slope underfoot still leads lower. This is early stopping.'] },
+  regular: { name: 'Less', draw: 'regular', who: 'Nitish Srivastava, Geoffrey Hinton, Alex Krizhevsky, Ilya Sutskever and Ruslan Salakhutdinov, 2014',
+    text: ['Another cure is to leave the model less to memorise with. Weight decay keeps its numbers small. Dropout switches off a random part of the network at every step, so that no part can lean on another.', 'Dropout was set out in full in 2014 by Nitish Srivastava, Geoffrey Hinton, Alex Krizhevsky, Ilya Sutskever and Ruslan Salakhutdinov.'] },
 };
 // The practice slope: one thing at a time. Each lesson is shown where the ground asks for it.
 export const TUTOR = {
@@ -82,6 +92,12 @@ export const TUTOR = {
   goal: { name: 'The valley', key: 'Every level ends at the lowest ground, where the light is. Go down.', touch: 'Every level ends at the lowest ground, where the light is. Go down.', pad: 'Every level ends at the lowest ground, where the light is. Go down.' },
 };
 export const HINTS = {
+  brook: { key: 'Boulders cross the brook. Wading is slow, and costs nothing else.', touch: 'Boulders cross the brook. Wading is slow, and costs nothing else.', pad: 'Boulders cross the brook. Wading is slow, and costs nothing else.' },
+  log: { key: 'A fallen cedar lies across the gully. A jump from the rim puts you on it.', touch: 'A fallen cedar lies across the gully. A jump from the rim puts you on it.', pad: 'A fallen cedar lies across the gully. A jump from the rim puts you on it.' },
+  heart: { key: 'The same stretch of path comes three times. The fourth time, look before you leap.', touch: 'The same stretch of path comes three times. The fourth time, look before you leap.', pad: 'The same stretch of path comes three times. The fourth time, look before you leap.' },
+  aside: { key: 'This part was kept aside. Nothing in it is quite where it was before.', touch: 'This part was kept aside. Nothing in it is quite where it was before.', pad: 'This part was kept aside. Nothing in it is quite where it was before.' },
+  stop: { key: 'The light is on a shelf. The ground beyond goes lower, and nothing is there. Arrive slowly.', touch: 'The light is on a shelf. The ground beyond goes lower, and nothing is there. Arrive slowly.', pad: 'The light is on a shelf. The ground beyond goes lower, and nothing is there. Arrive slowly.' },
+  memo: { key: 'The old macaque knows this path by heart. It has changed since he learned it.', touch: 'The old macaque knows this path by heart. It has changed since he learned it.', pad: 'The old macaque knows this path by heart. It has changed since he learned it.' },
   head: { key: 'A wind in your face. It cannot stop you on the ground, only in the air. Keep the jumps short.', touch: 'A wind in your face. It cannot stop you on the ground, only in the air. Keep the jumps short.', pad: 'A wind in your face. It cannot stop you on the ground, only in the air. Keep the jumps short.' },
   drift: { key: 'Deep snow takes the speed off. Go through it, and the gap beyond is the right size.', touch: 'Deep snow takes the speed off. Go through it, and the gap beyond is the right size.', pad: 'Deep snow takes the speed off. Go through it, and the gap beyond is the right size.' },
   short: { key: 'Snow reaches out from both rims. Jump the gap between them: the long way down takes all your speed.', touch: 'Snow reaches out from both rims. Jump the gap between them: the long way down takes all your speed.', pad: 'Snow reaches out from both rims. Jump the gap between them: the long way down takes all your speed.' },

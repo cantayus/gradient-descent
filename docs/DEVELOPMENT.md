@@ -59,3 +59,21 @@ The design is original and must stay clear of any known character.
   lake's `things`. A stamp with `drop: [a, b]` stands on the face of the hill, that fraction of the ridge's height below its skyline. Sprites face right.
 - **Page veils.** The three `<i>` in `#grade` blend with the canvas (soft-light tint, overlay grain, vignette). Their holder is `display: contents` on
   purpose: a positioned holder would be a layer of its own and the blends would have nothing under them.
+
+## Notes added with worlds 6 and 7, the things to find, the tutorial and the ending
+
+- The goal of a level is the lowest point of its FIRST `bowl` stroke. Strokes may follow it (Yakushima's shelf: the light is not at the lowest place).
+  Nothing past the goal is given seeds, checkpoints or things to find.
+- Things to find live in `level.items` (`stamp`, `dew`, `feather`). `build(spec, { mu })` places them; pass `mu` or the feather stairs are left out.
+  A level places its own with a stroke's `items: [{ kind, at, up }]` and `items: 'own'` on the spec (the tutorial does). `items: false` for none.
+- A feather is taken only by wings that need it, and a dewdrop only when a light is out or a spark is short. Do not change that: it is what makes them
+  worth leaving for later.
+- Mu's flyer is kept in `Play.muF`. Do not find it by its place in `flyers`; the ending adds a flyer after it.
+- `powder` is the only surface with `plough` (drag with the square of the speed). No other ground slows a rolling ball by much: sand and snow do not.
+  If a level needs the hero slowed, use powder or a rise, and check with `node scripts/bot.mjs -v`.
+- Every zone a level names must have a skin in its country's `ground()`. A missing one used to crash the picture when it scrolled into view; the scene now
+  falls back to the country's base zone, but the look will be wrong. `/tmp`-style check: build each level and compare `zones` with `Object.keys(skin)`.
+- Hints wrap now, but keep them under about ninety characters.
+- The tutorial (`TUTORIAL`, id `T`) is not in `WORLDS` or `ALL`; `levelById('T')` knows it. Its lessons are `TUTOR` in `notebook.js`, keyed by the
+  `text` of marks of kind `tutor`. Finishing it is not recorded as a level.
+- The ending is a `Play` with `cine` and `ending` set (`main.js` `ending()`); `attract()` will not reuse it for the title.

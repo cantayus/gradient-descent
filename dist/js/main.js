@@ -2,7 +2,7 @@
 // and turns what happens in it into sound.
 import { input, initInput, initTouch, readInput } from './core/input.js';
 import { Play } from './game/play.js';
-import { WORLDS, levelById, TITLE, ALL } from './data/worlds.js';
+import { WORLDS, levelById, TITLE, ALL, ENDING } from './data/worlds.js';
 import { save, loadSave } from './core/save.js';
 import { setVolumes, setIntensity, ambient, quiet, sfx, voice } from './core/audio.js';
 import * as UI from './ui/ui.js';
@@ -33,13 +33,15 @@ export function startLevel(id, opt = {}) {
 }
 // The country behind the title and the menus: the hero on a ledge, looking out, at whatever hour it is where the player is.
 function attract() {
-  if (G.mode === 'title' && G.play) return G.play;
+  if (G.mode === 'title' && G.play && !G.play.end) return G.play;
   const h = new Date().getHours(), time = q.get('time') || (h < 5 ? 'night' : h < 8 ? 'dawn' : h < 16 ? 'day' : h < 19 ? 'golden' : h < 22 ? 'dusk' : 'night');
   const reached = WORLDS.findLast((w) => w.levels.some((l) => save.levels[l.id]?.done)) || WORLDS[0];
   const world = WORLDS.find((w) => w.id === q.get('world')) || reached;
   G.play = new Play({ spec: { ...TITLE(...world.title), time: world.theme.times[time] ? time : 'day' }, theme: world.theme, can: world.can, cine: true, hooks: {} });
   G.play.scene.q = G.gfx; G.play.resize(G.W, G.H); G.mode = 'title'; G.paused = false; S.reset(); return G.play;
 }
+// The last scene: the hollow in the old forest.
+function ending() { const world = WORLDS.find((w) => w.id === 'yakushima'); G.play = new Play({ spec: ENDING, theme: world.theme, can: world.can, cine: true, ending: true, hooks: {} }); G.play.scene.q = G.gfx; G.play.resize(G.W, G.H); G.mode = 'title'; G.paused = false; S.reset(); return G.play; }
 function greet() { const p = G.play; if (!p || G.mode !== 'title') return; p.rig.feel('joy', 1.8); p.rig.sq.kick(5); setTimeout(() => voice.trill(), 350); }
 
 // ---- what the hero's doings sound like ----
@@ -106,9 +108,10 @@ function frame(now) {
 { const c = document.createElement('canvas'); c.width = c.height = 180; const x = c.getContext('2d'), im = x.createImageData(180, 180); for (let i = 0; i < im.data.length; i += 4) { const v = Math.random() * 255; im.data[i] = im.data[i + 1] = im.data[i + 2] = v; im.data[i + 3] = 30; } x.putImageData(im, 0, 0); const g = document.querySelector('#grade .grain'); if (g) g.style.backgroundImage = `url(${c.toDataURL()})`; }
 loadSave(); applyText(); applyGfx(); setVolumes({ music: save.settings.music, sfx: save.settings.sfx, voice: save.settings.voice });
 initInput(); initTouch(document.getElementById('touch'));
-UI.initUI({ G, startLevel, attract, greet, applyGfx, applyText, unlockAll: q.has('unlock') || q.has('class'), forceIntro: q.has('intro') });
+UI.initUI({ G, startLevel, attract, ending, greet, applyGfx, applyText, unlockAll: q.has('unlock') || q.has('class'), forceIntro: q.has('intro') });
 // For looking at one level directly: ?level=1-1, with &x= to stand somewhere along it, &time= to change the hour, &run to hold right and &wx=0..1 to fix the weather.
-if (q.has('level')) {
+if (q.has('ending')) UI.showEnding();
+else if (q.has('level')) {
   const f = levelById(q.get('level')); if (f && q.has('time')) f.spec.time = q.get('time');
   UI.play(q.get('level'), !q.has('story')); const p = G.play;
   if (p && q.has('x')) { const x = +q.get('x'); p.b.x = x; p.b.y = p.T.h(x) + 0.5; p.cam.update(p.b, 0.016, G.W / G.H, true); p.eta.x = x; p.eta.y = p.b.y + 1; }

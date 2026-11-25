@@ -110,10 +110,17 @@ After the last world a sandbox opens: pick a landscape, set learning rate, momen
   (run, jump, leap, slide, turbo, lights, stamps, the valley). Offered once before the first level and always on the title menu. Nothing can be lost on it.
   A check proves its three gaps ask for exactly a tap, a held jump and a turbo.
 
+- Yakushima, the seventh and last world (`js/art/worlds/yakushima.js`, levels `YAK`, track `yakushima`): the old cedars (`P.cedar`), far cedars (`P.sugi`),
+  hollow stumps, moss, toadstools, Yaku deer (`P.deer`) and grey Yaku macaques, brooks, rain. Lessons: generalising, overfitting, the validation set, early
+  stopping, weight decay and dropout. Mechanics: brooks crossed on boulders (in flood the water comes over them), gullies bridged by a fallen cedar, a verse of
+  path sung three times and then changed (the seeds still lie where they lay), and a shelf where the light is with deeper ground beyond it where nothing is
+  (the first `bowl` in a level is its goal, so strokes may follow it). The boss, The Memorizer, is an old macaque who waits at the same place in every verse.
+- The ending (`Play._ending`, `ENDING` in `worlds.js`, `showEnding` in `ui.js`; `?ending` to see it): Theta sets the seed down in a mossy hollow, it takes root
+  and grows, the picture draws back, and the last chapter is told beneath it. It follows level 7-B, and leads to the credits.
+
 ## Not built yet
 
-- World 7, Yakushima (overfitting, early stopping; ancient cedars, moss, rain, Yaku deer and macaques, streams; the finale and the Memorizer, who is not a villain).
-- An ending scene for the last chapter of the story.
+- All seven worlds are built. What is left is polish and the extras below.
 - Cappadocia still wants: a scene in which Mu joins (like the opening scene), a boss with something of its own (now it is a hard run of hollows), a play-through by hand for feel, better poplars.
 - The wordless story scenes, Sort! bonus stages, the daily valley, endless mode, the lab with sliders, the teacher page, the share card.
 - Key rebinding screen (the hooks exist in `input.js`), high-contrast palette (the setting exists, the palette does not), a larger landing margin for assist.

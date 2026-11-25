@@ -117,6 +117,14 @@ export function showTale(key, then) {
   const go = () => { sfx.ui(true); then(); };
   ui.append(el('div.tale', {}, el('div.inner', {}, el('small', { text: 'The story' }), el('h2', { text: ch.title }), route(ch.at), ...ch.lines.map((t, i) => el('p', { style: `--i:${i}`, text: t })), el('div.row', { style: `--i:${ch.lines.length}` }, el('button.btn.big', { type: 'button', on: { click: go } }, then === showTitle || then === showStory ? 'Back' : 'Go on')))));
 }
+// ---- the ending: the last chapter, told over the scene it describes ----
+export function showEnding() {
+  const ch = STORY.end; clear(); hud.hidden = true; document.getElementById('touch').hidden = true; api.ending(); playMusic('title'); save.seen.storyend = true; save.seen.end = true; store();
+  const n = ch.lines.length, stamps = ALL.filter((id) => save.levels[id]?.stamp).length;
+  ui.append(el('div.tale.ending', {}, el('div.inner', {}, el('small', { text: ch.title }), ...ch.lines.map((t, i) => el('p', { style: `--i:${i * 2.4 + 2}`, text: t })),
+    el('p.fin', { style: `--i:${n * 2.4 + 3}`, text: 'The end' }), el('p.note', { style: `--i:${n * 2.4 + 4}`, text: stamps < ALL.length ? `${stamps} of ${ALL.length} stamps are in the album. The rest are still out there.` : 'Every stamp is in the album.' }),
+    el('div.row', { style: `--i:${n * 2.4 + 4.6}` }, btn('Credits', showCredits, 'big'), btn('Title', showTitle)))));
+}
 // ---- the album: the stamps found, a page for each country ----
 export function showAlbum() {
   clear(); document.body.classList.add('dim'); const open = (w) => api.unlockAll || save.levels[w.levels[0].id]?.done || w.n === 1;
@@ -158,7 +166,7 @@ export function showFinish(res) {
       el('div.chartwrap', {}, chart, el('p.cap', { text: 'Your run as a loss curve: how high you stood, moment by moment. Lower is better.' })),
       card ? el('div.note' + (fresh ? '.fresh' : ''), {}, cardArt(card.draw), el('div', {}, el('h3', { text: (fresh ? 'New in the notebook: ' : '') + card.name }), ...card.text.slice(0, fresh ? 3 : 1).map((t) => el('p', { text: t })))) : null,
       !nx && run.id !== '7-B' ? el('p.note', { text: 'That is as far as the road is built. The next country is being made.' }) : null,
-      el('div.row', {}, nx ? btn('Next', () => play(nx), 'big') : btn('Levels', showLevels, 'big'), btn('Again', () => play(run.id)), nx ? btn('Levels', showLevels) : null)));
+      el('div.row', {}, nx ? btn('Next', () => play(nx), 'big') : run.id === '7-B' ? btn('The ending', showEnding, 'big') : btn('Levels', showLevels, 'big'), btn('Again', () => play(run.id)), nx || run.id === '7-B' ? btn('Levels', showLevels) : null)));
     drawCurve(chart, res.curve, out.bestBefore != null && !out.newBest ? s.curve : null, res.top, res.bottom);
   }, 1500);
 }
@@ -207,6 +215,16 @@ function cardArt(kind) {
     for (let i = 0; i < n; i++) { const h = h0 * f ** (n - 1 - i); x.fillStyle = kind === 'chain' || kind === 'skip' ? teal : gold; x.fillRect(bx(i) - 8, by - 20 - h, 16, h); }
     if (kind === 'skip') { x.strokeStyle = gold; x.lineWidth = 5; x.lineCap = 'round'; x.beginPath(); x.moveTo(bx(4), by - 62); x.quadraticCurveTo(bx(2.5), by - 128, bx(1) + 8, by - 66); x.stroke(); x.fillStyle = gold; x.beginPath(); x.moveTo(bx(1) - 2, by - 58); x.lineTo(bx(1) + 16, by - 62); x.lineTo(bx(1) + 6, by - 78); x.closePath(); x.fill(); }
     arrow(bx(n - 1) - 4, by + 34, bx(0) + 12, by + 34, kind === 'chain' || kind === 'skip' ? gold : teal); }
+  else if (kind === 'overfit' || kind === 'regular' || kind === 'valid') {      // examples as dots, and a line drawn through them: the plain trend, or every wobble
+    const rr = (n) => { const v = Math.sin(n * 91.7) * 43758.5; return v - Math.floor(v); }, tr = (u) => 136 - 86 * u - 26 * Math.sin(u * 2.6), pts = Array.from({ length: 11 }, (_, i) => { const u = 0.06 + (0.88 * i) / 10; return [u * 240, tr(u) + (rr(i + 3) - 0.5) * 46, i % 4 === 2]; });
+    const smoothLine = (col, w) => { x.strokeStyle = col; x.lineWidth = w; x.beginPath(); for (let i = 0; i <= 40; i++) { const u = 0.04 + (0.92 * i) / 40; i ? x.lineTo(u * 240, tr(u)) : x.moveTo(u * 240, tr(u)); } x.stroke(); };
+    if (kind === 'overfit') { x.setLineDash([4, 7]); smoothLine(teal, 3); x.setLineDash([]); x.strokeStyle = gold; x.lineWidth = 4; x.lineJoin = 'round'; x.beginPath(); pts.forEach(([px, py], i) => { if (!i) x.moveTo(px, py); else { const [qx, qy] = pts[i - 1]; x.bezierCurveTo(qx + 9, qy + (i % 2 ? 30 : -30), px - 9, py + (i % 2 ? -30 : 30), px, py); } }); x.stroke(); }
+    else if (kind === 'regular') smoothLine(gold, 5); else smoothLine(teal, 3);
+    for (const [px, py, aside] of pts) { const held = kind === 'valid' && aside; x.fillStyle = held ? gold : '#eef6ee'; x.strokeStyle = ink; x.lineWidth = 2.5; x.beginPath(); x.arc(px, py, held ? 8 : 6, 0, 7); x.fill(); x.stroke(); if (held) { x.strokeStyle = gold; x.lineWidth = 2; x.setLineDash([3, 4]); x.beginPath(); x.arc(px, py, 14, 0, 7); x.stroke(); x.setLineDash([]); } } }
+  else if (kind === 'early') { const tra = (u) => 40 + 110 * (1 - Math.exp(-u * 3.2)), val = (u) => 36 + 86 * (1 - Math.exp(-u * 4.5)) - 150 * Math.max(0, u - 0.42) ** 1.6; x.strokeStyle = ink; x.lineWidth = 2; x.beginPath(); x.moveTo(20, 16); x.lineTo(20, 164); x.lineTo(228, 164); x.stroke();
+    const curve = (f, col) => { x.strokeStyle = col; x.lineWidth = 4; x.lineCap = 'round'; x.beginPath(); for (let i = 0; i <= 40; i++) { const u = i / 40, px = 24 + u * 196, py = f(u); i ? x.lineTo(px, py) : x.moveTo(px, py); } x.stroke(); }; curve(tra, teal); curve(val, gold);
+    let bu = 0, bv = -1; for (let i = 0; i <= 100; i++) { const v = val(i / 100); if (v > bv) { bv = v; bu = i / 100; } } const sx = 24 + bu * 196; x.setLineDash([4, 6]); x.strokeStyle = ink; x.lineWidth = 2; x.beginPath(); x.moveTo(sx, 20); x.lineTo(sx, 164); x.stroke(); x.setLineDash([]); hero(sx, bv - 2, 22, { expr: 'joy' }); x.fillStyle = ink; x.font = '700 14px Nunito, sans-serif'; x.fillText('stop', sx - 14, 16); }
+  else if (kind === 'general') { fill(slope); hero(0.3 * 240, slope(0.3) - 2, 26); x.fillStyle = 'rgba(238,246,238,0.82)'; x.fillRect(132, 0, 108, 180); x.setLineDash([3, 7]); x.strokeStyle = ink; x.lineWidth = 3; x.beginPath(); for (let i = 132; i <= 240; i += 4) { const y = slope(i / 240) + Math.sin(i * 0.11) * 9; i > 132 ? x.lineTo(i, y) : x.moveTo(i, y); } x.stroke(); x.setLineDash([]); x.fillStyle = teal; x.font = '700 30px Fredoka, sans-serif'; x.fillText('?', 178, 76); }
   else if (kind === 'clip') { fill(slope); const u = 0.3, px = u * 240, py = slope(u); hero(px, py - 2, 26); x.setLineDash([4, 8]); x.strokeStyle = gold; x.lineWidth = 4; x.lineCap = 'round'; x.beginPath(); x.moveTo(px + 66, py + 44); x.lineTo(px + 150, py + 100); x.stroke(); x.setLineDash([]);
     x.strokeStyle = teal; x.lineWidth = 3; x.beginPath(); x.arc(px + 20, py + 12, 62, -0.1, 1.5); x.stroke(); arrow(px + 20, py + 12, px + 62, py + 40); }
   else if (kind === 'local' || kind === 'momentum' || kind === 'start') { // a hollow part-way down, and the deeper valley beyond its rim
