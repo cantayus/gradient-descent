@@ -104,6 +104,15 @@ TRACKS.galapagos = { bpm: 104, len: 96, parts: [
   line('bass', 0.2, 0.4, T(Array.from({ length: 8 }, (_, b) => { const r = [45, 42, 38, 40, 45, 42, 38, 40][b]; return `${r} . . . . . ${r + 7} . . ${r} . .`; }).join(' '))),
   beat('thump', 0.14, 0.55, 'x.....x.....', 8), beat('shake', 0.05, 0.6, '..x..x..x..x', 8), beat('tick', 0.03, 0.85, 'x.xx.xx.xx.x', 8),
 ] };
+// Namib: slow and wide, five notes only (E, G, A, B, D), a thumb piano over a long breath, a great deal of room between the notes.
+TRACKS.namib = { bpm: 84, len: 128, parts: [
+  chords(0.15, [[52, 59, 64], [52, 59, 66], [50, 57, 64], [52, 59, 64], [55, 62, 67], [52, 59, 66], [50, 57, 62], [52, 59, 64]], 16),
+  line('keys', 0.2, 0, T('76 . . 79 . . 81 . 79 . . . 76 . . . 74 . . 76 . . 79 . . . 76 . . . . . 81 . . 83 . . 86 . 83 . . . 81 . . . 79 . . 76 . . 74 . . . 76 . . . . . 79 . . 81 . . 83 . 81 . . . 79 . . . 76 . . 79 . . 76 . 74 . . . 71 . . . 74 . . 76 . . . . 79 . . 76 . . 74 . 71 . . 74 . 76 . . . . . . . . . . .')),
+  line('flute', 0.08, 0.3, T('. . . . . . . . 88 . . . . . . . . . . . . . . . 86 . . . . . . . . . . . . . . . 91 . . . . . . . . . . . . . . . 88 . . . . . . . . . . . . . . . 86 . . . . . . . . . . . . . . . 83 . . . . . . . . . . . . . . . 86 . . . . . . . . . . . . . . . 88 . . . . . . .')),
+  line('pluck', 0.08, 0.5, T(Array.from({ length: 8 }, (_, b) => { const r = [64, 64, 62, 64, 67, 64, 62, 64][b]; return `. . ${r} . . ${r + 7} . . ${r + 3} . . ${r + 7} . . ${r + 10} .`; }).join(' '))),
+  line('bass', 0.2, 0.4, T(Array.from({ length: 8 }, (_, b) => { const r = [40, 40, 38, 40, 43, 40, 38, 40][b]; return `${r} . . . . . . . . . ${r} . . . . .`; }).join(' '))),
+  beat('tom', 0.12, 0.55, 'o.....x...o.....', 8), beat('shake', 0.04, 0.7, '..x...x...x...x.', 8),
+] };
 export const trackNames = () => Object.keys(TRACKS);
 export function addTrack(name, def) { TRACKS[name] = def; }
 export const tk = { T, line, chords, beat };

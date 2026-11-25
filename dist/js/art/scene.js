@@ -28,7 +28,7 @@ function tile(kind, seed) {
   else for (let i = 0; i < 380; i++) dab(r.chance(0.5) ? '#ffffff' : '#000000', r.range(0.04, 0.14), r.range(0.7, 1.8), r.range(0.7, 1.8), 0);   // sand: a fine speckle
   return c;
 }
-const TILE_OF = { lava: 'rock', beach: 'sand', scoria: 'sand', green: 'grass', carpet: 'grass', wetrock: 'rock', tuff: 'sand', rose: 'sand', honey: 'sand', dust: 'sand', vine: 'grass', cap: 'rock', drum: 'sand', meadow: 'grass', moss: 'grass', snow: 'snow', ice: 'ice', sand: 'sand', hot: 'sand', rock: 'rock', basalt: 'rock', wet: 'rock' };
+const TILE_OF = { dune: 'sand', soft: 'sand', pan: 'rock', gravel: 'rock', grassy: 'grass', lava: 'rock', beach: 'sand', scoria: 'sand', green: 'grass', carpet: 'grass', wetrock: 'rock', tuff: 'sand', rose: 'sand', honey: 'sand', dust: 'sand', vine: 'grass', cap: 'rock', drum: 'sand', meadow: 'grass', moss: 'grass', snow: 'snow', ice: 'ice', sand: 'sand', hot: 'sand', rock: 'rock', basalt: 'rock', wet: 'rock' };
 
 export class Scene {
   constructor(theme, level, timeKey = 'day') {
@@ -57,6 +57,7 @@ export class Scene {
   update(dt, cam) {
     this.t += dt; this.shake = Math.max(0, this.shake - dt * 3); this.flash = Math.max(0, this.flash - dt * 2.2);
     const wx = this.wx; if (this.own) wx.set(this.t, dt); this.cloudX += (0.0035 + wx.wind * 0.004) * dt; this.windX += wx.wind * dt; if (wx.flash > 0.9) this.flash = Math.max(this.flash, 0.7);
+    if (cam && this.q) for (const z of this.T.winds) { const a0 = Math.max(z.x0, cam.x - cam.vw / 2), a1 = Math.min(z.x1, cam.x + cam.vw / 2); if (a1 <= a0) continue; const g = z.gust ? z.gust(this.pt ?? this.t) : 1; let n = Math.abs(z.wx) * g * (a1 - a0) * 0.05 * dt; n = Math.floor(n) + (Math.random() < n % 1 ? 1 : 0); for (let i = 0; i < n; i++) { const x = a0 + Math.random() * (a1 - a0); this.emit('line', x, this.T.h(x) + 0.2 + Math.random() * 3.2, 1, { speed: 0, life: 0.5, size: 0.07, col: this.theme.dustCol || '#ffffff', g: 0, vx: z.wx * g * 0.9, vy: 0, drag: 0 }); } }      // the wind made visible
     if (cam) { // it snows on the snow and the ice, where the ground is cold enough to keep it, and rains lower down
       const z = this.zoneAt(cam.x), cold = wx.cold >= 0.5 || z === 'snow' || z === 'ice' ? 1 : 0; this.coldNow += (cold - this.coldNow) * Math.min(1, dt * 0.8);
       const wet = wx.rain * (1 - this.coldNow); if (wet > 0.04 && this.q) { let n = wet * 70 * dt; n = Math.floor(n) + (Math.random() < n % 1 ? 1 : 0); for (let i = 0; i < n; i++) { const x = cam.x + (Math.random() - 0.5) * cam.vw, w = this.T.waterAt(x), gy = this.T.h(x), y = w && w.y > gy ? w.y : gy; if (y < cam.y - cam.vh) continue; this.emit('drop', x, y + 0.04, 2, { speed: 1.7, spread: 1.5, life: 0.2, size: 0.032, col: '#eef6ff', g: 16, jx: 0.05 }); } }

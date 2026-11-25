@@ -58,6 +58,10 @@ After the last world a sandbox opens: pick a landscape, set learning rate, momen
   Tide and surf (`js/game/tide.js`, stroke options `water` + `tide`), rafts afloat (`float`), sea turtles that swim to and fro (`walk`),
   lagoons (dry is the fast line, falling in only costs time) and tide basins (stand on the raft, the tide lifts it, hop out). Music in six-eight, five pages
   (a handful at a time, a noisy slope, stochastic gradient descent, shaken loose, settling).
+- Namib (`js/art/worlds/namib.js`, six hours incl. sea fog): dune seas with a lit and a shadowed face, white clay pans, dead trees (`P.deadtree`), acacias,
+  oryx, sand on the wind (wind zones now show as streaks). Five levels and a boss, all finished by the scripted player. Blocks in worlds.js: `pan` (hard, level
+  clay: a ball keeps its speed), `softFlat` (a roll dies), `dune` (up and over), `gale` (a tail wind to sail on with the float). Music on five notes, five pages
+  (plateau, keep going, a schedule for the steps, shorter and shorter, warming up).
 - The story (`js/data/story.js`, owner: "there should be a story about why the hero travels to these locations"). A seed of light will grow only in the
   lowest valley in the world, and nobody knows where that is. Each country is somebody's answer, fails for the reason that country teaches, and whoever
   lives there knows where to try next: Iceland (too new, still boiling) → Cappadocia (all hollows, all on a high plateau) → Galápagos (the edge of the sea,
@@ -77,7 +81,7 @@ After the last world a sandbox opens: pick a landscape, set learning rate, momen
 
 ## Not built yet
 
-- Worlds 4 to 7 (themes, music, mechanics, bosses, notebook pages). Next: Namib (plateaus, learning-rate schedules; long flats, oryx, dead camel-thorn trees, sand on the wind).
+- Worlds 5 to 7 (themes, music, mechanics, bosses, notebook pages). Next: Zhangjiajie (ravines and adaptive steps; sandstone pillars in mist, deep narrow gorges, vines, macaques).
 - An ending scene for the last chapter of the story.
 - Cappadocia still wants: a scene in which Mu joins (like the opening scene), a boss with something of its own (now it is a hard run of hollows), a play-through by hand for feel, better poplars.
 - The wordless story scenes, Sort! bonus stages, the daily valley, endless mode, the lab with sliders, the teacher page, the share card.

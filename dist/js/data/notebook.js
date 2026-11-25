@@ -36,6 +36,17 @@ export const CARDS = {
     text: ['The wobble is not only a nuisance. A noisy step can lift a traveller out of a shallow hollow that an exact step would never leave.', 'The tide does the same for Theta here: it comes in, and what was a trap is a way out.'] },
   settle: { name: 'Settling', draw: 'descent',
     text: ['Near the bottom, the same wobble keeps you from ever standing still.', 'Smaller steps quiet it, and so do bigger handfuls. Many training runs shorten their steps toward the end for this reason.'] },
+  // ---- Namib ----
+  plateau: { name: 'Plateau', draw: 'plateau',
+    text: ['On level ground the slope is nearly nothing, and it says nearly nothing about which way to go.', 'Learning slows to a crawl in such places. They are called plateaus, and the loss can sit on one for a long time before it starts to fall again.'] },
+  patience: { name: 'Keep going', draw: 'plateau',
+    text: ['A plateau is not the bottom. It only feels like one.', 'Speed carried in from the last slope will take you a long way across level ground. It is one more reason machines are given momentum.'] },
+  schedule: { name: 'A schedule for the steps', draw: 'rate',
+    text: ['The best length of step is not the same all the way down. Long steps suit the start, when the valley is far off. Short ones suit the end, when it is underfoot.', 'A plan for changing the learning rate as training goes on is called a schedule.'] },
+  decay: { name: 'Shorter and shorter', draw: 'descent',
+    text: ['The commonest schedule simply shrinks the step as time passes, a little at a time or all at once every so often.', 'The dunes here do it for you. Each is lower than the last, and the final ones can be taken at a walk.'] },
+  warmup: { name: 'Warming up', draw: 'noisy',
+    text: ['Some schedules also begin small. At the very start a machine knows nothing, the slopes it measures are wild, and a long step taken on bad advice does harm.', 'So the steps start short, grow for a while, and only then begin to shrink. The growing part is called warm-up.'] },
 };
 export const HINTS = {
   move: { key: 'Press → or D to run.', touch: 'Slide your left thumb to run.', pad: 'Push the stick to run.' },
@@ -45,6 +56,7 @@ export const HINTS = {
   rim: { key: 'Too steep to walk up. Roll down the slope behind you and let the speed carry you over.', touch: 'Too steep to walk up. Roll down the slope behind you and let the speed carry you over.', pad: 'Too steep to walk up. Roll down the slope behind you and let the speed carry you over.' },
   raft: { key: 'Stay on the rafts to stay fast. Falling in only costs time.', touch: 'Stay on the rafts to stay fast. Falling in only costs time.', pad: 'Stay on the rafts to stay fast. Falling in only costs time.' },
   tide: { key: 'Too high to climb. Stand on the raft and let the tide lift it.', touch: 'Too high to climb. Stand on the raft and let the tide lift it.', pad: 'Too high to climb. Stand on the raft and let the tide lift it.' },
+  gale: { key: 'A wind at your back. Jump, and hold Space in the air to spread wide and sail on it.', touch: 'A wind at your back. Jump, and hold the upper button in the air to spread wide and sail on it.', pad: 'A wind at your back. Jump, and hold A in the air to spread wide and sail on it.' },
   ride: { key: 'Stand still in the basket.', touch: 'Stand still in the basket.', pad: 'Stand still in the basket.' },
   jet: { key: 'Stand in the geyser and let it carry you up.', touch: 'Stand in the geyser and let it carry you up.', pad: 'Stand in the geyser and let it carry you up.' },
 };

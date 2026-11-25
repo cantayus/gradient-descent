@@ -140,7 +140,7 @@ export const P = {
     ctx.fillStyle = top; ctx.fillRect(w * 0.24, h * 0.16, w * 0.52, h * 0.05); ctx.fillStyle = lamp; ctx.fillRect(w * 0.36, h * 0.07, w * 0.28, h * 0.1); ctx.fillStyle = top; ctx.beginPath(); ctx.moveTo(w * 0.3, h * 0.075); ctx.lineTo(w * 0.5, 0); ctx.lineTo(w * 0.7, h * 0.075); ctx.closePath(); ctx.fill();
   },
   // a four-legged animal from the side, facing right. graze: 0 head up, 1 head down in the grass
-  quad(ctx, w, h, r, { col = '#6a4a35', dark = '#3a2a22', mane = null, neck = 0.5, head = 0.2, tail = 0.5, graze = 0, wool = false } = {}) {
+  quad(ctx, w, h, r, { col = '#6a4a35', dark = '#3a2a22', mane = null, neck = 0.5, head = 0.2, tail = 0.5, graze = 0, wool = false, horns = null, belly = null } = {}) {
     const by = h * 0.5; ctx.fillStyle = dark; for (const lx of [0.27, 0.36, 0.64, 0.73]) ctx.fillRect(lx * w - w * 0.025, by, w * 0.055, h * 0.5);
     ctx.fillStyle = col; ctx.beginPath(); ctx.ellipse(w * 0.5, by, w * 0.3, h * 0.2, 0, 0, TAU); ctx.fill();
     const nx = w * 0.74, ny = by - h * 0.06, hx = nx + w * 0.12 * (1 - graze * 0.2), hy = lerp(by - h * neck * 0.7, by + h * 0.3, graze);
@@ -148,6 +148,8 @@ export const P = {
     ctx.fillStyle = col; ctx.beginPath(); ctx.ellipse(hx + w * 0.055, hy + h * 0.03, w * head * 0.55, h * 0.085, 0.55 - graze * 0.4, 0, TAU); ctx.fill();
     if (mane) { ctx.strokeStyle = mane; ctx.lineWidth = w * 0.05; ctx.beginPath(); ctx.moveTo(nx - w * 0.08, ny - h * 0.05); ctx.lineTo(hx - w * 0.04, hy - h * 0.04); ctx.stroke(); }
     ctx.strokeStyle = mane || dark; ctx.lineWidth = w * 0.04; ctx.beginPath(); ctx.moveTo(w * 0.21, by - h * 0.08); ctx.quadraticCurveTo(w * (0.13 - tail * 0.12), by + h * 0.04, w * (0.15 - tail * 0.1), by + h * 0.32); ctx.stroke();
+    if (belly) { ctx.fillStyle = belly; ctx.beginPath(); ctx.ellipse(w * 0.5, by + h * 0.1, w * 0.26, h * 0.09, 0, 0, TAU); ctx.fill(); ctx.fillStyle = dark; ctx.fillRect(w * 0.26, by + h * 0.01, w * 0.48, h * 0.035); }
+    if (horns) { ctx.strokeStyle = horns; ctx.lineWidth = w * 0.018; for (const o of [0, 0.03]) { ctx.beginPath(); ctx.moveTo(hx + w * (0.02 + o), hy - h * 0.05); ctx.lineTo(hx - w * (0.1 - o), hy - h * (0.5 - graze * 0.2)); ctx.stroke(); } }
     if (wool) { ctx.fillStyle = col; for (let i = 0; i < 12; i++) { ctx.beginPath(); ctx.arc(w * r.range(0.24, 0.76), by + h * r.range(-0.18, 0.14), w * 0.075, 0, TAU); ctx.fill(); } }
   },
   boat(ctx, w, h, r, { hull = '#c8483a', cabin = '#f4f1ea', trim = '#2c3644' } = {}) {
@@ -278,6 +280,11 @@ export const P = {
   crab(ctx, w, h, r, { col = '#e8442a', lit = '#ffb04a' } = {}) {
     ctx.strokeStyle = col; ctx.lineWidth = h * 0.11; ctx.lineCap = 'round'; for (const sd of [-1, 1]) for (let i = 0; i < 3; i++) { ctx.beginPath(); ctx.moveTo(w / 2 + sd * w * 0.2, h * 0.55); ctx.quadraticCurveTo(w / 2 + sd * w * (0.34 + i * 0.06), h * (0.2 + i * 0.12), w / 2 + sd * w * (0.4 + i * 0.045), h * 0.98); ctx.stroke(); }
     const g = ctx.createLinearGradient(0, h * 0.2, 0, h * 0.8); g.addColorStop(0, lit); g.addColorStop(1, col); ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(w / 2, h * 0.55, w * 0.26, h * 0.3, 0, 0, TAU); ctx.fill(); ctx.fillStyle = '#7fd0e8'; ctx.beginPath(); ctx.ellipse(w / 2, h * 0.7, w * 0.16, h * 0.12, 0, 0, TAU); ctx.fill(); ctx.fillStyle = '#1c1a18'; ctx.fillRect(w * 0.42, h * 0.22, w * 0.04, h * 0.14); ctx.fillRect(w * 0.54, h * 0.22, w * 0.04, h * 0.14);
+  },
+  // a tree long dead and still standing: bare limbs, nothing else
+  deadtree(ctx, w, h, r, { col = '#2a1c18', lit = '#5a4038' } = {}) {
+    ctx.lineCap = 'round'; const limb = (x, y, a, len, wd, d) => { const x1 = x + Math.cos(a) * len, y1 = y + Math.sin(a) * len, mx = (x + x1) / 2 + r.range(-0.08, 0.08) * len, my = (y + y1) / 2 + r.range(-0.08, 0.08) * len; ctx.strokeStyle = d % 2 ? col : mix(col, lit, 0.35); ctx.lineWidth = wd; ctx.beginPath(); ctx.moveTo(x, y); ctx.quadraticCurveTo(mx, my, x1, y1); ctx.stroke(); if (d < 4) for (let i = 0, n = d < 2 ? 2 : r.int(1, 2); i < n; i++) limb(x1, y1, a + r.range(-0.9, 0.9) - 0.1 * Math.sign(Math.cos(a)), len * r.range(0.55, 0.75), wd * 0.62, d + 1); };
+    limb(w * 0.5, h, -Math.PI / 2 + r.range(-0.15, 0.15), h * 0.34, w * 0.075, 0);
   },
 };
 

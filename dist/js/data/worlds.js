@@ -4,6 +4,7 @@
 import { iceland } from '../art/worlds/iceland.js';
 import { cappadocia } from '../art/worlds/cappadocia.js';
 import { galapagos } from '../art/worlds/galapagos.js';
+import { namib } from '../art/worlds/namib.js';
 
 const m = 'meadow', g = 'grass';
 const ICE = [
@@ -128,6 +129,37 @@ const GAL = [
       run(30, -11, CP), ['flat', 12, { zone: BE, surf: 'sand' }], ['bowl', 22, 4.4, 4.4, { zone: BE, surf: 'sand' }]] },
 ];
 
+// ---- Namib: level ground, and a plan for the length of the step ----
+const DU = 'dune', SO = 'soft', PA = 'pan', GV = 'gravel', GY = 'grassy';
+const dune = (L, h, dy = 0, seeds = 2) => ['hill', L, h, dy, { zone: DU, seeds }];                 // up and over: a slope to walk, or speed to carry
+const pan = (L, seeds = 3) => ['flat', L, { zone: PA, seeds }];                                     // hard clay, dead level: nothing here tells you which way to go, and a ball keeps what speed it brought
+const softFlat = (L = 12) => ['flat', L, { zone: SO, surf: 'sand' }];                               // soft sand: a roll dies in it
+const gale = (L, wx = 13, o = {}) => ['flat', L, { zone: GV, wind: [{ from: 0, to: 1, wx, gusty: true }], seeds: [{ at: 0.3, up: 2.6 }, { at: 0.55, up: 3 }, { at: 0.8, up: 2.6 }], ...o }];
+const down = (L, dy, zone = DU, seeds = 3) => ['slope', L, dy, { zone, seeds }];
+const NAM = [
+  { id: '4-1', name: 'Level Ground', time: 'dawn', card: 'plateau', par: 31,
+    strokes: [['flat', 10, { zone: GV }], down(34, -12), pan(40), down(26, -9, GV), softFlat(10), pan(30), dune(16, 2.4, -1), down(30, -11), pan(46, 4), ['flat', 10, { zone: GY, surf: g }], down(28, -10, GY),
+      dune(18, 3, -1), pan(36), softFlat(8), down(32, -12), pan(40, 4), dune(16, 2.6, -1), down(26, -9, GV), ['flat', 12, { zone: PA }], ['bowl', 22, 4, 4, { zone: PA }]] },
+  { id: '4-2', name: 'Keep Going', time: 'day', card: 'patience', par: 43,
+    strokes: [['flat', 10, { zone: GY, surf: g }], down(36, -14), pan(50, 4), dune(18, 3.4, 0), pan(30), down(28, -10, GV), softFlat(12), ['gap', 4, -1], land(GV, 12), down(32, -13), pan(44, 4), dune(16, 3, -1), dune(16, 3.4, -1),
+      pan(36), down(30, -12, GY), ...hollow(26, 10, 3.2, 3.6, { zone: GV }), land(GV, 18), pan(40, 4), dune(18, 3.6, -1), down(28, -10), ['flat', 12, { zone: PA }], ['bowl', 22, 4.2, 4, { zone: PA }]] },
+  { id: '4-3', name: 'Long Steps First', time: 'golden', card: 'schedule', par: 44,
+    strokes: [['flat', 10, { zone: GV }], down(40, -17, DU, 4), ['kicker', 7, 2.6, { zone: DU }], ['gap', 10, -6], land(DU, 20), gale(34, 13, { mark: 'hint', text: 'gale', at: 0.1 }), down(36, -15, DU, 4), dune(20, 4.2, -1), pan(34), down(30, -12),
+      ['kicker', 6, 2.2, { zone: DU }], ['gap', 8, -4], land(GV, 18), gale(30, 12), down(28, -10, GY), dune(16, 3, -1), pan(30), down(24, -8), dune(14, 2.2, -1), down(20, -6, GV), ['gap', 3.4, -1], land(GV, 10),
+      dune(12, 1.6, -1), down(16, -4), ['gap', 2.6], ['flat', 8, { zone: PA }], ['gap', 2.6], ['flat', 12, { zone: PA }], ['bowl', 22, 4, 4, { zone: PA }]] },
+  { id: '4-4', name: 'Shorter and Shorter', time: 'mist', card: 'decay', par: 40,
+    strokes: [['flat', 10, { zone: DU }], down(38, -16, DU, 4), dune(22, 5, -1, 3), dune(20, 4.2, -1, 3), dune(18, 3.5, -1), pan(30), down(30, -12), dune(16, 3, -1), dune(15, 2.5, -1), dune(14, 2, -1), softFlat(8), gale(30, 12),
+      down(28, -10, GV), ['waves', 30, 1.6, 3, -5, { zone: DU, seeds: 3 }], ['waves', 26, 1.1, 3, -4, { zone: DU, seeds: 3 }], ['waves', 22, 0.7, 3, -3, { zone: DU, seeds: 3 }], pan(26), ['gap', 3.6], ['flat', 7, { zone: PA, seeds: [{ at: 0.5 }] }], ['gap', 3],
+      ['flat', 6, { zone: PA, seeds: [{ at: 0.5 }] }], ['gap', 2.4], ['flat', 12, { zone: PA }], down(22, -7, GY), ['flat', 10, { zone: PA }], ['bowl', 22, 4, 4, { zone: PA }]] },
+  { id: '4-5', name: 'Warming Up', time: 'dusk', card: 'warmup', par: 50,
+    strokes: [['flat', 10, { zone: PA }], ['gap', 2.2], ['flat', 6, { zone: PA, seeds: [{ at: 0.5 }] }], ['gap', 2.6], ['flat', 7, { zone: PA, seeds: [{ at: 0.5 }] }], ['gap', 3.2], land(GV, 12), down(20, -6, GV), dune(12, 1.6, -1), down(24, -8), dune(15, 2.4, -1),
+      down(30, -12), dune(18, 3.4, -1), pan(30), down(36, -15, DU, 4), ['kicker', 7, 2.6, { zone: DU }], ['gap', 10, -6], land(DU, 20), gale(34, 13), down(34, -14, DU, 4), dune(20, 4.4, -1, 3), pan(36, 4),
+      down(28, -10, GY), dune(16, 3, -1), down(22, -7), dune(13, 2, -1), softFlat(8), ['gap', 3], ['flat', 7, { zone: PA, seeds: [{ at: 0.5 }] }], ['gap', 2.4], ['flat', 12, { zone: PA }], ['bowl', 22, 4, 4.2, { zone: PA }]] },
+  { id: '4-B', name: 'The Long Flat', time: 'night', boss: 'flat', par: 70, music: 'boss',
+    strokes: [['flat', 10, { zone: GV }], down(40, -17, DU, 4), pan(70, 5), dune(18, 3.6, 0), pan(40, 3), softFlat(10), gale(40, 14), down(32, -13, DU, 4), pan(60, 5), dune(20, 4.4, -1, 3), dune(16, 3, -1), softFlat(8), ['gap', 4, -1], land(GV, 12),
+      down(34, -14), pan(80, 6), dune(18, 4, -1), gale(36, 14), down(30, -12, GV), ...hollow(28, 12, 3.6, 4.4, { zone: GV }, 4), land(GV, 18), pan(50, 4), dune(16, 3.2, -1), down(26, -9), ['flat', 12, { zone: PA }], ['bowl', 22, 4.4, 4.4, { zone: PA }]] },
+];
+
 // the ground behind the title: a mossy ledge above a long green slope
 export const TITLE = (z1, z2) => ({ id: 'title', name: '', time: 'golden', strokes: [['flat', 6, { zone: z1 }], ['hill', 8, 0.9, -0.4, { zone: z2, surf: g }], ['slope', 13, -9, { zone: z2, surf: g }], ['slope', 30, -9, { zone: z1 }], ['waves', 30, 1.2, 2, -6, { zone: z2, surf: g }], ['bowl', 20, 3, 3, { zone: z2, surf: g }]] });
 
@@ -135,6 +167,7 @@ export const WORLDS = [
   { id: 'iceland', n: 1, name: 'Iceland', theme: iceland, music: 'iceland', can: { slide: true, roll: false, spread: true }, title: ['moss', 'meadow'], levels: ICE },
   { id: 'cappadocia', n: 2, name: 'Cappadocia', theme: cappadocia, music: 'cappadocia', can: { slide: true, roll: true, spread: true, mu: true }, title: ['tuff', 'vine'], levels: CAP },
   { id: 'galapagos', n: 3, name: 'Galápagos', theme: galapagos, music: 'galapagos', can: { slide: true, roll: true, spread: true, mu: true }, title: ['lava', 'green'], levels: GAL },
+  { id: 'namib', n: 4, name: 'Namib', theme: namib, music: 'namib', can: { slide: true, roll: true, spread: true, mu: true }, title: ['gravel', 'grassy'], levels: NAM },
 ];
 export const levelById = (id) => { for (const w of WORLDS) for (const l of w.levels) if (l.id === id) return { world: w, spec: l }; return null; };
 export const ALL = WORLDS.flatMap((w) => w.levels.map((l) => l.id));
