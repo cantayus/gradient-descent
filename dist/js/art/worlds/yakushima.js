@@ -28,26 +28,26 @@ export const yakushima = {
       // the far forest: every ridge a different green, and a waterfall or two down the rock
       { par: 0.04, scale: 0.6, base: 0.53, amp: 0.2, style: 'round', seed: 23, col: t('#3f7a6a'), haze: 0.34, lit: 0.12, fog: 0.26, ribs: 0.1,
         bands: [{ col: t('#5fa878'), a: 0.6, at: 0.1, th: 0.3, w: 0.2, f: 3, s: 2 }, { col: t('#2f6a5a'), a: 0.5, at: 0.5, th: 0.2, w: 0.2, f: 4, s: 6 }],
-        stamps: [{ s: 'sugiFar', every: 0.024, p: 0.9, size: 0.05, seed: 3, sink: 0.004 }, { s: '-', kind: 'fall', every: 0.5, p: 0.5, size: 0.5, len: 0.12, seed: 5 }, { s: '-', kind: 'flock', every: 1.3, p: 0.5, size: 0.022, seed: 7, n: 4, sink: -0.05 }] },
+        stamps: [{ s: 'sugiFar', every: 0.06, p: 0.9, size: 0.055, seed: 3, sink: 0.004 }, { s: '-', kind: 'fall', every: 0.5, p: 0.5, size: 0.5, len: 0.12, seed: 5 }, { s: '-', kind: 'flock', every: 1.3, p: 0.5, size: 0.022, seed: 7, n: 4, sink: -0.05 }] },
       // the sea, a long way down
       { kind: 'lake', y: 0.585, h: 0.06, par: 0.06, things: [{ s: 'boatFar', n: 2, seed: 4, size: 0.03, speed: 0.0012, at: 0.3, span: 0.5 }] },
       { par: 0.075, scale: 0.5, base: 0.62, amp: 0.18, style: 'round', seed: 37, col: t('#2f6a4a'), haze: 0.22, lit: 0.12, fog: 0.22,
         bands: [{ col: t('#6fb860'), a: 0.6, at: 0.06, th: 0.28, w: 0.2, f: 3, s: 3 }, { col: t('#1f5a40'), a: 0.5, at: 0.5, th: 0.2, w: 0.2, f: 4, s: 7 }],
-        stamps: [{ s: 'sugiFar', every: 0.03, p: 0.92, size: 0.085, seed: 11, sink: 0.006 }, { s: '-', kind: 'fall', every: 0.44, p: 0.45, size: 0.6, len: 0.13, seed: 13 }, { s: 'mistS', every: 0.3, p: 0.6, size: 0.3, seed: 15, drop: [0.1, 0.5] }] },
+        stamps: [{ s: 'sugiFar', every: 0.08, p: 0.92, size: 0.09, seed: 11, sink: 0.006 }, { s: '-', kind: 'fall', every: 0.44, p: 0.45, size: 0.6, len: 0.13, seed: 13 }, { s: 'mistS', every: 0.5, p: 0.6, size: 0.28, seed: 15, drop: [0.1, 0.5] }] },
       // nearer: single great trees stand out of the canopy, and there are deer in the clearings
       { par: 0.13, scale: 0.44, base: 0.7, amp: 0.15, style: 'round', seed: 49, col: t('#2a5a38'), haze: 0.12, fog: 0.18,
         bands: [{ col: t('#7fc858'), a: 0.7, at: 0.04, th: 0.26, w: 0.16, f: 3, s: 2 }, { col: t('#3f8a48'), a: 0.6, at: 0.36, th: 0.16, w: 0.14, f: 5, s: 6 }, { col: time.water, a: 0.8, at: 0.6, th: 0.035, w: 0.12, f: 1.4, s: 12, glint: 16 }],
-        stamps: [{ s: 'sugiFar', every: 0.045, p: 0.9, size: 0.14, seed: 21, sink: 0.01 }, { s: 'cedarFar', every: 0.3, p: 0.6, size: 0.24, seed: 23, sink: 0.01 }, { s: 'deerFar', kind: 'graze', every: 0.3, p: 0.5, size: 0.034, seed: 25, drop: [0.1, 0.5], roam: 0.8, speed: 0.03 },
+        stamps: [{ s: 'sugiFar', every: 0.1, p: 0.9, size: 0.15, seed: 21, sink: 0.01 }, { s: 'cedarFar', every: 0.3, p: 0.6, size: 0.24, seed: 23, sink: 0.01 }, { s: 'deerFar', kind: 'graze', every: 0.3, p: 0.5, size: 0.034, seed: 25, drop: [0.1, 0.5], roam: 0.8, speed: 0.03 },
           { s: 'rhodoFar', every: 0.1, p: 0.5, size: 0.04, seed: 27, drop: [0.05, 0.5] }, { s: '-', kind: 'flock', every: 1, p: 0.5, size: 0.03, seed: 29, n: 3, sink: -0.08 }] },
       { par: 0.24, scale: 0.4, base: 0.78, amp: 0.13, style: 'round', seed: 61, col: t('#1f4a2c'), haze: 0.05, foot: 0.3,
         bands: [{ col: t('#8fd858'), a: 0.75, at: 0.02, th: 0.24, w: 0.14, f: 4, s: 3 }, { col: t('#4f9a48'), a: 0.6, at: 0.3, th: 0.14, w: 0.14, f: 5, s: 5 }],
-        stamps: [{ s: 'sugiFar', every: 0.07, p: 0.8, size: 0.24, seed: 31, sink: 0.014 }, { s: 'cedarFar', every: 0.34, p: 0.55, size: 0.42, seed: 33, sink: 0.014 }, { s: 'rockFar', every: 0.12, p: 0.5, size: 0.06, seed: 35, sink: 0.012 }, { s: 'fernFar', every: 0.04, p: 0.7, size: 0.05, seed: 37, sink: 0.004 },
+        stamps: [{ s: 'sugiFar', every: 0.16, p: 0.85, size: 0.24, seed: 31, sink: 0.014 }, { s: 'cedarFar', every: 0.45, p: 0.6, size: 0.38, seed: 33, sink: 0.014 }, { s: 'rockFar', every: 0.12, p: 0.5, size: 0.06, seed: 35, sink: 0.012 }, { s: 'fernFar', every: 0.07, p: 0.7, size: 0.05, seed: 37, sink: 0.004 },
           { s: 'rhodoFar', every: 0.12, p: 0.5, size: 0.07, seed: 39, drop: [0.05, 0.4] }, { s: 'deerFar', kind: 'graze', every: 0.5, p: 0.5, size: 0.06, seed: 41, sink: 0.002, roam: 0.9, speed: 0.035 }] },
     ];
   },
   behind: [
     { s: 'cedar', every: 13, p: 0.62, size: 1, seed: 1401, sink: 0.5 },
-    { s: 'sugi', every: 5, p: 0.6, size: 1, seed: 1405, sink: 0.25 },
+    { s: 'sugi', every: 6.5, p: 0.6, size: 1, seed: 1405, sink: 0.25 },
     { s: 'stump', every: 23, p: 0.5, size: 1, seed: 1409, sink: 0.3, zone: ['moss', 'cedar', 'root'] },
     { s: 'rockBig', every: 9, p: 0.4, size: 1, seed: 1413, sink: 0.5 },
     { s: 'rhodo', every: 7, p: 0.45, size: 1, seed: 1417, sink: 0.15, zone: ['moss', 'cedar'] },
