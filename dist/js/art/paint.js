@@ -123,6 +123,52 @@ export const P = {
     for (let i = 0; i < 14; i++) { const x = r.range(0.2, 0.8) * w, y = h * r.range(0.35, 0.65), rx = w * r.range(0.14, 0.3), ry = h * r.range(0.18, 0.34); const g = ctx.createRadialGradient(0, 0, 0, 0, 0, 1); g.addColorStop(0, rgba(col, 0.2)); g.addColorStop(1, rgba(col, 0)); ctx.save(); ctx.translate(x, y); ctx.scale(rx, ry); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, 0, 1, 0, TAU); ctx.fill(); ctx.restore(); }
   },
   glow(ctx, w, h, r, { col = '#ffffff', a = 1 } = {}) { const g = ctx.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, w / 2); g.addColorStop(0, rgba(col, a)); g.addColorStop(0.35, rgba(col, a * 0.35)); g.addColorStop(1, rgba(col, 0)); ctx.fillStyle = g; ctx.fillRect(0, 0, w, h); },
+  // a small house with a pitched roof, gable end on. `turf` grows grass on the roof; `spire` gives it a tower and makes it a country church
+  house(ctx, w, h, r, { wall = '#f4f1ea', roof = '#c8483a', trim = '#3a3f4a', win = '#2c3644', turf = null, spire = false } = {}) {
+    const bw = spire ? w * 0.6 : w * 0.86, bx = spire ? w * 0.36 : w * 0.07, wh = h * (spire ? 0.32 : 0.44), top = h - wh, ridge = top - h * (spire ? 0.2 : 0.36);
+    ctx.fillStyle = wall; ctx.fillRect(bx, top, bw, wh); ctx.fillStyle = rgba('#000000', 0.12); ctx.fillRect(bx + bw * 0.62, top, bw * 0.38, wh);
+    ctx.fillStyle = turf || roof; ctx.beginPath(); ctx.moveTo(bx - w * 0.05, top + h * 0.01); ctx.lineTo(bx + bw / 2, ridge); ctx.lineTo(bx + bw + w * 0.05, top + h * 0.01); ctx.closePath(); ctx.fill();
+    if (turf) { ctx.strokeStyle = lighten(turf, 0.25); ctx.lineWidth = w * 0.012; ctx.lineCap = 'round'; for (let i = 0; i < 26; i++) { const u = r.u(), x = bx + bw * u, y = lerp(ridge, top, Math.abs(u - 0.5) * 2) + r.range(-0.01, 0.02) * h; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + r.range(-0.02, 0.02) * w, y - r.range(0.03, 0.08) * h); ctx.stroke(); } }
+    ctx.fillStyle = win; ctx.fillRect(bx + bw * 0.16, top + wh * 0.28, bw * 0.17, wh * 0.36); ctx.fillRect(bx + bw * 0.67, top + wh * 0.28, bw * 0.17, wh * 0.36); if (!spire) ctx.fillRect(bx + bw * 0.44, lerp(ridge, top, 0.55), bw * 0.12, wh * 0.26);
+    ctx.fillStyle = trim; ctx.fillRect(bx + bw * 0.42, top + wh * 0.36, bw * 0.16, wh * 0.64);
+    if (spire) { ctx.fillStyle = wall; ctx.fillRect(w * 0.1, h * 0.36, w * 0.27, h * 0.64); ctx.fillStyle = roof; ctx.beginPath(); ctx.moveTo(w * 0.06, h * 0.37); ctx.lineTo(w * 0.235, 0); ctx.lineTo(w * 0.41, h * 0.37); ctx.closePath(); ctx.fill(); ctx.fillStyle = win; ctx.fillRect(w * 0.19, h * 0.5, w * 0.09, h * 0.14); }
+  },
+  // a lighthouse
+  tower(ctx, w, h, r, { col = '#f2a23a', band = '#ffffff', top = '#2c3038', lamp = '#fff3b0' } = {}) {
+    ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(w * 0.2, h); ctx.lineTo(w * 0.33, h * 0.2); ctx.lineTo(w * 0.67, h * 0.2); ctx.lineTo(w * 0.8, h); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = band; ctx.fillRect(w * 0.27, h * 0.48, w * 0.46, h * 0.13); ctx.fillStyle = rgba('#000000', 0.14); ctx.beginPath(); ctx.moveTo(w * 0.55, h * 0.2); ctx.lineTo(w * 0.67, h * 0.2); ctx.lineTo(w * 0.8, h); ctx.lineTo(w * 0.6, h); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = top; ctx.fillRect(w * 0.24, h * 0.16, w * 0.52, h * 0.05); ctx.fillStyle = lamp; ctx.fillRect(w * 0.36, h * 0.07, w * 0.28, h * 0.1); ctx.fillStyle = top; ctx.beginPath(); ctx.moveTo(w * 0.3, h * 0.075); ctx.lineTo(w * 0.5, 0); ctx.lineTo(w * 0.7, h * 0.075); ctx.closePath(); ctx.fill();
+  },
+  // a four-legged animal from the side, facing right. graze: 0 head up, 1 head down in the grass
+  quad(ctx, w, h, r, { col = '#6a4a35', dark = '#3a2a22', mane = null, neck = 0.5, head = 0.2, tail = 0.5, graze = 0, wool = false } = {}) {
+    const by = h * 0.5; ctx.fillStyle = dark; for (const lx of [0.27, 0.36, 0.64, 0.73]) ctx.fillRect(lx * w - w * 0.025, by, w * 0.055, h * 0.5);
+    ctx.fillStyle = col; ctx.beginPath(); ctx.ellipse(w * 0.5, by, w * 0.3, h * 0.2, 0, 0, TAU); ctx.fill();
+    const nx = w * 0.74, ny = by - h * 0.06, hx = nx + w * 0.12 * (1 - graze * 0.2), hy = lerp(by - h * neck * 0.7, by + h * 0.3, graze);
+    ctx.strokeStyle = col; ctx.lineWidth = w * 0.115; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(nx - w * 0.03, ny); ctx.lineTo(hx, hy); ctx.stroke();
+    ctx.fillStyle = col; ctx.beginPath(); ctx.ellipse(hx + w * 0.055, hy + h * 0.03, w * head * 0.55, h * 0.085, 0.55 - graze * 0.4, 0, TAU); ctx.fill();
+    if (mane) { ctx.strokeStyle = mane; ctx.lineWidth = w * 0.05; ctx.beginPath(); ctx.moveTo(nx - w * 0.08, ny - h * 0.05); ctx.lineTo(hx - w * 0.04, hy - h * 0.04); ctx.stroke(); }
+    ctx.strokeStyle = mane || dark; ctx.lineWidth = w * 0.04; ctx.beginPath(); ctx.moveTo(w * 0.21, by - h * 0.08); ctx.quadraticCurveTo(w * (0.13 - tail * 0.12), by + h * 0.04, w * (0.15 - tail * 0.1), by + h * 0.32); ctx.stroke();
+    if (wool) { ctx.fillStyle = col; for (let i = 0; i < 12; i++) { ctx.beginPath(); ctx.arc(w * r.range(0.24, 0.76), by + h * r.range(-0.18, 0.14), w * 0.075, 0, TAU); ctx.fill(); } }
+  },
+  boat(ctx, w, h, r, { hull = '#c8483a', cabin = '#f4f1ea', trim = '#2c3644' } = {}) {
+    ctx.fillStyle = hull; ctx.beginPath(); ctx.moveTo(0, h * 0.55); ctx.lineTo(w, h * 0.5); ctx.lineTo(w * 0.86, h); ctx.lineTo(w * 0.1, h); ctx.closePath(); ctx.fill(); ctx.fillStyle = rgba('#ffffff', 0.85); ctx.fillRect(w * 0.04, h * 0.6, w * 0.9, h * 0.07);
+    ctx.fillStyle = cabin; ctx.fillRect(w * 0.3, h * 0.2, w * 0.3, h * 0.34); ctx.fillStyle = trim; ctx.fillRect(w * 0.36, h * 0.27, w * 0.18, h * 0.12); ctx.fillStyle = '#2c3038'; ctx.fillRect(w * 0.64, 0, w * 0.025, h * 0.52);
+  },
+  // a cairn: stones piled to mark the way
+  cairn(ctx, w, h, r, { col = '#565b69', lit = '#9aa0b0' } = {}) {
+    let y = h; for (let i = 0; i < 5; i++) { const sw = w * (0.95 - i * 0.16) * r.range(0.85, 1), sh = h * 0.24 * r.range(0.8, 1.1), cx = w / 2 + r.range(-0.04, 0.04) * w; ctx.fillStyle = mix(col, lit, 0.1 + i * 0.12); ctx.beginPath(); ctx.ellipse(cx, y - sh / 2, sw / 2, sh / 2, r.range(-0.1, 0.1), 0, TAU); ctx.fill(); ctx.fillStyle = rgba('#ffffff', 0.2); ctx.beginPath(); ctx.ellipse(cx - sw * 0.12, y - sh * 0.72, sw * 0.25, sh * 0.13, 0, 0, TAU); ctx.fill(); y -= sh * 0.8; }
+  },
+  // a puffin standing
+  puffin(ctx, w, h, r, { blink = false } = {}) {
+    ctx.fillStyle = '#f08a2a'; ctx.fillRect(w * 0.36, h * 0.88, w * 0.11, h * 0.12); ctx.fillRect(w * 0.54, h * 0.88, w * 0.11, h * 0.12);
+    ctx.fillStyle = '#1c1e24'; ctx.beginPath(); ctx.ellipse(w * 0.47, h * 0.6, w * 0.3, h * 0.33, -0.15, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#f7f5ef'; ctx.beginPath(); ctx.ellipse(w * 0.55, h * 0.66, w * 0.2, h * 0.26, -0.1, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#1c1e24'; ctx.beginPath(); ctx.arc(w * 0.54, h * 0.24, w * 0.25, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#f1efe8'; ctx.beginPath(); ctx.ellipse(w * 0.6, h * 0.27, w * 0.16, h * 0.13, 0, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#f0752a'; ctx.beginPath(); ctx.moveTo(w * 0.72, h * 0.16); ctx.lineTo(w * 0.99, h * 0.28); ctx.lineTo(w * 0.72, h * 0.39); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#4a6a92'; ctx.beginPath(); ctx.moveTo(w * 0.72, h * 0.16); ctx.lineTo(w * 0.81, h * 0.2); ctx.lineTo(w * 0.81, h * 0.355); ctx.lineTo(w * 0.72, h * 0.39); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#1c1e24'; if (blink) ctx.fillRect(w * 0.58, h * 0.245, w * 0.09, h * 0.018); else { ctx.beginPath(); ctx.arc(w * 0.625, h * 0.25, w * 0.038, 0, TAU); ctx.fill(); }
+  },
 };
 
 // Make `n` different sprites with one painter.

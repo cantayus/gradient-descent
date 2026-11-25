@@ -15,13 +15,13 @@ const IDLE = { move: 0, jump: false, jumpNow: false, tuck: false };
 
 function resize() {
   const cap = G.gfx >= 2 ? 2 : G.gfx === 1 ? 1.25 : 1, dpr = Math.min(window.devicePixelRatio || 1, cap), w = innerWidth, h = innerHeight;
-  // never paint more pixels than a 4K screen has, and fewer on the plainer settings
-  const lim = G.gfx >= 2 ? 3840 * 2160 : G.gfx === 1 ? 1920 * 1080 : 1280 * 720, k = Math.min(1, Math.sqrt(lim / (w * h * dpr * dpr)));
+  // a painted picture in many layers costs by the pixel, so there is a ceiling on how many are painted: 1440p on Full, 1080p on Good, 720p on Plain
+  const lim = G.gfx >= 2 ? 2560 * 1440 : G.gfx === 1 ? 1920 * 1080 : 1280 * 720, k = Math.min(1, Math.sqrt(lim / (w * h * dpr * dpr)));
   G.dpr = dpr * k; G.W = view.width = Math.round(w * G.dpr); G.H = view.height = Math.round(h * G.dpr);
   if (G.play) G.play.resize(G.W, G.H);
 }
 addEventListener('resize', resize);
-function applyGfx() { const s = save.settings.gfx; G.gfx = q.has('gfx') ? +q.get('gfx') : s < 0 ? G.auto : s; resize(); if (G.play) G.play.scene.q = G.gfx; document.body.classList.toggle('safe', !!save.settings.safe); }
+function applyGfx() { const s = save.settings.gfx; G.gfx = q.has('gfx') ? +q.get('gfx') : s < 0 ? G.auto : s; resize(); if (G.play) G.play.scene.q = G.gfx; document.body.dataset.gfx = G.gfx; document.body.classList.toggle('safe', !!save.settings.safe); }
 function applyText() { document.documentElement.style.setProperty('--fs', save.settings.text || 1); }
 
 export function startLevel(id, opt = {}) {
@@ -88,6 +88,8 @@ function frame(now) {
   if (save.settings.gfx < 0 && !G.paused && !q.has('gfx')) { G.slow = G.fps < 42 ? G.slow + dt : 0; if (G.slow > 3 && G.auto > 0) { G.auto--; G.slow = 0; applyGfx(); } }
 }
 
+// film grain, made once and handed to the page to lay over the picture
+{ const c = document.createElement('canvas'); c.width = c.height = 180; const x = c.getContext('2d'), im = x.createImageData(180, 180); for (let i = 0; i < im.data.length; i += 4) { const v = Math.random() * 255; im.data[i] = im.data[i + 1] = im.data[i + 2] = v; im.data[i + 3] = 30; } x.putImageData(im, 0, 0); const g = document.querySelector('#grade .grain'); if (g) g.style.backgroundImage = `url(${c.toDataURL()})`; }
 loadSave(); applyText(); applyGfx(); setVolumes({ music: save.settings.music, sfx: save.settings.sfx, voice: save.settings.voice });
 initInput(); initTouch(document.getElementById('touch'));
 UI.initUI({ G, startLevel, attract, greet, applyGfx, applyText, unlockAll: q.has('unlock') || q.has('class'), forceIntro: q.has('intro') });
