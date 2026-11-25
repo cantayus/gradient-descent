@@ -286,6 +286,32 @@ export const P = {
     ctx.lineCap = 'round'; const limb = (x, y, a, len, wd, d) => { const x1 = x + Math.cos(a) * len, y1 = y + Math.sin(a) * len, mx = (x + x1) / 2 + r.range(-0.08, 0.08) * len, my = (y + y1) / 2 + r.range(-0.08, 0.08) * len; ctx.strokeStyle = d % 2 ? col : mix(col, lit, 0.35); ctx.lineWidth = wd; ctx.beginPath(); ctx.moveTo(x, y); ctx.quadraticCurveTo(mx, my, x1, y1); ctx.stroke(); if (d < 4) for (let i = 0, n = d < 2 ? 2 : r.int(1, 2); i < n; i++) limb(x1, y1, a + r.range(-0.9, 0.9) - 0.1 * Math.sign(Math.cos(a)), len * r.range(0.55, 0.75), wd * 0.62, d + 1); };
     limb(w * 0.5, h, -Math.PI / 2 + r.range(-0.15, 0.15), h * 0.34, w * 0.075, 0);
   },
+  // a pine such as clings to rock: a bent trunk and flat, layered pads of needles
+  pine(ctx, w, h, r, { col = '#2f5f3a', lit = '#7fb060', trunk = '#5a4034' } = {}) {
+    const lean = r.range(-0.18, 0.18) * w; ctx.strokeStyle = trunk; ctx.lineWidth = w * 0.07; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(w / 2, h); ctx.quadraticCurveTo(w / 2 - lean, h * 0.6, w / 2 + lean, h * 0.2); ctx.stroke();
+    for (let i = 0; i < 5; i++) { const y = h * (0.12 + i * 0.13), cx = w / 2 + lean * (1 - i * 0.35) + r.range(-0.12, 0.12) * w, pw = w * (0.2 + i * 0.07) * r.range(0.8, 1.15), g = ctx.createLinearGradient(0, y - h * 0.05, 0, y + h * 0.05); g.addColorStop(0, lit); g.addColorStop(1, col); ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(cx, y, pw, h * 0.05, r.range(-0.12, 0.12), 0, TAU); ctx.fill(); }
+  },
+  // a pillar of sandstone: blocks one on another, split by level joints and upright cracks, with green wherever a ledge will hold a root
+  pillar(ctx, w, h, r, { col = '#b8a88a', lit = '#e4d6b4', shade = '#6f6a78', green = '#3f7a45', greenLit = '#8fc060', sunLeft = true } = {}) {
+    const n = Math.max(4, Math.round(h / (w * 0.55))), hw = (v) => w * (0.3 + 0.12 * v + 0.05 * Math.sin(v * 9 + w)); let y = h;
+    for (let i = 0; i < n; i++) { const v0 = 1 - i / n, bh = (h / n) * r.range(0.85, 1.15), bw = hw(v0) * r.range(0.9, 1.08), cx = w / 2 + r.range(-0.04, 0.04) * w, g = ctx.createLinearGradient(cx - bw, 0, cx + bw, 0); g.addColorStop(0, sunLeft ? lit : shade); g.addColorStop(0.45, col); g.addColorStop(1, sunLeft ? shade : lit); ctx.fillStyle = g;
+      ctx.beginPath(); ctx.roundRect(cx - bw, y - bh, bw * 2, bh + 0.05, w * 0.05); ctx.fill(); ctx.strokeStyle = rgba('#2a2430', 0.3); ctx.lineWidth = w * 0.012; for (let k = 0; k < 3; k++) { const x = cx + r.range(-0.8, 0.8) * bw; ctx.beginPath(); ctx.moveTo(x, y - bh * r.range(0.6, 1)); ctx.lineTo(x + r.range(-0.03, 0.03) * w, y - bh * r.range(0, 0.3)); ctx.stroke(); }
+      ctx.fillStyle = rgba('#a0522a', 0.14); ctx.fillRect(cx - bw, y - bh * r.range(0.3, 0.7), bw * 2, bh * 0.12);      // a rust-stained bed
+      if (r.chance(0.55)) for (let k = 0; k < 5; k++) { ctx.fillStyle = mix(green, greenLit, r.u()); ctx.beginPath(); ctx.ellipse(cx + (r.chance(0.5) ? -1 : 1) * bw * r.range(0.6, 1.05), y - bh + r.range(-0.03, 0.05) * w, w * r.range(0.06, 0.12), w * r.range(0.035, 0.06), 0, 0, TAU); ctx.fill(); }
+      y -= bh; }
+    for (let k = 0; k < 9; k++) { ctx.fillStyle = mix(green, greenLit, r.u()); ctx.beginPath(); ctx.ellipse(w / 2 + r.range(-1, 1) * hw(0) * 0.9, y + r.range(-0.02, 0.06) * w, w * r.range(0.08, 0.14), w * r.range(0.05, 0.08), 0, 0, TAU); ctx.fill(); }
+  },
+  // a macaque sitting
+  macaque(ctx, w, h, r, { col = '#8a7458', lit = '#c0a888', face = '#e89a8a', arm = 0 } = {}) {
+    ctx.fillStyle = col; ctx.beginPath(); ctx.ellipse(w * 0.46, h * 0.68, w * 0.3, h * 0.3, 0, 0, TAU); ctx.fill(); ctx.fillStyle = lit; ctx.beginPath(); ctx.ellipse(w * 0.52, h * 0.72, w * 0.17, h * 0.2, 0, 0, TAU); ctx.fill();
+    ctx.strokeStyle = col; ctx.lineWidth = w * 0.09; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(w * 0.62, h * 0.56); ctx.lineTo(w * (0.74 + arm * 0.06), h * (0.84 - arm * 0.5)); ctx.moveTo(w * 0.3, h * 0.86); ctx.lineTo(w * 0.56, h * 0.95); ctx.moveTo(w * 0.2, h * 0.84); ctx.quadraticCurveTo(w * 0.02, h * 0.8, w * 0.08, h * 0.6); ctx.stroke();
+    ctx.fillStyle = col; ctx.beginPath(); ctx.arc(w * 0.54, h * 0.28, w * 0.2, 0, TAU); ctx.fill(); ctx.fillStyle = face; ctx.beginPath(); ctx.ellipse(w * 0.6, h * 0.31, w * 0.12, h * 0.12, 0, 0, TAU); ctx.fill(); ctx.fillStyle = '#1c1a18'; ctx.beginPath(); ctx.arc(w * 0.57, h * 0.28, w * 0.02, 0, TAU); ctx.arc(w * 0.66, h * 0.28, w * 0.02, 0, TAU); ctx.fill();
+  },
+  // a small pavilion with a curved roof, such as stands on a lookout
+  pavilion(ctx, w, h, r, { roof = '#4a5a52', post = '#a83a2c', lamp = '#3a2c2a' } = {}) {
+    ctx.fillStyle = post; for (const x of [0.24, 0.72]) ctx.fillRect(x * w, h * 0.45, w * 0.05, h * 0.5); ctx.fillStyle = lamp; ctx.fillRect(w * 0.42, h * 0.55, w * 0.16, h * 0.2); ctx.fillStyle = '#6a5a4a'; ctx.fillRect(w * 0.14, h * 0.93, w * 0.72, h * 0.07);
+    ctx.fillStyle = roof; ctx.beginPath(); ctx.moveTo(0, h * 0.5); ctx.quadraticCurveTo(w * 0.22, h * 0.42, w * 0.5, h * 0.08); ctx.quadraticCurveTo(w * 0.78, h * 0.42, w, h * 0.5); ctx.quadraticCurveTo(w * 0.5, h * 0.36, 0, h * 0.5); ctx.fill(); ctx.fillRect(w * 0.47, 0, w * 0.06, h * 0.12);
+  },
 };
 
 // Make `n` different sprites with one painter.

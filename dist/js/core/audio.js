@@ -113,6 +113,15 @@ TRACKS.namib = { bpm: 84, len: 128, parts: [
   line('bass', 0.2, 0.4, T(Array.from({ length: 8 }, (_, b) => { const r = [40, 40, 38, 40, 43, 40, 38, 40][b]; return `${r} . . . . . . . . . ${r} . . . . .`; }).join(' '))),
   beat('tom', 0.12, 0.55, 'o.....x...o.....', 8), beat('shake', 0.04, 0.7, '..x...x...x...x.', 8),
 ] };
+// Zhangjiajie: five notes again, but a different five (D, E, F sharp, A, B), plucked runs like a zither's and a bamboo flute a long way off.
+TRACKS.zhangjiajie = { bpm: 72, len: 128, parts: [
+  chords(0.14, [[50, 57, 62, 66], [47, 54, 59, 62], [45, 52, 57, 61], [50, 57, 62, 64], [50, 57, 62, 66], [47, 54, 59, 66], [45, 52, 59, 61], [50, 57, 62, 66]], 16),
+  line('pluck', 0.2, 0, T('74 76 78 . 81 . . . 78 . 76 . 74 . . . 71 . 74 . 76 . . . 74 . . . . . . . 73 . 76 . 81 . . . 83 . 81 . 78 . . . 76 78 81 . 78 . 76 . 74 . . . . . . . 81 83 86 . 83 . . . 81 . 78 . 76 . . . 78 . 81 . 83 . . . 78 . . . . . . . 76 . 73 . 76 . . . 81 . 78 . 76 . 74 . 74 . . . . . . . . . . . . . . .')),
+  line('flute', 0.1, 0.25, T('. . . . . . . . . . . . 86 . . . . . . . 88 . . . . . . . 86 . . . . . . . . . . . 90 . . . . . . . 88 . . . . . . . 86 . . . 83 . . . . . . . . . . . 93 . . . . . . . 90 . . . . . . . 88 . . . 86 . . . . . . . . . . . 85 . . . . . . . 88 . . . . . . . 86 . . . . . . .')),
+  line('bell', 0.05, 0.5, T(Array.from({ length: 8 }, (_, b) => `. . . . . . . . ${[90, 86, 85, 88, 93, 90, 88, 86][b]} . . . . . . .`).join(' '))),
+  line('bass', 0.18, 0.4, T(Array.from({ length: 8 }, (_, b) => { const r = [38, 35, 33, 38, 38, 35, 33, 38][b]; return `${r} . . . . . . . ${r + 7} . . . . . . .`; }).join(' '))),
+  beat('tick', 0.03, 0.6, 'x...x...x...x.x.', 8), beat('tom', 0.1, 0.75, 'o.......o.....x.', 8),
+] };
 export const trackNames = () => Object.keys(TRACKS);
 export function addTrack(name, def) { TRACKS[name] = def; }
 export const tk = { T, line, chords, beat };
@@ -161,6 +170,7 @@ export const sfx = {
   geyser() { if (!A.ctx) return; hiss(A.sfx, now(), 1.4, 0.3, { f: 500, f2: 2600, q: 0.5, a: 0.3 }); },
   drum(p = 0) { if (!A.ctx) return; const t = now(); tone(A.sfx, 'sine', 70 + p * 60, t, 0.5, 0.5, { a: 0.004, r: 0.4, f2: 46 + p * 30, send: 0.3 }); hiss(A.sfx, t, 0.25 + p * 0.5, 0.06 + p * 0.14, { f: 1800, f2: 4200, q: 0.7 }); },
   thunder() { if (!A.ctx) return; const t = now() + 0.8 + Math.random() * 1.4; hiss(A.sfx, t, 2.6, 0.5, { type: 'lowpass', f: 220, f2: 60, q: 0.4, a: 0.05, send: 0.6 }); },
+  turbo() { if (!A.ctx) return; const t = now(); tone(A.sfx, 'sawtooth', 220, t, 0.45, 0.2, { a: 0.01, r: 0.3, f2: 1320, lp: 2600, send: 0.5 }); hiss(A.sfx, t, 0.5, 0.3, { f: 900, f2: 5200, q: 0.6, a: 0.02 }); tone(A.sfx, 'sine', midi(81), t + 0.05, 0.4, 0.14, { r: 0.3, send: 0.7 }); },
   wake() { if (!A.ctx) return; const t = now(); [57, 64, 69, 76, 81].forEach((n, i) => tone(A.sfx, 'sine', midi(n), t + i * 0.13, 2.2, 0.13, { a: 0.02, r: 1.8, send: 0.9 })); },
   ui(up = false) { if (!A.ctx) return; tone(A.sfx, 'sine', up ? 880 : 660, now(), 0.07, 0.12, { r: 0.05 }); },
   page() { if (!A.ctx) return; hiss(A.sfx, now(), 0.16, 0.12, { f: 2600, f2: 900, q: 0.5 }); },

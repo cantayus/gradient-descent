@@ -24,9 +24,11 @@ addEventListener('resize', resize);
 function applyGfx() { const s = save.settings.gfx; G.gfx = q.has('gfx') ? +q.get('gfx') : s < 0 ? G.auto : s; resize(); if (G.play) G.play.scene.q = G.gfx; document.body.dataset.gfx = G.gfx; document.body.classList.toggle('safe', !!save.settings.safe); }
 function applyText() { document.documentElement.style.setProperty('--fs', save.settings.text || 1); }
 
+// Three lights and a time limit; with assist, five lights and all the time in the world. The limit is generous: a little over twice a good first run.
+export const rules = (spec) => (save.settings.assist ? { lights: 5, limit: Infinity } : { lights: 3, limit: Math.round(spec.par * (spec.boss ? 2.5 : 2.3)) });
 export function startLevel(id, opt = {}) {
   const f = levelById(id); if (!f) return null;
-  G.play = new Play({ spec: f.spec, theme: f.world.theme, can: { ...f.world.can, ...(f.spec.can || {}) }, ghost: opt.ghost || null, hooks: G.hooks, intro: !!opt.intro });
+  G.play = new Play({ spec: f.spec, theme: f.world.theme, can: { ...f.world.can, ...(f.spec.can || {}) }, ghost: opt.ghost || null, hooks: G.hooks, intro: !!opt.intro, ...rules(f.spec) });
   G.play.scene.q = G.gfx; G.play.resize(G.W, G.H); G.levelId = id; G.mode = 'level'; S.reset(); return G.play;
 }
 // The country behind the title and the menus: the hero on a ledge, looking out, at whatever hour it is where the player is.
@@ -56,6 +58,9 @@ G.hooks = {
     else if (name === 'back') { sfx.back(); setTimeout(() => voice.grumble(), 250); }
     else if (name === 'goal') { sfx.goal(); setTimeout(() => voice.trill(), 300); }
     else if (name === 'thump') sfx.drum(extra);
+    else if (name === 'turbo') { sfx.turbo(); say(() => voice.whee(0.6), 0); }
+    else if (name === 'spark') sfx.medal(0);
+    else if (name === 'saved') { sfx.back(); say(() => voice.eep(), 0); }
     else if (name === 'tuck') say(() => voice.hup(0.2), 0.3);
     else if (name === 'lift') { sfx.geyser(); say(() => voice.eep(), 0); setTimeout(() => voice.whee(1), 900); }
     else if (name === 'down') { sfx.land(6, true); setTimeout(() => voice.giggle(), 200); }
@@ -63,9 +68,10 @@ G.hooks = {
     else if (name === 'erupt') { sfx.geyser(); sfx.drum(1); say(() => voice.eep(), 0); setTimeout(() => voice.whee(1), 600); }
   },
   finish(res) { UI.showFinish(res); },
+  fail(why, res) { sfx.fall(); setTimeout(() => voice.grumble(), 500); UI.showFail(why, res); },
 };
 function sounds(p, dt) {
-  const b = p.b, sp = b.speed(), wx = p.weather, live = G.mode === 'level' && !p.done;
+  const b = p.b, sp = b.speed(), wx = p.weather, live = G.mode === 'level' && !p.done && !p.failed;
   ambient({ speed: live ? sp : 0, air: !b.grounded, rolling: live && b.grounded && b.mode === 'ball', sliding: live && b.grounded && b.mode === 'slide', soft: !!SOFT[b.surf], jet: Math.max(b.inJet, p.boss ? p.boss.p * 0.25 : 0), rain: wx.rain * (1 - p.scene.coldNow), wind: wx.wind, gust: wx.gust });
   if (wx.thunder) { wx.thunder = false; sfx.thunder(); }
   if (!live) return; setIntensity(Math.min(1, Math.max(0, (sp - 5) / 15)));
@@ -86,7 +92,7 @@ function frame(now) {
       if (!save.settings.motion) p.scene.shake = 0;
       sounds(p, dt);
     } else quiet();
-    p.draw(ctx); inp.jumpNow = false; UI.frameUI(p);
+    p.draw(ctx); inp.jumpNow = false; inp.turboNow = false; UI.frameUI(p);
   }
   // on Auto, step the picture down if the machine cannot keep up, and say nothing about it
   if (save.settings.gfx < 0 && !G.paused && !q.has('gfx')) { G.slow = G.fps < 42 ? G.slow + dt : 0; if (G.slow > 3 && G.auto > 0) { G.auto--; G.slow = 0; applyGfx(); } }

@@ -33,6 +33,7 @@ export function runBot(spec, can, { maxT = 240, trace = false } = {}) {
     if (can.slide && !can.roll && b.grounded && s < -0.1 && (surf === 'ice' || surf === 'snow') && !pitAhead(b.x, 3)) inp.tuck = true;
     if (can.roll && b.grounded && (s < -0.06 || (sp > 6 && s > 0.25) || b.mode === 'ball' && sp > 9) && !pitAhead(b.x, 3)) inp.tuck = true;
     { const rd = rides.list.find((r) => !r.done && r.x > b.x - 1.5 && r.x - b.x < 12); if (rd && !rides.on) { inp.tuck = false; const d = rd.x - b.x; inp.move = Math.abs(d) < 0.5 ? 0 : d > 0 ? (sp > 4 && d < 5 ? 0 : 1) : -1; inp.jumpNow = false; holdT = 0; inp.jump = false; } }
+    if (f0 && f0.world.cautious) { const pz = pitAhead(b.x, 30); if (pz && b.grounded && sp > 10.2 && pz.x1 - pz.x0 < 7) { inp.tuck = false; inp.move = sp > 11.5 ? -1 : 0; } else if (pz && pz.x1 - pz.x0 < 7) inp.tuck = false; }      // among pillars: walk, do not roll
     let inBasin = false;
     { const wtr = T.waterAt(b.x); if (wtr && wtr.tide && wtr.tide.amp > 2) { // a tide basin: get on the raft, wait for the water, hop out near the top
         const pf = T.platforms.find((p) => p.move && (p.x0 + p.x1) / 2 > wtr.x0 && (p.x0 + p.x1) / 2 < wtr.x1); if (pf) { inBasin = true; retreat = 0; lastMove = t; inp.tuck = false;

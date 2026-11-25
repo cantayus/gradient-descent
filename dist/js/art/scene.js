@@ -28,7 +28,7 @@ function tile(kind, seed) {
   else for (let i = 0; i < 380; i++) dab(r.chance(0.5) ? '#ffffff' : '#000000', r.range(0.04, 0.14), r.range(0.7, 1.8), r.range(0.7, 1.8), 0);   // sand: a fine speckle
   return c;
 }
-const TILE_OF = { dune: 'sand', soft: 'sand', pan: 'rock', gravel: 'rock', grassy: 'grass', lava: 'rock', beach: 'sand', scoria: 'sand', green: 'grass', carpet: 'grass', wetrock: 'rock', tuff: 'sand', rose: 'sand', honey: 'sand', dust: 'sand', vine: 'grass', cap: 'rock', drum: 'sand', meadow: 'grass', moss: 'grass', snow: 'snow', ice: 'ice', sand: 'sand', hot: 'sand', rock: 'rock', basalt: 'rock', wet: 'rock' };
+const TILE_OF = { stone: 'rock', ledge: 'rock', mossy: 'grass', forest: 'grass', wetstone: 'rock', dune: 'sand', soft: 'sand', pan: 'rock', gravel: 'rock', grassy: 'grass', lava: 'rock', beach: 'sand', scoria: 'sand', green: 'grass', carpet: 'grass', wetrock: 'rock', tuff: 'sand', rose: 'sand', honey: 'sand', dust: 'sand', vine: 'grass', cap: 'rock', drum: 'sand', meadow: 'grass', moss: 'grass', snow: 'snow', ice: 'ice', sand: 'sand', hot: 'sand', rock: 'rock', basalt: 'rock', wet: 'rock' };
 
 export class Scene {
   constructor(theme, level, timeKey = 'day') {

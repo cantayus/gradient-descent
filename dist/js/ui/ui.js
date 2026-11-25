@@ -20,7 +20,7 @@ const clear = () => { ui.replaceChildren(); document.body.classList.remove('dim'
 const MEDAL = ['', 'bronze', 'silver', 'gold'];
 const how = () => (input.touch.used ? 'touch' : input.pad.used ? 'pad' : 'key');
 
-export function initUI(a) { api = a; hud.replaceChildren(el('div.h-name', {}, el('small'), el('b'), el('i')), el('div.h-clock'), el('div.h-seeds'), el('div.h-hint'), el('button.h-pause', { type: 'button', 'aria-label': 'Pause', on: { click: () => pause() } }, 'II')); }
+export function initUI(a) { api = a; hud.replaceChildren(el('div.h-lights'), el('div.h-sparks'), el('div.h-bar', {}, el('i')), el('div.h-name', {}, el('small'), el('b'), el('i')), el('div.h-clock'), el('div.h-seeds'), el('div.h-hint'), el('button.h-pause', { type: 'button', 'aria-label': 'Pause', on: { click: () => pause() } }, 'II')); }
 
 // ---- title ----
 // A wide, quiet look at the country with the name over it and one line asking for a key; the menu comes only after that.
@@ -68,6 +68,10 @@ export function frameUI(p) {
   if (!p || hud.hidden || !run) return;
   if (p.started && hud.classList.contains('fresh') && p.clock > 0.6) hud.classList.remove('fresh');
   hud.querySelector('.h-clock').textContent = p.started ? fmt(p.clock) : '';
+  // the rules, where they can be seen: the seed's lights, and how much of its light is left
+  const hl = hud.querySelector('.h-lights'); if (hl.childElementCount !== p.lightsAll) hl.replaceChildren(...Array.from({ length: p.lightsAll }, () => el('i'))); [...hl.children].forEach((n, i) => n.classList.toggle('out', i >= p.lights));
+  const hs = hud.querySelector('.h-sparks'); if (hs.childElementCount !== p.sparksAll) hs.replaceChildren(...Array.from({ length: p.sparksAll }, () => el('i', { text: '✦' }))); [...hs.children].forEach((n, i) => n.classList.toggle('out', i >= p.sparks));
+  const bar = hud.querySelector('.h-bar'), left = p.limit - p.clock; bar.hidden = !Number.isFinite(p.limit); if (!bar.hidden) { bar.firstChild.style.width = Math.max(0, Math.min(100, (left / p.limit) * 100)) + '%'; bar.classList.toggle('low', left < 15); }
   hud.querySelector('.h-seeds').textContent = p.level.seeds.length ? `${p.seeds} / ${p.level.seeds.length}` : '';
   const m = p.level.marks.find((k) => k.kind === 'hint' && p.b.x > k.x - 7 && p.b.x < k.x + 16), text = m && !p.done ? HINTS[m.text]?.[how()] : null, h = hud.querySelector('.h-hint');
   if (text !== run.shown) { run.shown = text; h.textContent = text || ''; h.classList.toggle('on', !!text); }
@@ -99,6 +103,15 @@ export function showStory() {
   ui.append(sheet('The story', showTitle, keys.length ? null : el('p.note', { text: 'It begins when you do.' }), el('div.pages', {}, keys.map((k) => el('button.stone.chapter', { type: 'button', on: { click: () => showTale(k, showStory) } }, el('span.num', { text: String(STORY[k].at + 1) }), el('span.nm', { text: STORY[k].title }), el('span.tm', { text: STORY[k].lines[0] }))))));
 }
 
+// ---- a lost level ----
+export function showFail(why, res) {
+  setTimeout(() => { hud.hidden = true; document.body.classList.add('dim'); playMusic('card');
+    ui.append(el('div.card.small.fail', {}, el('h2', { text: why === 'time' ? 'The light faded' : 'The lights went out' }),
+      el('p', { text: why === 'time' ? 'The seed’s light does not last for ever, and this time it faded before the valley.' : 'Every fall puts out one of the seed’s lights, and that was the last of them.' }), el('p.note', { text: 'It will be lit again at the top.' }),
+      el('div.menu', {}, btn('Try again', () => play(run.id, true), 'big'), btn('Levels', showLevels), btn('Title', showTitle)),
+      save.settings.assist ? null : el('p.note', { text: 'Assist, in Settings, gives five lights and no time limit.' }))); }, 1100);
+}
+
 // ---- the card after a run ----
 export function showFinish(res) {
   const f = run.f, mt = medals(f.spec), out = record(run.id, res, mt, save.settings.assist), s = save.levels[run.id];
@@ -109,7 +122,7 @@ export function showFinish(res) {
     const medalRow = el('div.medals', {}, [3, 2, 1].map((k) => el('div.medal.' + MEDAL[k] + (out.medal >= k ? '.won' : ''), {}, el('i'), el('span', { text: fmt(mt[3 - k]) }))));
     ui.append(el('div.card.finish', {},
       el('div.top', {}, el('div', {}, el('h2', { text: f.spec.name }), el('p.time', {}, el('b', { text: fmt(res.time) }), out.newBest && !out.first ? el('span.tag', { text: 'your best' }) : null, save.settings.assist ? el('span.tag.soft', { text: 'with assist' }) : null),
-        el('p.sub', { text: `Seeds ${res.seeds} of ${res.seedsAll}` + (res.falls ? ` · ${res.falls} ${res.falls === 1 ? 'fall' : 'falls'}` : '') })), medalRow),
+        el('p.sub', { text: `Seeds ${res.seeds} of ${res.seedsAll}` + (res.falls ? ` · ${res.falls} ${res.falls === 1 ? 'fall' : 'falls'}` : '') }), el('p', {}, res.lights === res.lightsAll ? el('span.tag.star', { text: 'no light lost' }) : null, res.seeds === res.seedsAll && res.seedsAll ? el('span.tag.star', { text: 'every seed' }) : null)), medalRow),
       el('div.chartwrap', {}, chart, el('p.cap', { text: 'Your run as a loss curve: how high you stood, moment by moment. Lower is better.' })),
       card ? el('div.note' + (fresh ? '.fresh' : ''), {}, cardArt(card.draw), el('div', {}, el('h3', { text: (fresh ? 'New in the notebook: ' : '') + card.name }), ...card.text.slice(0, fresh ? 3 : 1).map((t) => el('p', { text: t })))) : null,
       !nx && run.id !== '7-B' ? el('p.note', { text: 'That is as far as the road is built. The next country is being made.' }) : null,
@@ -169,10 +182,14 @@ function forget(back) { let armed = 0; const b = btn('Forget my progress', () =>
 function sheet(title, back, ...kids) { return el('div.card.sheet', {}, el('header', {}, el('h2', { text: title }), btn('Back', back, 'ghost')), el('div.body', {}, ...kids)); }
 export function showHow() {
   clear(); document.body.classList.add('dim');
-  const k = how(), rows = k === 'touch' ? [['Run', 'Slide your left thumb left or right.'], ['Jump', 'The upper button. Tap for a hop, hold for a leap.'], ['Slide', 'Hold the lower button on ice and snow.'], ['Float', 'Hold jump in the air to spread wide and fall slowly.'], ['Roll', 'From Cappadocia on, hold the lower button to tuck in and roll.']]
-    : [['Run', '← → or A D'], ['Jump', 'Space. Tap for a hop, hold for a leap.'], ['Slide', 'Hold Shift on ice and snow.'], ['Float', 'Hold Space in the air to spread wide and fall slowly.'], ['Roll', 'From Cappadocia on, hold Shift to tuck in and roll.'], ['Start again', 'R'], ['Pause', 'Esc or P'], ['Sound off', 'M']];
+  const k = how(), rows = k === 'touch' ? [['Run', 'Slide your left thumb left or right.'], ['Jump', 'The upper button. Tap for a hop, hold for a leap.'], ['Slide', 'Hold the lower button on ice and snow.'], ['Float', 'Hold jump in the air to spread wide and fall slowly.'], ['Roll', 'From Cappadocia on, hold the lower button to tuck in and roll.'], ['Turbo', 'The star button. A burst of speed from Eta. It uses up one spark.']]
+    : [['Run', '← → or A D'], ['Jump', 'Space. Tap for a hop, hold for a leap.'], ['Slide', 'Hold Shift on ice and snow.'], ['Float', 'Hold Space in the air to spread wide and fall slowly.'], ['Roll', 'From Cappadocia on, hold Shift to tuck in and roll.'], ['Turbo', 'E. A burst of speed from Eta. It uses up one spark.'], ['Start again', 'R'], ['Pause', 'Esc or P'], ['Sound off', 'M']];
   ui.append(sheet('How to play', showTitle, el('p.lead', { text: 'Find the lowest ground. Every level ends in the deepest valley, where a light is waiting.' }), el('dl.keys', {}, rows.flatMap(([a, b]) => [el('dt', { text: a }), el('dd', { text: b })])),
-    el('p.note', { text: 'Height is the lesson. The higher you stand, the worse the guess, so the way to go is always down. The seeds along the way are worth the detour, and the clock only matters if you want it to.' })));
+    el('h3', { text: 'To win a level' }), el('p', { text: 'Bring the seed to the lowest valley while it still has a light, and before that light fades.' }),
+    el('h3', { text: 'How a level is lost' }), el('p', { text: 'The seed has three lights, shown at the top left. Every fall puts one out, and so does being thrown by the Geyser. When the last goes out the level is lost.' }), el('p', { text: 'The light also fades with time. The bar under the clock shows how much is left. It is generous, but it does run out.' }), el('p', { text: 'A lost level starts again from the top.' }),
+    el('h3', { text: 'Sparks' }), el('p', { text: 'The small stars under the lights are sparks. You begin a level with one, and every five seeds earn another, up to three.' }), el('p', { text: 'A spark can be spent as a turbo. Or it can be kept: if Theta falls with a spark in hand, Eta makes the catch, the spark is spent and no light is lost.' }),
+    el('h3', { text: 'To win the game' }), el('p', { text: 'Each country has five levels and then a harder last one. Finish that and the next country opens. Medals are for time: gold, silver, bronze.' }),
+    el('p.note', { text: 'Height is the lesson. The higher you stand, the worse the guess, so the way to go is always down.' })));
 }
 export function showSettings(back) {
   clear(); document.body.classList.add('dim'); const s = save.settings;
@@ -180,7 +197,7 @@ export function showSettings(back) {
   const pick = (label, key, opts, after) => el('label.set', {}, el('span', { text: label }), el('div.seg', {}, opts.map(([v, t]) => el('button' + (s[key] === v ? '.on' : ''), { type: 'button', on: { click: () => { s[key] = v; store(); after?.(); showSettings(back); } } }, t))));
   ui.append(sheet('Settings', back, slider('Music', 'music'), slider('Sound', 'sfx'), slider('Theta’s voice', 'voice'),
     pick('Picture', 'gfx', [[-1, 'Auto'], [0, 'Plain'], [1, 'Good'], [2, 'Full']], api.applyGfx), pick('Motion', 'motion', [[true, 'Full'], [false, 'Reduced']]), pick('Text', 'text', [[1, 'Normal'], [1.2, 'Larger'], [1.4, 'Largest']], api.applyText),
-    pick('Assist', 'assist', [[false, 'Off'], [true, 'On']]), el('p.note', { text: 'Assist slows the game by a fifth. Times set with it are kept apart and win no medals.' }),
+    pick('Assist', 'assist', [[false, 'Off'], [true, 'On']]), el('p.note', { text: 'Assist slows the game by a fifth, gives the seed five lights and takes away the time limit. Times set with it are kept apart and win no medals.' }),
     pick('Colours', 'safe', [[false, 'Standard'], [true, 'High contrast']], api.applyGfx),
     el('div.row', {}, forget(back))));
 }

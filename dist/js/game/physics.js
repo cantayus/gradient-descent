@@ -228,6 +228,15 @@ function resolve(b, c, inp, dt, first) {
 }
 
 // Run the fixed step as many times as real time asks for. Returns how far into the next step we are, for smooth drawing.
+// Turbo. A burst from the hero's own store of light: a push of TURBO_V along the ground in the way it faces, or forward and a little up when in the air.
+// It is work done by the body, and it is entered in the body's accounts like a jump, so the tests that watch the energy still balance.
+export const TURBO_V = 11;
+export function turbo(b) {
+  if (b.inWater > 0.5) return false;                       // nothing to push against
+  const e0 = b.energy(), f = b.face || 1, dx = b.grounded ? b.ny * f : 0.94 * f, dy = b.grounded ? -b.nx * f : 0.34;
+  b.vx += dx * TURBO_V; b.vy += dy * TURBO_V; if (b.mode === 'ball' && b.grounded) b.w = (b.vx * b.ny - b.vy * b.nx) / b.r;      // a rolling ball goes on rolling without slipping
+  b.work += Math.max(0, b.energy() - e0); b.events.push('turbo'); return true;
+}
 export function advance(b, T, inp, acc, dtReal, onStep) {
   acc += Math.min(dtReal, 0.1);
   while (acc >= STEP) { b.px = b.x; b.py = b.y; step(b, T, inp, STEP); if (onStep) onStep(b); inp.jumpNow = false; acc -= STEP; }

@@ -70,6 +70,18 @@ p { margin: 0.35em 0; line-height: 1.45; }
 @media (max-aspect-ratio: 1/1) { .tmenu { right: auto; left: 50%; top: auto; bottom: 5%; transform: translateX(-50%); align-items: center; } .titem { padding: 0.45em 1em; } .cine::after { background: linear-gradient(to top, rgba(6, 10, 22, 0.6), rgba(6, 10, 22, 0) 55%); } .logo h1 { letter-spacing: 0.2em; margin-right: -0.2em; } }
 @media (prefers-reduced-motion: reduce) { .veil, .emblem, .logo h1, .rule, .press, .titem { animation-duration: 0.01s !important; animation-delay: 0s !important; } }
 
+/* ---- the rules, in play ---- */
+.h-lights { left: 1.1rem; top: 0.95rem; display: flex; gap: 0.45rem; }
+.h-lights i { width: 0.95rem; height: 1.25rem; border-radius: 50% 50% 50% 50% / 62% 62% 38% 38%; background: radial-gradient(circle at 40% 35%, #fff6c8, #ffc23d 60%, #d98a1a); box-shadow: 0 0 0.7rem #ffc23d; transition: all 0.5s; }
+.h-lights i.out { background: rgba(255, 255, 255, 0.16); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35); transform: scale(0.82); }
+.h-bar { left: 50%; top: 2.9rem; transform: translateX(-50%); width: 9rem; height: 3px; border-radius: 2px; background: rgba(255, 255, 255, 0.22); overflow: hidden; }
+.h-bar i { display: block; height: 100%; margin: 0 auto; background: #ffd87a; border-radius: 2px; } .h-bar.low i { background: #ff6a5a; animation: pulse 0.8s infinite; }
+.h-sparks { left: 1.1rem; top: 2.7rem; display: flex; gap: 0.5rem; font-size: 1.05rem; line-height: 1; } .h-sparks i { font-style: normal; color: #8fe0dc; text-shadow: 0 0 0.6rem #5fd0d0; transition: all 0.4s; } .h-sparks i.out { color: rgba(255, 255, 255, 0.25); text-shadow: none; transform: scale(0.8); }
+#hud.intro .h-lights, #hud.intro .h-bar, #hud.intro .h-sparks { opacity: 0; }
+.h-bar { transition: opacity 0.6s; } #hud.fresh .h-bar { opacity: 0; }
+.card.fail h2 { margin-bottom: 0.6rem; } .tag.star { background: rgba(255, 216, 122, 0.18); color: #ffd87a; box-shadow: inset 0 0 0 1px rgba(255, 216, 122, 0.5); margin: 0.3rem 0.4rem 0 0; }
+.sheet .body h3 { margin-top: 0.5rem; color: #ffd87a; font: 700 0.86rem Nunito, sans-serif; letter-spacing: 0.16em; text-transform: uppercase; }
+
 /* ---- the story ---- */
 .tale { position: absolute; inset: 0; display: grid; place-items: center; background: radial-gradient(ellipse at 50% 40%, rgba(8, 12, 26, 0.78), rgba(4, 6, 14, 0.94)); color: #fff; animation: taleIn 1.2s ease-out; overflow: auto; }
 @keyframes taleIn { from { opacity: 0; } }
@@ -137,7 +149,7 @@ p { margin: 0.35em 0; line-height: 1.45; }
 #touch { pointer-events: none; } #touch > * { pointer-events: auto; position: absolute; }
 .tpad { left: 0; top: 0; width: 50%; height: 100%; }
 .tbtn { right: 1.2rem; width: 4.6rem; height: 4.6rem; border-radius: 50%; border: 0; background: rgba(255, 248, 234, 0.4); color: rgba(35, 67, 77, 0.85); font-size: 1.5rem; backdrop-filter: blur(2px); }
-.tjump { bottom: 7.4rem; } .ttuck { bottom: 1.6rem; right: 5.2rem; }
+.tjump { bottom: 7.4rem; } .ttuck { bottom: 1.6rem; right: 5.2rem; } .tturbo { bottom: 6.6rem; right: 6.6rem; width: 3.6rem; height: 3.6rem; background: rgba(255, 216, 122, 0.5); }
 @media (max-height: 520px) { .card { padding: 0.9rem 1.1rem; } .finish .note { display: none; } .title h1 { font-size: 2.4rem; } .title { gap: 0.8rem; } .title .menu { gap: 0.35rem; } .title .menu .btn { padding: 0.3em 1em; } }
 @media (prefers-reduced-motion: reduce) { .card, .medal.won { animation: none; } }
 

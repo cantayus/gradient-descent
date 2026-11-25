@@ -93,3 +93,12 @@ test('the hero floats in water with about six tenths of the body under', () => {
   const under = (-0.5 - (b.y - R)) / (2 * R);
   assert.ok(Math.abs(b.vy) < 0.05, 'comes to rest'); assert.ok(under > 0.5 && under < 0.72, `share under water: ${under}`);
 });
+
+test('turbo adds its speed along the ground and its energy is counted as work', async () => {
+  const { turbo, TURBO_V } = await import('../dist/js/game/physics.js');
+  const T = new Terrain({ ys: Float32Array.from({ length: 400 }, (_, i) => -0.3 * i * 0.25), dx: 0.25 }), b = new Body(20, T.h(20) + R); b.grounded = true;
+  for (let i = 0; i < 120; i++) step(b, T, { move: 1, jump: false, jumpNow: false, tuck: false });
+  const v0 = Math.hypot(b.vx, b.vy), e0 = b.energy(), w0 = b.work; assert.ok(turbo(b)); const v1 = Math.hypot(b.vx, b.vy);
+  assert.ok(Math.abs(v1 - v0 - TURBO_V) < 0.05, `speed rose by ${(v1 - v0).toFixed(2)}, expected ${TURBO_V}`);
+  assert.ok(Math.abs((b.energy() - e0) - (b.work - w0)) < 1e-6, 'the energy gained must equal the work entered');
+});

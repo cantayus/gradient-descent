@@ -5,6 +5,7 @@ import { iceland } from '../art/worlds/iceland.js';
 import { cappadocia } from '../art/worlds/cappadocia.js';
 import { galapagos } from '../art/worlds/galapagos.js';
 import { namib } from '../art/worlds/namib.js';
+import { zhangjiajie } from '../art/worlds/zhangjiajie.js';
 
 const m = 'meadow', g = 'grass';
 const ICE = [
@@ -13,7 +14,7 @@ const ICE = [
       ['valley', 16, 2.2, -2, { zone: 'moss' }], ['hill', 12, 1.6, -1, { zone: 'sand' }], ['flat', 8, { zone: 'snow', surf: 'snow', mark: 'hint', text: 'slide' }], ['slope', 46, -18, { surf: 'ice', zone: 'ice', seeds: 4 }], ['flat', 12, { zone: 'snow', surf: 'snow' }],
       ['steps', 24, 4, -1.6, { zone: 'basalt' }], ['slope', 34, -12, { zone: m, surf: g, seeds: 3 }], ['waves', 30, 1.1, 3, -5, { zone: m, surf: g }], ['slope', 26, -9, { zone: 'sand' }], ['bowl', 20, 4, 3.5, { zone: m, surf: g }]] },
   { id: '1-2', name: 'The Slope Knows', time: 'day', card: 'gradient', par: 38,
-    strokes: [['flat', 8], ['slope', 24, -4, { zone: m, surf: g, seeds: 2 }], ['slope', 26, -14, { zone: m, surf: g, seeds: 3 }], ['flat', 9, { zone: 'sand' }], ['gap', 4], ['flat', 8, { zone: 'sand', seeds: [{ at: 0.5 }] }], ['gap', 5], ['flat', 10, { zone: 'rock' }],
+    strokes: [['flat', 8, { mark: 'hint', text: 'turbo', at: 0.2 }], ['slope', 24, -4, { zone: m, surf: g, seeds: 2 }], ['slope', 26, -14, { zone: m, surf: g, seeds: 3 }], ['flat', 9, { zone: 'sand' }], ['gap', 4], ['flat', 8, { zone: 'sand', seeds: [{ at: 0.5 }] }], ['gap', 5], ['flat', 10, { zone: 'rock' }],
       ['slope', 22, -5, { surf: 'ice', zone: 'ice', seeds: 2 }], ['slope', 30, -19, { surf: 'ice', zone: 'ice', seeds: 3 }], ['kicker', 7, 1.6, { surf: 'ice', zone: 'ice' }], ['gap', 7, -4], ['flat', 12, { zone: 'snow', surf: 'snow', seeds: 2 }], ['slope', 30, -8, { zone: 'snow', surf: 'snow' }],
       ['valley', 24, 3, 0, { zone: 'hot', water: [0.2, 0.8, -1.3], hot: true, plat: [{ at: 0.36, up: -0.9, w: 2.6 }, { at: 0.64, up: -0.9, w: 2.6 }], seeds: [{ at: 0.36, up: 0.6 }, { at: 0.64, up: 0.6 }] }],
       ['flat', 10, { zone: 'hot', jets: [{ at: 0.84, top: 10, v: 18, w: 1.6 }], mark: 'hint', text: 'jet', at: 0.2 }], ['line', 2.5, 5.5, { zone: 'rock' }], ['flat', 12, { zone: 'moss', seeds: 2 }], ['slope', 40, -21, { zone: 'moss', seeds: 4 }],
@@ -160,6 +161,38 @@ const NAM = [
       down(34, -14), pan(80, 6), dune(18, 4, -1), gale(36, 14), down(30, -12, GV), ...hollow(28, 12, 3.6, 4.4, { zone: GV }, 4), land(GV, 18), pan(50, 4), dune(16, 3.2, -1), down(26, -9), ['flat', 12, { zone: PA }], ['bowl', 22, 4.4, 4.4, { zone: PA }]] },
 ];
 
+// ---- Zhangjiajie: ravines, and a step for each direction ----
+const ST = 'stone', LE = 'ledge', MO = 'mossy', FO = 'forest', WS = 'wetstone';
+// The tops of pillars: level stone with nothing between. Every gap is a different width, so every jump has to be a different length.
+const tops = (widths, gaps, zone = LE) => widths.flatMap((w, i) => [['flat', w, { zone, seeds: [{ at: 0.5 }] }], ...(i < gaps.length ? [['gap', gaps[i]]] : [])]);
+// A ravine: steep in and steep out, though never too steep to walk out of. A vine bridge hangs across its mouth; a hop from the rim reaches it.
+const ravine = (L, depth, bridge = true, o = {}) => ['valley', L, depth, 0, { zone: WS, seeds: [{ at: 0.5, up: 0.9 - depth }, ...(bridge ? [{ at: 0.5, up: 1 }] : [])], ...(bridge ? { plat: [{ at: 0.5, up: 0.12, w: L * 0.4, kind: 'vine' }] } : {}), ...o }];
+const ZHA = [
+  { id: '5-1', name: 'The Ravine', time: 'dawn', card: 'ravine', par: 52,
+    strokes: [['flat', 10, { zone: FO, surf: g }], run(28, -9, FO, 3, g), ['flat', 10, { zone: ST, mark: 'hint', text: 'bridge', at: 0.2 }], ravine(14, 3.6), land(ST, 14), run(26, -9, MO, 3, 'moss'), ...tops([8, 6, 7, 10], [2.4, 2.8, 2.6]), run(24, -8, FO, 3, g), ravine(16, 4.2), land(ST, 14),
+      run(30, -11, MO, 3, 'moss'), ['waves', 26, 1.1, 3, -4, { zone: FO, surf: g, seeds: 3 }], ['flat', 8, { zone: ST }], ravine(14, 3.6), ['flat', 6, { zone: ST }], ravine(14, 3.8), land(ST, 14), ...tops([8, 7, 8, 10], [3, 2.4, 3.2]), run(26, -9, FO, 3, g),
+      ['flat', 10, { zone: MO, surf: 'moss' }], ['bowl', 22, 4, 4, { zone: MO, surf: 'moss' }]] },
+  { id: '5-2', name: 'Side to Side', time: 'day', card: 'zigzag', par: 58,
+    strokes: [['flat', 10, { zone: ST }], run(30, -11, ST), ravine(16, 4.2, false), ravine(16, 4.4, false), ravine(16, 4.2, false), land(ST, 14), run(26, -9, FO, 3, g), ...tops([8, 6, 6, 8, 10], [2.6, 3, 2.4, 3.4]), run(28, -10, MO, 3, 'moss'), ravine(18, 4.6), ['flat', 6, { zone: ST }], ravine(16, 4.2),
+      land(ST, 14), ...hollow(24, 9, 3, 3.2, { zone: ST }), land(ST, 16), run(26, -9, FO, 3, g), ravine(14, 3.8, false), ravine(14, 3.8, false), ravine(14, 3.8, false), ravine(14, 3.8, false), land(ST, 14), ...tops([8, 7, 10], [3.2, 2.8]), run(24, -8, MO, 3, 'moss'),
+      ['flat', 10, { zone: MO, surf: 'moss' }], ['bowl', 22, 4, 4, { zone: MO, surf: 'moss' }]] },
+  { id: '5-3', name: 'A Step for Each Way', time: 'golden', card: 'adaptive', par: 54,
+    strokes: [['flat', 10, { zone: LE }], ...tops([9, 5, 9, 6, 10, 5, 12], [2.2, 4.6, 2.6, 5.4, 2.4, 3.6]), run(28, -10, FO, 3, g), ravine(16, 4.2), land(ST, 14), ...tops([10, 4.5, 4.5, 10, 6, 12], [2.4, 2.4, 5.6, 3, 4.8]), run(30, -11, MO, 3, 'moss'), ['waves', 26, 1.2, 3, -4, { zone: FO, surf: g, seeds: 3 }],
+      ['flat', 8, { zone: ST }], ravine(14, 3.8), ['flat', 6, { zone: ST }], ...tops([9, 6, 9, 5, 9, 12], [3.4, 5, 2.2, 4.4, 5.8]), run(26, -9, FO, 3, g), ['flat', 10, { zone: MO, surf: 'moss' }], ['bowl', 22, 4, 4, { zone: MO, surf: 'moss' }]] },
+  { id: '5-4', name: 'Recent Memory', time: 'mist', card: 'rms', par: 65,
+    strokes: [['flat', 10, { zone: MO, surf: 'moss' }], run(28, -10, MO, 3, 'moss'), ...tops([8, 5, 5, 5, 8], [2.4, 2.4, 2.4, 2.4]), ...tops([9, 9, 9, 12], [5, 5, 5]), run(26, -9, FO, 3, g), ravine(14, 3.8, false), ravine(14, 3.8, false), ravine(18, 4.6), land(ST, 14),
+      ...tops([8, 5, 9, 5, 9, 12], [2.4, 5, 2.4, 5, 2.4]), run(30, -11, MO, 3, 'moss'), ...hollow(24, 9, 3, 3.4, { zone: ST }), land(ST, 16), ...tops([9, 6, 6, 9, 9, 12], [3.2, 3.2, 3.2, 5.2, 5.2]), run(26, -9, FO, 3, g), ravine(16, 4.2), land(ST, 12),
+      ['flat', 10, { zone: MO, surf: 'moss' }], ['bowl', 22, 4, 4, { zone: MO, surf: 'moss' }]] },
+  { id: '5-5', name: 'Both at Once', time: 'dusk', card: 'adam', par: 54,
+    strokes: [['flat', 10, { zone: ST }], run(34, -13, ST, 4), ['flat', 4, { zone: ST }], ['kicker', 6, 2.2, { zone: ST }], ['gap', 8, -4], land(LE, 18), ...tops([9, 5, 9, 12], [2.4, 5.2, 3]), run(28, -10, FO, 3, g), ravine(16, 4.2), ['flat', 6, { zone: ST }], ravine(14, 3.8, false), land(ST, 14),
+      run(30, -12, MO, 4, 'moss'), ...hollow(26, 10, 3.2, 3.6, { zone: ST }), land(ST, 16), ...tops([9, 6, 5, 9, 6, 12], [3, 2.4, 5.4, 2.6, 4.8]), run(30, -11, FO, 3, g), ['flat', 4, { zone: ST }], ['kicker', 6, 2, { zone: ST }], ['gap', 8, -4, { plat: [{ at: 0.5, up: -2.2, w: 3, kind: 'vine' }] }], land(LE, 18),
+      ravine(18, 4.6), land(ST, 12), ...tops([9, 5, 9, 12], [4.6, 2.4, 5.6]), run(24, -8, MO, 3, 'moss'), ['flat', 10, { zone: MO, surf: 'moss' }], ['bowl', 22, 4, 4.2, { zone: MO, surf: 'moss' }]] },
+  { id: '5-B', name: 'The Thousand Pillars', time: 'night', boss: 'pillars', par: 80, music: 'boss',
+    strokes: [['flat', 10, { zone: LE }], ...tops([9, 6, 5, 9, 5, 9, 6, 12], [2.6, 2.4, 5, 2.4, 5.4, 3, 4.6]), run(26, -9, FO, 3, g), ravine(16, 4.2, false), ravine(16, 4.4, false), ravine(18, 4.6), land(ST, 14), ...tops([9, 4.5, 4.5, 9, 6, 9, 12], [2.4, 2.4, 5.6, 3.2, 5, 5.8]),
+      run(30, -12, MO, 4, 'moss'), ['flat', 4, { zone: ST }], ['kicker', 6, 2.2, { zone: ST }], ['gap', 9, -5], land(LE, 18), ...tops([9, 6, 9, 5, 9, 5, 12], [5.2, 3, 5.6, 2.4, 4.8, 2.6]), run(26, -9, FO, 3, g), ravine(18, 4.6), land(ST, 12),
+      ...tops([9, 9, 6, 12], [5.8, 3.4, 5.4]), run(24, -8, MO, 3, 'moss'), ['flat', 10, { zone: MO, surf: 'moss' }], ['bowl', 22, 4.2, 4.4, { zone: MO, surf: 'moss' }]] },
+];
+
 // the ground behind the title: a mossy ledge above a long green slope
 export const TITLE = (z1, z2) => ({ id: 'title', name: '', time: 'golden', strokes: [['flat', 6, { zone: z1 }], ['hill', 8, 0.9, -0.4, { zone: z2, surf: g }], ['slope', 13, -9, { zone: z2, surf: g }], ['slope', 30, -9, { zone: z1 }], ['waves', 30, 1.2, 2, -6, { zone: z2, surf: g }], ['bowl', 20, 3, 3, { zone: z2, surf: g }]] });
 
@@ -168,6 +201,7 @@ export const WORLDS = [
   { id: 'cappadocia', n: 2, name: 'Cappadocia', theme: cappadocia, music: 'cappadocia', can: { slide: true, roll: true, spread: true, mu: true }, title: ['tuff', 'vine'], levels: CAP },
   { id: 'galapagos', n: 3, name: 'Galápagos', theme: galapagos, music: 'galapagos', can: { slide: true, roll: true, spread: true, mu: true }, title: ['lava', 'green'], levels: GAL },
   { id: 'namib', n: 4, name: 'Namib', theme: namib, music: 'namib', can: { slide: true, roll: true, spread: true, mu: true }, title: ['gravel', 'grassy'], levels: NAM },
+  { id: 'zhangjiajie', n: 5, name: 'Zhangjiajie', theme: zhangjiajie, music: 'zhangjiajie', can: { slide: true, roll: true, spread: true, mu: true }, title: ['ledge', 'forest'], cautious: true, levels: ZHA },
 ];
 export const levelById = (id) => { for (const w of WORLDS) for (const l of w.levels) if (l.id === id) return { world: w, spec: l }; return null; };
 export const ALL = WORLDS.flatMap((w) => w.levels.map((l) => l.id));

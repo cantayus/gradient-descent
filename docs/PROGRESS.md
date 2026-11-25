@@ -62,6 +62,19 @@ After the last world a sandbox opens: pick a landscape, set learning rate, momen
   oryx, sand on the wind (wind zones now show as streaks). Five levels and a boss, all finished by the scripted player. Blocks in worlds.js: `pan` (hard, level
   clay: a ball keeps its speed), `softFlat` (a roll dies), `dune` (up and over), `gale` (a tail wind to sail on with the float). Music on five notes, five pages
   (plateau, keep going, a schedule for the steps, shorter and shorter, warming up).
+- Zhangjiajie (`js/art/worlds/zhangjiajie.js`): ranks of flat-topped pillars in mist (`pillar` ridge style), near pillars of stacked blocks (`P.pillar`),
+  pines, bamboo, macaques, a pavilion, waterfalls. Five levels and a boss, all finished by the scripted player. Blocks: `tops(widths, gaps)` (pillar tops
+  with gaps of differing width, so every jump is a different length) and `ravine(L, depth, bridge)` (steep both ways but always walkable out of; a vine
+  bridge across the mouth for the fast line). Five pages (ravine, side to side, a step for each direction, recent memory, Adam).
+- Rules for losing and winning (owner: "the player should also be able to fail… set some rules for failing and some rules for winning"):
+  the seed has three lights; a fall or a Geyser eruption puts one out; at none the level is lost. The seed's light also fades with time: the limit is
+  2.3 times par (2.5 for a boss), shown as a bar under the clock. A lost level starts again from the top (`Play._fail`, `UI.showFail`). With assist: five
+  lights, no limit. Winning: reach the lowest valley with a light left, in time; five levels then the boss opens the next country. The rules are written
+  out under "How to play". The levels test fails if the scripted player loses three lights or comes near the limit.
+- Special powers (owner: "like a 'turbo' move"): sparks, Eta's gift. One at the start of a level, one more for every five seeds, three at most.
+  A spark is a turbo when asked for (E, C, L or Ctrl; the star button on touch; Y on a pad): `turbo(b)` in physics.js adds 11 units a second along the
+  ground, counted as work, with a test. While it burns, seeds nearby are drawn in. Or a spark is a rescue: fall with one in hand and Eta makes the catch,
+  the spark is spent and no light is lost.
 - The story (`js/data/story.js`, owner: "there should be a story about why the hero travels to these locations"). A seed of light will grow only in the
   lowest valley in the world, and nobody knows where that is. Each country is somebody's answer, fails for the reason that country teaches, and whoever
   lives there knows where to try next: Iceland (too new, still boiling) → Cappadocia (all hollows, all on a high plateau) → Galápagos (the edge of the sea,
@@ -81,7 +94,8 @@ After the last world a sandbox opens: pick a landscape, set learning rate, momen
 
 ## Not built yet
 
-- Worlds 5 to 7 (themes, music, mechanics, bosses, notebook pages). Next: Zhangjiajie (ravines and adaptive steps; sandstone pillars in mist, deep narrow gorges, vines, macaques).
+- Worlds 6 and 7 (themes, music, mechanics, bosses, notebook pages). Next: Patagonia (exploding and vanishing gradients, clipping; granite towers, glaciers, hard wind, condors, guanacos, turquoise lakes, an ice field), then Yakushima (overfitting, early stopping; ancient cedars, moss, rain, Yaku deer and macaques, streams; the finale and the Memorizer, who is not a villain).
+- More powers were offered to the owner as possible: a second hop carried by Mu. Not built; it would let a standing jump clear the rims that are meant to need speed.
 - An ending scene for the last chapter of the story.
 - Cappadocia still wants: a scene in which Mu joins (like the opening scene), a boss with something of its own (now it is a hard run of hollows), a play-through by hand for feel, better poplars.
 - The wordless story scenes, Sort! bonus stages, the daily valley, endless mode, the lab with sliders, the teacher page, the share card.

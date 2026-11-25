@@ -1,5 +1,5 @@
 // One run of one level: the body, the rig, the camera, the clock, the ghost, and everything that happens along the way.
-import { Body, advance, step, R, STEP } from './physics.js';
+import { Body, advance, step, turbo, R, STEP } from './physics.js';
 import { build } from './level.js';
 import { Rig, POSE } from './theta.js';
 import { Scene } from '../art/scene.js';
@@ -53,7 +53,12 @@ class Mu {
 }
 
 export class Play {
-  constructor({ spec, theme, can = {}, ghost = null, hooks = {}, cine = false, intro = false }) {
+  // The rules. A level is won by bringing the seed to the lowest valley. It is lost if the seed's lights all go out (each fall puts one out, and so does
+  // being thrown by the Geyser), or if its light fades before the valley is reached (the time limit). A lost level starts again from the top.
+  constructor({ spec, theme, can = {}, ghost = null, hooks = {}, cine = false, intro = false, lights = 3, limit = Infinity }) {
+    this.lights = this.lightsAll = lights; this.limit = limit; this.failed = null;
+    // Sparks: Eta's gift. One to begin with, another for every five seeds, three at most. A spark is a turbo when asked for, and a rescue when Theta falls with one in hand.
+    this.sparks = 1; this.sparksAll = 3; this.turboT = 0; this.turboCd = 0;
     this.cine = cine; this.intro = intro ? { t: 0, stage: 0 } : null; this.seedGlow = intro ? 0 : 1; this.etaIn = intro ? 0 : 1; this.star = null; this.spec = spec; this.theme = theme; this.level = build(spec); this.T = this.level.T; this.hooks = hooks;
     this.scene = new Scene(theme, this.level, spec.time || 'day');
     this.b = new Body(this.level.start.x, this.level.start.y + R); Object.assign(this.b.can, { slide: true, roll: true, spread: true }, can); this.b.grounded = true;
@@ -94,14 +99,19 @@ export class Play {
   update(dt, inp) {
     const b = this.b, sc = this.scene; this.t += dt;
     if (this.intro) inp = this._intro(dt, inp);
+    this.turboT = Math.max(0, this.turboT - dt); this.turboCd = Math.max(0, this.turboCd - dt);
+    if (inp.turboNow && !this.cine && !this.intro && !this.done && !this.failed && this.dead <= 0 && !this.rides.on && this.sparks > 0 && this.turboCd <= 0 && turbo(b)) {
+      this.sparks--; this.turboT = 0.8; this.turboCd = 0.45; if (!this.started) { this.started = true; this.hooks.start?.(); } this.rig.feel('glee', 0.9); this.rig.sq.kick(4); this.eta.glow = 1.8; this.scene.flash = Math.max(this.scene.flash, 0.16);
+      for (let i = 0; i < 3; i++) this.scene.emit('spark', b.x - b.face * 0.3, b.y, 8, { speed: 6, dir: b.face > 0 ? Math.PI : 0, spread: 1.4, life: 0.6, size: 0.12, g: 3 }); this.hooks.event?.('turbo', b); }
     if (!this.started && !this.cine && !this.intro && (inp.move || inp.jump || inp.tuck)) { this.started = true; this.hooks.start?.(); }
     this.weather.set(b.t + (this.cine ? this.t : 0), dt); this.rig.wind = this.weather.wind; this.rig.rain = this.weather.rain * (1 - this.scene.coldNow);
     if (this.dead > 0) { this.dead -= dt; if (this.dead <= 0) this._respawn(); }
-    else if (!this.done) {
+    else if (!this.done && !this.failed) {
       if (this.rides.on || this.rides.list.length) { // a balloon carries the hero step by step in place of the ordinary physics
         this.acc += Math.min(dt, 0.1); while (this.acc >= STEP) { b.px = b.x; b.py = b.y; if (this.rides.step(b, STEP)) { b.events.length = 0; } else step(b, this.T, inp, STEP); for (const e of this.rides.events) { this.hooks.event?.(e, b); if (e === 'lift') this.rig.feel('wow', 1.4); else this.rig.feel('joy', 1.5); } this._onStep(); inp.jumpNow = false; this.acc -= STEP; } b.mix = this.acc / STEP;
       } else this.acc = advance(b, this.T, inp, this.acc, dt, () => this._onStep());
       if (this.started) this.clock += dt;
+      if (this.clock > this.limit) this._fail('time');
     } else { // at the goal the hero is let down gently and the level is over
       this.acc = advance(b, this.T, { move: 0, jump: false, jumpNow: false, tuck: false }, this.acc, dt);
     }
@@ -114,7 +124,7 @@ export class Play {
     if (this.cine) this._cine(dt); else this.cam.update(v, dt, this.W / this.H, false, this.intro ? 'close' : !this.started || !!this.rides.on); sc.update(dt, this.cam);
     this._effects(dt);
     // the record of the run: where the hero was (for the ghost) and how high (for the loss curve)
-    if (this.started && !this.done) {
+    if (this.started && !this.done && !this.failed) {
       this.recT -= dt; if (this.recT <= 0) { this.recT += 1 / 30; this.rec.push(+b.x.toFixed(2), +b.y.toFixed(2), +pose.tuck.toFixed(2), +pose.roll.toFixed(2), +pose.lean.toFixed(2), b.face); }
       this.curT -= dt; if (this.curT <= 0) { this.curT += 0.1; this.curve.push(+b.y.toFixed(2)); }
     }
@@ -123,21 +133,23 @@ export class Play {
   }
 
   _onStep() {
-    const b = this.b, L = this.level; tides(this.T, b.t);
+    const b = this.b, L = this.level; if (this.dead > 0 || this.failed) return; tides(this.T, b.t);
     for (const e of b.events) this.hooks.event?.(e, b);
-    if (this.boss) { this.boss.step(b, STEP); for (const e of this.boss.events) { this.hooks.event?.(e, b, this.boss.p); if (e === 'erupt') { this.scene.shake = 0.6; this.rig.dizzy = 3.2; } else this.scene.emit('steam', b.x, b.y - 0.3, 3, { speed: 1.2, life: 1.2, size: 0.5, col: '#ffffff', g: -1.2, drag: 0.6 }); } }
+    if (this.boss) { this.boss.step(b, STEP); for (const e of this.boss.events) { this.hooks.event?.(e, b, this.boss.p); if (e === 'erupt') { this.scene.shake = 0.6; this.rig.dizzy = 3.2; this.lights--; if (this.lights <= 0) this._fail('falls'); } else this.scene.emit('steam', b.x, b.y - 0.3, 3, { speed: 1.2, life: 1.2, size: 0.5, col: '#ffffff', g: -1.2, drag: 0.6 }); } }
     if (b.grounded && Math.abs(this.T.dh(b.x)) < 0.35) { const c = L.checkFor(b.x); if (c.x > this.check.x) this.check = c; }
-    for (const s of L.seeds) if (!s.got && Math.abs(s.x - b.x) < 0.75 && Math.abs(s.y - b.y) < 0.85) { s.got = true; this.seeds++; this.scene.emit('spark', s.x, s.y, 8, { speed: 3, spread: 6.3, life: 0.5, size: 0.12, g: 4 }); this.hooks.event?.('seed', b, this.seeds); }
-    if (L.fell(b)) { this.dead = 0.55; this.falls++; this.hooks.event?.('fall', b); return; }
-    if (!this.done && Math.abs(b.x - L.goal.x) < 1.5 && b.y - L.goal.y < 2.2) { this.done = true; this.rig.feel('proud', 4); for (let i = 0; i < 4; i++) this.scene.emit('spark', L.goal.x, L.goal.y + 0.5, 12, { speed: 7, spread: 2.4, life: 1.2, size: 0.14, g: 5 }); this.hooks.event?.('goal', b); this.hooks.finish?.(this.result()); }
+    for (const s of L.seeds) if (!s.got && Math.abs(s.x - b.x) < (this.turboT > 0 ? 2.4 : 0.75) && Math.abs(s.y - b.y) < (this.turboT > 0 ? 2.4 : 0.85)) { s.got = true; this.seeds++; if (this.seeds % 5 === 0 && this.sparks < this.sparksAll) { this.sparks++; this.hooks.event?.('spark', b); } this.scene.emit('spark', s.x, s.y, 8, { speed: 3, spread: 6.3, life: 0.5, size: 0.12, g: 4 }); this.hooks.event?.('seed', b, this.seeds); }
+    if (L.fell(b)) { this.falls++; if (this.sparks > 0) { this.sparks--; this.dead = 0.4; this.hooks.event?.('saved', b); return; }      // a spark in hand: Eta catches the fall, and no light is lost
+      this.lights--; this.hooks.event?.('fall', b); if (this.lights <= 0) { this.dead = 1e9; this._fail('falls'); } else this.dead = 0.55; return; }
+    if (!this.done && !this.failed && Math.abs(b.x - L.goal.x) < 1.5 && b.y - L.goal.y < 2.2) { this.done = true; this.rig.feel('proud', 4); for (let i = 0; i < 4; i++) this.scene.emit('spark', L.goal.x, L.goal.y + 0.5, 12, { speed: 7, spread: 2.4, life: 1.2, size: 0.14, g: 5 }); this.hooks.event?.('goal', b); this.hooks.finish?.(this.result()); }
   }
+  _fail(why) { if (this.failed || this.done) return; this.failed = why; this.rig.feel('sulk', 6); this.hooks.fail?.(why, this.result()); }
   _respawn() { const b = this.b, c = this.check; b.x = b.px = c.x; b.y = b.py = c.y + R + 0.05; b.vx = b.vy = b.w = 0; b.mode = 'run'; b.grounded = true; this.rig.feel('sulk', 0.9); this.rig.sq.kick(4); this.scene.emit('dust', c.x, c.y + 0.3, 14, { speed: 2.5, spread: 6.3, life: 0.5, size: 0.16, col: '#ffffff', g: -1 }); this.cam.update(b, 0.016, this.W / this.H, true); this.hooks.event?.('back', b); }
-  result() { return { id: this.spec.id, time: this.clock, seeds: this.seeds, seedsAll: this.level.seeds.length, falls: this.falls, curve: this.curve.slice(), rec: this.rec.slice(), top: this.level.start.y, bottom: this.level.goal.y, maxSpeed: this.maxSpeed }; }
+  result() { return { id: this.spec.id, sparks: this.sparks, lights: this.lights, lightsAll: this.lightsAll, limit: this.limit, time: this.clock, seeds: this.seeds, seedsAll: this.level.seeds.length, falls: this.falls, curve: this.curve.slice(), rec: this.rec.slice(), top: this.level.start.y, bottom: this.level.goal.y, maxSpeed: this.maxSpeed }; }
 
   // dust, spray and streaks: small things that say what the body is doing
   _effects(dt) {
     const b = this.b, sc = this.scene, T = this.T, sp = b.speed(), gy = b.y - b.r, z = sc.zoneAt(b.x);
-    const soil = { dune: '#f8ac64', soft: '#ffe4b4', pan: '#fffaf0', gravel: '#c8b8a4', grassy: '#f6e490', lava: '#6a6a78', beach: '#fff4dc', scoria: '#dc8458', green: '#aadc62', carpet: '#f48c5c', wetrock: '#8ab0c8', tuff: '#f2e2c4', rose: '#f0c0b4', honey: '#f0d898', dust: '#e0cca8', vine: '#b4d07a', cap: '#a89888', snow: '#ffffff', ice: '#dff6ff', sand: '#5a5d6a', moss: '#a9c94f', meadow: '#9cc267', hot: '#e0b070', rock: '#8a90a0', basalt: '#8a90a0', wet: '#bfd9ea' }[z] || '#bbbbbb';
+    const soil = { stone: '#dccfae', ledge: '#f0e4c4', mossy: '#a8d868', forest: '#8ab858', wetstone: '#a0b8c0', dune: '#f8ac64', soft: '#ffe4b4', pan: '#fffaf0', gravel: '#c8b8a4', grassy: '#f6e490', lava: '#6a6a78', beach: '#fff4dc', scoria: '#dc8458', green: '#aadc62', carpet: '#f48c5c', wetrock: '#8ab0c8', tuff: '#f2e2c4', rose: '#f0c0b4', honey: '#f0d898', dust: '#e0cca8', vine: '#b4d07a', cap: '#a89888', snow: '#ffffff', ice: '#dff6ff', sand: '#5a5d6a', moss: '#a9c94f', meadow: '#9cc267', hot: '#e0b070', rock: '#8a90a0', basalt: '#8a90a0', wet: '#bfd9ea' }[z] || '#bbbbbb';
     for (const e of b.events) {
       if (e === 'jump') sc.emit('dust', b.x, gy, 6, { speed: 2.2, spread: 2.6, life: 0.4, size: 0.11, col: soil, g: 3 });
       if (e === 'land') { const n = Math.round(clamp(b.impact * 0.9, 3, 16)); sc.emit('dust', b.x, gy, n, { speed: clamp(b.impact * 0.3, 1.5, 5), spread: 3.1, dir: Math.PI / 2, life: 0.5, size: 0.13, col: soil, g: 2 }); if (b.impact > 13) sc.shake = Math.min(0.5, b.impact * 0.02); }
