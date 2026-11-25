@@ -169,21 +169,60 @@ export const P = {
     ctx.fillStyle = '#4a6a92'; ctx.beginPath(); ctx.moveTo(w * 0.72, h * 0.16); ctx.lineTo(w * 0.81, h * 0.2); ctx.lineTo(w * 0.81, h * 0.355); ctx.lineTo(w * 0.72, h * 0.39); ctx.closePath(); ctx.fill();
     ctx.fillStyle = '#1c1e24'; if (blink) ctx.fillRect(w * 0.58, h * 0.245, w * 0.09, h * 0.018); else { ctx.beginPath(); ctx.arc(w * 0.625, h * 0.25, w * 0.038, 0, TAU); ctx.fill(); }
   },
-  // a fairy chimney: a cone of soft pale rock under a cap of harder, darker stone. People have cut rooms into many of them, so some have a door and windows.
-  chimney(ctx, w, h, r, { col = '#e6d2ae', lit = '#fbeecf', shade = '#b89a80', cap = '#6a5a52', capLit = '#9a8878', win = null, rooms = 0 } = {}) {
-    const top = h * 0.2, bw = w * r.range(0.4, 0.48), nw = w * r.range(0.11, 0.16), bulge = r.range(0.02, 0.07) * w;
-    ctx.beginPath(); ctx.moveTo(w / 2 - bw, h); ctx.bezierCurveTo(w / 2 - bw * 0.8 - bulge, h * 0.62, w / 2 - nw * 1.6, h * 0.4, w / 2 - nw, top); ctx.lineTo(w / 2 + nw, top); ctx.bezierCurveTo(w / 2 + nw * 1.6, h * 0.4, w / 2 + bw * 0.8 + bulge, h * 0.62, w / 2 + bw, h); ctx.closePath();
-    const g = ctx.createLinearGradient(w / 2 - bw, 0, w / 2 + bw, 0); g.addColorStop(0, lit); g.addColorStop(0.45, col); g.addColorStop(1, shade); ctx.fillStyle = g; ctx.fill(); ctx.save(); ctx.clip();
-    // the rock is laid down in beds, and rain has cut flutes down it
-    for (let i = 0; i < 5; i++) { ctx.fillStyle = rgba(i % 2 ? '#ffffff' : shade, 0.16); const y = top + (h - top) * r.range(0.1, 0.95); ctx.beginPath(); ctx.ellipse(w / 2, y, w, h * r.range(0.012, 0.03), r.range(-0.05, 0.05), 0, TAU); ctx.fill(); }
-    ctx.strokeStyle = rgba(shade, 0.5); ctx.lineWidth = w * 0.012; ctx.lineCap = 'round'; for (let i = 0; i < 9; i++) { const x = w / 2 + r.range(-1, 1) * bw * 0.8, y0 = top + (h - top) * r.range(0.15, 0.6); ctx.beginPath(); ctx.moveTo(x, y0); ctx.quadraticCurveTo(x + r.range(-0.03, 0.03) * w, (y0 + h) / 2, x + (x - w / 2) * 0.25, h); ctx.stroke(); }
-    if (rooms) { const dark = win || '#3a2c2a'; ctx.fillStyle = dark; const dw = w * 0.11, dh = h * 0.13; ctx.beginPath(); ctx.roundRect(w / 2 - dw / 2 + r.range(-0.08, 0.08) * w, h - dh, dw, dh * 1.2, [dw / 2, dw / 2, 0, 0]); ctx.fill();
-      for (let i = 0; i < rooms; i++) { const y = h * r.range(0.42, 0.78), x = w / 2 + r.range(-0.5, 0.5) * bw * (y / h), s = w * r.range(0.05, 0.075); ctx.beginPath(); ctx.roundRect(x - s / 2, y - s * 0.7, s, s * 1.3, [s / 2, s / 2, 0, 0]); ctx.fill(); }
-      ctx.fillStyle = rgba(shade, 0.8); for (let i = 0; i < 6; i++) ctx.fillRect(w / 2 + r.range(-0.3, 0.3) * bw, h * r.range(0.3, 0.42), w * 0.022, w * 0.022); }      // pigeon holes, high up
-    ctx.restore();
-    // the cap
-    const cw = nw * r.range(1.9, 2.6), ch = h * r.range(0.15, 0.2); ctx.beginPath(); ctx.moveTo(w / 2 - cw, top + ch * 0.25); ctx.quadraticCurveTo(w / 2 - cw * 0.9, top - ch * 0.5, w / 2 + r.range(-0.2, 0.2) * cw, top - ch); ctx.quadraticCurveTo(w / 2 + cw * 0.9, top - ch * 0.5, w / 2 + cw, top + ch * 0.25); ctx.quadraticCurveTo(w / 2, top + ch * 0.5, w / 2 - cw, top + ch * 0.25); ctx.closePath();
-    const cg = ctx.createLinearGradient(w / 2 - cw, 0, w / 2 + cw, 0); cg.addColorStop(0, capLit); cg.addColorStop(1, cap); ctx.fillStyle = cg; ctx.fill();
+  // A fairy chimney, drawn from what the real ones look like. A shaft of pale, soft tuff stands on a flared skirt of its own washed-down rock, narrows to a
+  // neck, and carries a darker cap of harder stone that overhangs it and throws a shadow down the neck. The rock is in beds of slightly different colour,
+  // rain has cut rills down the skirt, and no two sides are alike. Three kinds stand in Cappadocia and all three are here: the capped pillar (as at
+  // Paşabağ), the plain pointed cone (as round Göreme), and the tall column with a rounded tip. They often stand two or three to one base.
+  // Where people have cut rooms: a door with a dressed frame, small square windows with soot above them, and the rows of holes of a pigeon house.
+  chimney(ctx, w, h, r, { col = '#e9dfc6', lit = '#fdf6e2', shade = '#a9a0b4', cap = '#6b5a50', capLit = '#a8927e', win = null, rooms = 0, kind = null, heads = 0, sunLeft = true, snow = null } = {}) {
+    const K = kind || r.pick(['cap', 'cap', 'cap', 'cap', 'cone', 'cone', 'column']), n = heads || (w / h > 0.62 ? r.pick([2, 2, 3]) : r.pick([1, 1, 1, 2]));
+    const wob = (m) => { const a = Array.from({ length: 9 }, () => r.range(-1, 1)); return (v) => { const x = clamp(v, 0, 1) * 8, i = Math.min(7, Math.floor(x)), f = x - i, u = f * f * (3 - 2 * f); return (a[i] * (1 - u) + a[i + 1] * u) * m; }; };
+    const sm = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); }, dusk = '#3a2c3c';
+    const shafts = Array.from({ length: n }, (_, i) => ({ x: w * (n === 1 ? 0.5 : 0.24 + (0.52 * i) / (n - 1) + r.range(-0.03, 0.03)), hh: h * (n === 1 || i === (n > 2 ? 1 : 0) ? r.range(0.93, 1) : r.range(0.55, 0.84)), b: (w / n) * r.range(0.4, 0.47) * (n > 1 ? 1.2 : 1), lean: r.range(-0.04, 0.04) * w, kind: n > 1 && r.chance(0.3) ? 'cone' : K })).sort((a, b) => b.hh - a.hh);
+    shafts.forEach((s, si) => {
+      const capH = s.kind === 'cap' ? s.hh * r.range(0.15, 0.21) : 0, top = h - s.hh + capH, bodyH = h - top, neck = s.b * r.range(0.34, 0.46), nl = wob(0.045), nr = wob(0.045), sway = wob(0.01 * w);
+      const half = (v) => { const fl = sm(0.68, 1, v) ** 2; if (s.kind === 'cone') return s.b * Math.min(1, Math.sqrt(v / 0.05 + 0.01)) * (0.1 + 0.64 * v ** 0.85 + 0.26 * fl); if (s.kind === 'column') return s.b * Math.min(1, Math.sqrt(v / 0.09 + 0.015)) * (0.5 + 0.2 * v + 0.3 * fl); return neck + (s.b - neck) * (0.72 * v ** 0.95 + 0.28 * fl); };      // a steady taper from a broad foot, as the real ones have
+      const cx = (v) => s.x + s.lean * (1 - v) + sway(v), Lf = (v) => cx(v) - half(v) * (1 + nl(v)), Rt = (v) => cx(v) + half(v) * (1 + nr(v)), Y = (v) => top + bodyH * v, N = 26;
+      ctx.beginPath(); for (let i = 0; i <= N; i++) { const v = i / N; i ? ctx.lineTo(Lf(v), Y(v)) : ctx.moveTo(Lf(v), Y(v)); } for (let i = N; i >= 0; i--) ctx.lineTo(Rt(i / N), Y(i / N)); ctx.closePath();
+      const g = ctx.createLinearGradient(s.x - s.b, 0, s.x + s.b, 0); g.addColorStop(0, sunLeft ? lit : shade); g.addColorStop(sunLeft ? 0.4 : 0.6, col); g.addColorStop(1, sunLeft ? shade : lit); ctx.fillStyle = g; ctx.fill(); ctx.save(); ctx.clip();
+      // beds of ash, each sagging a little round the pillar; two of them harder, standing out as ledges
+      const tints = ['#ffffff', shade, '#e2a090', '#e8cc80', '#ffffff', shade, '#d9b8a8'];
+      for (let i = 0, nb = r.int(6, 9); i < nb; i++) { const v = r.range(0.08, 0.95), th = bodyH * r.range(0.012, 0.04), sag = r.range(0.012, 0.03) * bodyH, x0 = s.x - s.b * 1.4, x1 = s.x + s.b * 1.4;
+        ctx.fillStyle = rgba(tints[i % tints.length], r.range(0.1, 0.24)); ctx.beginPath(); ctx.moveTo(x0, Y(v)); ctx.quadraticCurveTo(cx(v), Y(v) + sag * 2, x1, Y(v)); ctx.lineTo(x1, Y(v) + th); ctx.quadraticCurveTo(cx(v), Y(v) + th + sag * 2, x0, Y(v) + th); ctx.closePath(); ctx.fill();
+        if (i < 2) { ctx.strokeStyle = rgba(dusk, 0.3); ctx.lineWidth = Math.max(0.012, bodyH * 0.006); ctx.beginPath(); ctx.moveTo(x0, Y(v) + th); ctx.quadraticCurveTo(cx(v), Y(v) + th + sag * 2, x1, Y(v) + th); ctx.stroke(); if (snow) { ctx.strokeStyle = snow; ctx.lineWidth = bodyH * 0.012; ctx.beginPath(); ctx.moveTo(x0, Y(v)); ctx.quadraticCurveTo(cx(v), Y(v) + sag * 2, x1, Y(v)); ctx.stroke(); } } }
+      // rills, fanning out with the skirt
+      ctx.lineCap = 'round'; for (let i = 0, m = Math.round(10 + s.b * 12); i < m; i++) { const u = r.range(-0.92, 0.92), v0 = r.range(0.3, 0.82); ctx.strokeStyle = i % 3 ? rgba(dusk, 0.2) : rgba('#ffffff', 0.22); ctx.lineWidth = w * r.range(0.005, 0.012); ctx.beginPath(); for (let k = 0; k <= 5; k++) { const v = v0 + ((1 - v0) * k) / 5, x = cx(v) + u * half(v); k ? ctx.lineTo(x, Y(v)) : ctx.moveTo(x, Y(v)); } ctx.stroke(); }
+      for (let i = 0; i < 90; i++) { ctx.fillStyle = rgba(i % 2 ? '#ffffff' : dusk, 0.07); ctx.fillRect(s.x + r.range(-1, 1) * s.b, Y(r.u()), w * 0.012, w * 0.008); }      // grain
+      if (capH) { const sg = ctx.createLinearGradient(0, top, 0, top + bodyH * 0.13); sg.addColorStop(0, rgba(dusk, 0.55)); sg.addColorStop(1, rgba(dusk, 0)); ctx.fillStyle = sg; ctx.fillRect(s.x - s.b, top, s.b * 2, bodyH * 0.13); }      // the cap's shadow
+      if (s.kind === 'column') { const tg = ctx.createLinearGradient(0, top, 0, top + bodyH * 0.2); tg.addColorStop(0, rgba(cap, 0.6)); tg.addColorStop(1, rgba(cap, 0)); ctx.fillStyle = tg; ctx.fillRect(s.x - s.b, top, s.b * 2, bodyH * 0.2); }
+      const fg = ctx.createLinearGradient(0, h - bodyH * 0.1, 0, h); fg.addColorStop(0, rgba(dusk, 0)); fg.addColorStop(1, rgba(dusk, 0.24)); ctx.fillStyle = fg; ctx.fillRect(s.x - s.b * 1.5, h - bodyH * 0.1, s.b * 3, bodyH * 0.1);
+      // rooms cut into the rock
+      if (rooms && si === 0) { const dark = win || '#2c2228', dw = Math.min(0.5, s.b * 0.5), dh = dw * 1.75, dx = cx(1) + r.range(-0.3, 0.3) * s.b - dw / 2;
+        ctx.fillStyle = rgba(lit, 0.9); ctx.beginPath(); ctx.roundRect(dx - dw * 0.14, h - dh - dw * 0.14, dw * 1.28, dh * 1.2, [dw * 0.64, dw * 0.64, 0, 0]); ctx.fill(); ctx.fillStyle = dark; ctx.beginPath(); ctx.roundRect(dx, h - dh, dw, dh * 1.1, [dw / 2, dw / 2, 0, 0]); ctx.fill(); if (!win) { ctx.fillStyle = '#6a4a30'; ctx.fillRect(dx + dw * 0.5, h - dh * 0.78, dw * 0.5, dh); }
+        for (let i = 0; i < rooms; i++) { const v = r.range(0.42, 0.86), ws = dw * r.range(0.34, 0.5), x = cx(v) + r.range(-0.55, 0.55) * half(v) - ws / 2, y = Y(v);
+          const st = ctx.createLinearGradient(0, y - ws * 2.2, 0, y); st.addColorStop(0, rgba(dusk, 0)); st.addColorStop(1, rgba(dusk, 0.28)); ctx.fillStyle = st; ctx.fillRect(x, y - ws * 2.2, ws, ws * 2.2);      // soot from the hearth inside
+          ctx.fillStyle = dark; ctx.beginPath(); ctx.roundRect(x, y - ws * 0.2, ws, ws * 1.2, i % 2 ? [ws / 2, ws / 2, 0, 0] : ws * 0.08); ctx.fill(); ctx.fillStyle = rgba(lit, 0.8); ctx.fillRect(x - ws * 0.12, y + ws, ws * 1.24, ws * 0.14); }
+        if (rooms >= 3) { const v = r.range(0.26, 0.36), c = r.int(3, 5), q = dw * 0.15, gx = cx(v) - (c * q * 1.9) / 2, gy = Y(v); ctx.fillStyle = rgba('#ffffff', 0.4); ctx.fillRect(gx - q * 0.6, gy - q * 0.6, c * q * 1.9 + q * 0.3, q * 4.1); ctx.strokeStyle = rgba('#b5523a', 0.55); ctx.lineWidth = q * 0.22; ctx.strokeRect(gx - q * 0.6, gy - q * 0.6, c * q * 1.9 + q * 0.3, q * 4.1); ctx.fillStyle = dark; for (let a = 0; a < 2; a++) for (let b = 0; b < c; b++) ctx.fillRect(gx + b * q * 1.9, gy + a * q * 1.9, q, q); } }      // the pigeon house, whitewashed and edged in red
+      ctx.restore();
+      if (capH) { // the cap: an uneven pointed block, wider than the neck it sits on
+        const cw = Math.max(neck * r.range(1.5, 2.1), s.b * 0.42), c0 = cx(0), ax = c0 + r.range(-0.25, 0.25) * cw, ty = top - capH, by = top + capH * 0.12, lk = [r.range(0.75, 0.95), r.range(0.3, 0.45), r.range(0.7, 0.92), r.range(0.25, 0.42)];
+        const hat = () => { ctx.beginPath(); ctx.moveTo(c0 - cw, by); ctx.lineTo(c0 - cw * lk[0], top - capH * lk[1]); ctx.lineTo(ax - cw * 0.12, ty + capH * 0.08); ctx.lineTo(ax + cw * 0.1, ty); ctx.lineTo(c0 + cw * lk[2], top - capH * lk[3]); ctx.lineTo(c0 + cw, by); ctx.quadraticCurveTo(c0, by + capH * 0.24, c0 - cw, by); ctx.closePath(); };
+        hat(); const cg = ctx.createLinearGradient(c0 - cw, 0, c0 + cw, 0); cg.addColorStop(0, sunLeft ? capLit : cap); cg.addColorStop(1, sunLeft ? cap : capLit); ctx.fillStyle = cg; ctx.fill(); ctx.save(); ctx.clip();
+        ctx.fillStyle = rgba('#2a2028', 0.3); ctx.beginPath(); ctx.moveTo(ax, ty); ctx.lineTo(sunLeft ? c0 + cw * 1.1 : c0 - cw * 1.1, by + capH * 0.2); ctx.lineTo(c0 + (sunLeft ? 0.12 : -0.12) * cw, by + capH * 0.3); ctx.closePath(); ctx.fill();
+        ctx.strokeStyle = rgba('#2a2028', 0.3); ctx.lineWidth = Math.max(0.012, capH * 0.03); for (let i = 0; i < 3; i++) { ctx.beginPath(); ctx.moveTo(c0 + r.range(-0.7, 0.7) * cw, top - capH * r.range(0.2, 0.7)); ctx.lineTo(c0 + r.range(-0.8, 0.8) * cw, by); ctx.stroke(); }
+        ctx.fillStyle = rgba(dusk, 0.3); ctx.fillRect(c0 - cw, by - capH * 0.02, cw * 2, capH * 0.3);
+        if (snow) { ctx.fillStyle = snow; ctx.beginPath(); ctx.moveTo(c0 - cw * 0.9, top - capH * 0.3); ctx.lineTo(c0 - cw * lk[0], top - capH * lk[1]); ctx.lineTo(ax - cw * 0.12, ty + capH * 0.08); ctx.lineTo(ax + cw * 0.1, ty); ctx.lineTo(c0 + cw * lk[2], top - capH * lk[3]); ctx.lineTo(c0 + cw * 0.88, top - capH * 0.26); ctx.quadraticCurveTo(c0, top - capH * 0.5, c0 - cw * 0.9, top - capH * 0.3); ctx.closePath(); ctx.fill(); }
+        ctx.restore(); }
+    });
+    // blocks that have come down, lying at the foot
+    for (let i = 0; i < 3; i++) { const bw = w * r.range(0.04, 0.09), x = w * r.range(0.08, 0.92); ctx.fillStyle = mix(col, shade, r.range(0.1, 0.5)); ctx.beginPath(); ctx.ellipse(x, h - bw * 0.3, bw, bw * 0.5, r.range(-0.3, 0.3), 0, TAU); ctx.fill(); }
+  },
+  // the soft rock between the pillars: low rounded waves of it, rilled by rain, with a pink or a white bed showing
+  badland(ctx, w, h, r, { col = '#e9dfc6', lit = '#fdf6e2', shade = '#a9a0b4', sunLeft = true } = {}) {
+    for (let i = 0, n = r.int(3, 5); i < n; i++) { const cx = w * (0.16 + (0.68 * (i + r.range(0.2, 0.8))) / n), hw = w * r.range(0.14, 0.24), hh = h * r.range(0.5, 1), g = ctx.createLinearGradient(cx - hw * 1.4, 0, cx + hw * 1.4, 0); g.addColorStop(0, sunLeft ? lit : shade); g.addColorStop(0.5, col); g.addColorStop(1, sunLeft ? shade : lit); ctx.fillStyle = g;
+      ctx.beginPath(); ctx.moveTo(cx - hw * 1.5, h); ctx.bezierCurveTo(cx - hw, h - hh * 0.2, cx - hw * 0.5, h - hh, cx, h - hh); ctx.bezierCurveTo(cx + hw * 0.5, h - hh, cx + hw, h - hh * 0.2, cx + hw * 1.5, h); ctx.closePath(); ctx.fill(); ctx.save(); ctx.clip();
+      for (let k = 0; k < 2; k++) { ctx.fillStyle = rgba(k ? '#e2a090' : '#ffffff', 0.2); ctx.fillRect(cx - hw * 1.5, h - hh * r.range(0.25, 0.7), hw * 3, hh * 0.07); }
+      ctx.lineCap = 'round'; for (let k = 0; k < 10; k++) { const u = r.range(-1.2, 1.2); ctx.strokeStyle = k % 3 ? rgba('#3a2c3c', 0.2) : rgba('#ffffff', 0.25); ctx.lineWidth = w * 0.006; ctx.beginPath(); ctx.moveTo(cx + u * hw * 0.3, h - hh * r.range(0.6, 0.95)); ctx.quadraticCurveTo(cx + u * hw * 0.7, h - hh * 0.4, cx + u * hw * 1.25, h); ctx.stroke(); } ctx.restore(); }
   },
   // a poplar: the tall thin tree that lines every stream and field edge in Anatolia
   poplar(ctx, w, h, r, { col = '#5f8a3f', lit = '#b4d06a', trunk = '#6a5a48' } = {}) {

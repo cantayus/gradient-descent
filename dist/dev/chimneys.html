@@ -1,0 +1,12 @@
+<!doctype html><meta charset="utf-8"><title>chimneys</title><body style="margin:0;background:#9cc4e8"><canvas id="c" width="1800" height="900"></canvas>
+<script type="module">
+import { cappadocia } from '../js/art/worlds/cappadocia.js';
+import { stamp } from '../js/art/paint.js';
+const q = new URLSearchParams(location.search), time = { ...cappadocia.times[q.get('time') || 'day'] }, S = cappadocia.sprites(time), x = document.getElementById('c').getContext('2d');
+const g = x.createLinearGradient(0, 0, 0, 900); time.sky.forEach((c, i) => g.addColorStop(i / (time.sky.length - 1), c)); x.fillStyle = g; x.fillRect(0, 0, 1800, 900);
+let px = 70; for (const s of S.chimney) { stamp(x, s, px + s.w * 35, 430, 70); px += s.w * 70 + 26; }
+px = 90; for (const s of S.chimneyBig) { stamp(x, s, px + s.w * 22, 880, 44); px += s.w * 44 + 30; }
+for (const s of S.wave) { stamp(x, s, px + s.w * 22, 880, 44); px += s.w * 44 + 20; }
+for (const s of S.chimneyMid) { stamp(x, s, px + 40, 880, 90); px += 110; }
+window.__ready = true;
+</script>

@@ -37,12 +37,12 @@ export const cappadocia = {
       // the valley floor: vineyards in rows, poplars along the stream, a village, the red river
       { par: 0.16, scale: 0.4, base: 0.69, amp: 0.12, style: 'round', seed: 47, col: t(snowy ? '#d2d6dc' : '#c9b07a'), haze: 0.12, foot: 0.45, fog: 0.14,
         bands: [{ col: t(snowy ? '#eef2f6' : '#7d9c46'), a: 0.75, at: 0.02, th: 0.2, w: 0.1, f: 3, s: 2 }, { col: t('#5f8a3a'), a: 0.6, at: 0.24, th: 0.07, w: 0.05, f: 9, s: 4 }, { col: t('#5f8a3a'), a: 0.6, at: 0.36, th: 0.07, w: 0.05, f: 9, s: 5 }, { col: t('#b9603f'), a: 0.85, at: 0.58, th: 0.045, w: 0.12, f: 1.4, s: 9, glint: 16 }],
-        stamps: [{ s: 'poplarFar', every: 0.07, p: 0.55, size: 0.05, seed: 3, sink: 0.004 }, { s: 'stoneHouse', kind: 'smoke', every: 0.3, p: 0.5, size: 0.03, seed: 5, drop: [0.05, 0.4], glow: 0.7 }, { s: 'chimneyFar', every: 0.22, p: 0.5, size: 0.08, seed: 7, drop: [0, 0.3] },
+        stamps: [{ s: 'poplarFar', every: 0.07, p: 0.55, size: 0.05, seed: 3, sink: 0.004 }, { s: 'stoneHouse', kind: 'smoke', every: 0.3, p: 0.5, size: 0.03, seed: 5, drop: [0.05, 0.4], glow: 0.7 }, { s: 'waveFar', every: 0.3, p: 0.5, size: 0.06, seed: 6, drop: [0, 0.3] }, { s: 'chimneyFar', every: 0.22, p: 0.5, size: 0.08, seed: 7, drop: [0, 0.3] },
           { s: 'horseFar', kind: 'graze', every: 0.3, p: 0.5, size: 0.034, seed: 11, drop: [0.1, 0.5], roam: 1.2, speed: 0.05 }, { s: 'poplarFar', every: 0.09, p: 0.5, size: 0.06, seed: 13, drop: [0.44, 0.54] }] },
       // the near slopes: waves of rose and cream rock, chimneys with rooms in them, apricot trees
       { par: 0.3, scale: 0.36, base: 0.79, amp: 0.14, style: 'round', seed: 61, col: t(snowy ? '#c4c8d0' : '#d9a888'), haze: 0.05, foot: 0.3,
         bands: [{ col: t(snowy ? '#f4f6fa' : '#f3dfc0'), a: 0.8, at: 0.02, th: 0.16, w: 0.12, f: 4, s: 3 }, { col: t('#e8958a'), a: 0.6, at: 0.2, th: 0.14, w: 0.12, f: 3, s: 5 }, { col: t('#ecc77a'), a: 0.55, at: 0.4, th: 0.12, w: 0.12, f: 4, s: 7 }, { col: t('#7d9c46'), a: 0.6, at: 0.6, th: 0.1, w: 0.14, f: 5, s: 9 }],
-        stamps: [{ s: 'chimneyMid', every: 0.16, p: 0.6, size: 0.085, seed: 21, sink: 0.014, glow: 0.35 }, { s: 'apricotFar', every: 0.08, p: 0.5, size: 0.05, seed: 23, drop: [0.05, 0.5] }, { s: 'poppyFar', every: 0.03, p: 0.6, size: 0.04, seed: 25, sink: 0.003 }, { s: 'tuftFar', every: 0.03, p: 0.7, size: 0.035, seed: 27, sink: 0.003 },
+        stamps: [{ s: 'waveFar', every: 0.2, p: 0.6, size: 0.07, seed: 19, sink: 0.012 }, { s: 'chimneyMid', every: 0.16, p: 0.6, size: 0.085, seed: 21, sink: 0.01, glow: 0.35 }, { s: 'chimneyMid', every: 0.21, p: 0.5, size: 0.075, seed: 22, drop: [0.05, 0.35], glow: 0.35 }, { s: 'apricotFar', every: 0.08, p: 0.5, size: 0.05, seed: 23, drop: [0.05, 0.5] }, { s: 'poppyFar', every: 0.03, p: 0.6, size: 0.04, seed: 25, sink: 0.003 }, { s: 'tuftFar', every: 0.03, p: 0.7, size: 0.035, seed: 27, sink: 0.003 },
           { s: 'jarFar', every: 0.4, p: 0.5, size: 0.04, seed: 29, drop: [0.1, 0.4] }, { s: '-', kind: 'flock', every: 0.6, p: 0.5, size: 0.016, seed: 31, n: 6, sink: -0.04 }] },
     ];
   },
@@ -55,8 +55,9 @@ export const cappadocia = {
     ctx.globalAlpha = 1;
   },
   behind: [
-    { s: 'chimney', every: 13, p: 0.6, size: 1, seed: 401, sink: 0.6, glow: 0.35 },
-    { s: 'chimneyBig', every: 37, p: 0.6, size: 1, seed: 405, sink: 0.8, glow: 0.3 },
+    { s: 'wave', every: 8, p: 0.6, size: 1, seed: 397, sink: 0.35 },
+    { s: 'chimney', every: 11, p: 0.62, size: 1, seed: 401, sink: 0.3, glow: 0.35 },
+    { s: 'chimneyBig', every: 37, p: 0.6, size: 1, seed: 405, sink: 0.4, glow: 0.3 },
     { s: 'poplar', every: 7, p: 0.4, size: 1, seed: 409, sink: 0.25, zone: ['vine', 'dust', 'honey'] },
     { s: 'apricot', every: 6, p: 0.45, size: 1, seed: 413, sink: 0.2, zone: ['vine', 'tuff'] },
     { s: 'rockBig', every: 9, p: 0.35, size: 1, seed: 417, sink: 0.5 },
@@ -106,11 +107,16 @@ export const cappadocia = {
     const pal = [['#e8503a', '#f6e7c4'], ['#f2a23a', '#3f6fb0', '#f6e7c4'], ['#d94f7a', '#ffd76a'], ['#3fa8a0', '#f6e7c4', '#e8503a'], ['#7a5fc8', '#ffd76a', '#f6e7c4'], ['#f2c53a', '#e8503a'], ['#2f6f9a', '#ffffff'], ['#e8503a', '#ffd76a', '#3fa8a0', '#f6e7c4'], ['#8fc84a', '#f6e7c4', '#2f6f5a'], ['#f08ab0', '#ffffff', '#7a5fc8']];
     S.balloon = pal.map((cols, i) => sprite(1, 1.32, (ctx, w, h) => P.balloon(ctx, w, h, new RNG('balloon' + i), { cols: cols.map((c) => mix(t(c), time.haze, 0.12)), basket: t('#6a4a30') }), { ax: 0.5, ay: 0.5, ppu: 110 }));
     const rockC = snowy ? ['#c9c2b8', '#b8b0a8'] : ['#d9c3a0', '#cdb090', '#e0cfae'];
-    const chim = (rooms) => (r) => { const c = r.pick([['#e9d6b2', '#fff2d6', '#b89a84'], ['#e8b8a6', '#ffdccc', '#b4847c'], ['#ecd08a', '#fff0bc', '#b89a5c']]); return { col: t(c[0]), lit: t(c[1]), shade: t(c[2]), cap: t('#5e504a'), capLit: t(snowy ? '#f4f6fa' : '#9c8a7c'), win, rooms: rooms(r) }; };
-    S.chimney = v(6, 'cap-chim', (r) => r.range(1.8, 2.8), (r) => r.range(3.2, 5.6), P.chimney, chim((r) => r.pick([0, 2, 3, 4])));
-    S.chimneyBig = v(3, 'cap-chimb', (r) => r.range(3.6, 5), (r) => r.range(7, 9.5), P.chimney, chim((r) => r.int(4, 7)));
-    S.chimneyMid = v(5, 'cap-chimm', (r) => r.range(0.6, 0.9), (r) => r.range(1, 1.7), P.chimney, chim((r) => r.pick([0, 2, 3])), { ppu: 64 });
-    S.chimneyFar = v(5, 'cap-chimf', (r) => r.range(0.5, 0.8), (r) => r.range(0.9, 1.6), P.chimney, (r) => ({ col: t.h('#dfc6a0', 0.15), lit: t.h('#f6e6c8', 0.15), shade: t.h('#b09a86', 0.15), cap: t.h('#6a5c56', 0.15), capLit: t.h('#94867c', 0.15) }), { ppu: 48 });
+    // the real colours are quiet: ivory, a pale rose, a pale honey, with a cool shadow side and a brown-grey cap
+    const sunLeft = time.sun ? time.sun.x < 0.5 : true, snow = snowy ? '#ffffff' : null, stone = [['#e9dfc6', '#fdf6e2', '#a9a0b4'], ['#e6cdb8', '#fbe8d8', '#a8929c'], ['#e6d6a4', '#fbf0c8', '#a89a84']];
+    const chim = (rooms, o = {}) => (r) => { const c = r.pick(stone); return { col: t(c[0]), lit: t(c[1]), shade: t(c[2]), cap: t('#6b5a50'), capLit: t('#a8927e'), win: dark ? '#ffd76a' : null, rooms: rooms(r), sunLeft, snow, ...o }; };
+    S.chimney = v(8, 'cap-chim', (r) => r.range(2.3, 4.6), (r) => r.range(3.6, 5.6), P.chimney, chim((r) => r.pick([0, 0, 2, 3, 4])));
+    S.chimneyBig = v(4, 'cap-chimb', (r) => r.range(4.4, 6.8), (r) => r.range(7, 9.2), P.chimney, chim((r) => r.int(3, 6)));
+    S.chimneyMid = v(6, 'cap-chimm', (r) => r.range(0.75, 1.4), (r) => r.range(1.1, 1.7), P.chimney, chim((r) => r.pick([0, 2, 3])), { ppu: 64 });
+    const far3 = (r) => { const c = r.pick(stone); return { col: t.h(c[0], 0.14), lit: t.h(c[1], 0.14), shade: t.h(c[2], 0.14), cap: t.h('#6b5a50', 0.14), capLit: t.h('#a8927e', 0.14), sunLeft, snow }; };
+    S.chimneyFar = v(6, 'cap-chimf', (r) => r.range(0.65, 1.3), (r) => r.range(1, 1.6), P.chimney, far3, { ppu: 48 });
+    S.wave = v(5, 'cap-wave', (r) => r.range(4, 8), (r) => r.range(1.1, 2.4), P.badland, (r) => { const c = r.pick(stone); return { col: t(c[0]), lit: t(c[1]), shade: t(c[2]), sunLeft }; });
+    S.waveFar = v(4, 'cap-wavef', (r) => r.range(2, 3.4), (r) => r.range(0.5, 0.9), P.badland, (r) => { const c = r.pick(stone); return { col: t.h(c[0], 0.12), lit: t.h(c[1], 0.12), shade: t.h(c[2], 0.12), sunLeft }; }, { ppu: 48 });
     S.castle = [sprite(2.6, 2.2, (ctx, w, h) => { const r = new RNG('castle'); P.rock(ctx, w, h, r, { col: t.h('#d2b490', 0.2), lit: t.h('#f2e0c0', 0.2) }); ctx.fillStyle = dark ? '#ffd76a' : t.h('#5a4640', 0.2); for (let i = 0; i < 16; i++) ctx.fillRect(r.range(0.2, 0.8) * w, r.range(0.3, 0.9) * h, 0.05, 0.07); }, { ppu: 48 })];
     S.poplar = v(4, 'cap-poplar', (r) => r.range(0.9, 1.2), (r) => r.range(3.4, 5), P.poplar, () => ({ col: t(snowy ? '#8a8f86' : '#5f8a3f'), lit: t(snowy ? '#e8ecee' : '#b4d06a'), trunk: t('#6a5a48') }));
     S.poplarFar = v(3, 'cap-popf', 0.3, (r) => r.range(0.9, 1.3), P.poplar, () => ({ col: t.h(snowy ? '#8a8f86' : '#557d3a', 0.1), lit: t.h('#a4c060', 0.1), trunk: t('#5a4a3c') }), { ppu: 48 });
