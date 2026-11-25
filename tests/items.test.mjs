@@ -46,3 +46,19 @@ for (const w of WORLDS) for (const l of w.levels) {
     assert.ok(L.items.some((i) => i.kind === 'dew'), 'no dewdrop');
   });
 }
+
+// The practice slope teaches by asking: a crack a tap can clear, a gap that wants the jump held, and one that wants a turbo. Each must ask for exactly that.
+import { turbo } from '../dist/js/game/physics.js';
+import { TUTORIAL } from '../dist/js/data/worlds.js';
+import { TUTOR } from '../dist/js/data/notebook.js';
+test('the practice slope: each gap asks for what its lesson teaches', () => {
+  const L = build(TUTORIAL), T = L.T;
+  const cross = (p, how) => { for (const off of [0.2, 0.5, 0.9, 1.4, 2, 3]) { const b = new Body(p.x0 - 9, T.h(p.x0 - 9) + R); b.can.roll = false; b.grounded = true; let jumped = false, held = 0, tb = false, ok = null;
+    for (let i = 0; i < 240 * 5 && ok == null; i++) { const inp = { move: 1, jump: held > 0, jumpNow: false, tuck: false }; if (!jumped && b.grounded && b.x >= p.x0 - off) { inp.jumpNow = true; inp.jump = true; jumped = true; held = how === 'tap' ? 0.03 : 0.5; } held -= STEP; step(b, T, inp, STEP);
+      if (how === 'turbo' && jumped && !tb && b.pushT <= 0) { turbo(b); tb = true; } if (L.fell(b)) ok = false; if (b.x > p.x1 + 0.4 && b.grounded) ok = true; }
+    if (ok) return true; } return false; };
+  assert.equal(L.pits.length, 3); const [crack, gap, wide] = L.pits;
+  assert.ok(cross(crack, 'tap'), 'a tap clears the crack'); assert.ok(!cross(gap, 'tap') && cross(gap, 'hold'), 'the gap wants the jump held'); assert.ok(!cross(wide, 'hold') && cross(wide, 'turbo'), 'the wide gap wants a turbo');
+  for (const m of L.marks.filter((k) => k.kind === 'tutor')) assert.ok(TUTOR[m.text]?.key && TUTOR[m.text]?.touch && TUTOR[m.text]?.pad, 'lesson text for ' + m.text);
+  assert.ok(L.items.some((i) => i.kind === 'stamp') && L.items.some((i) => i.kind === 'dew'));
+});

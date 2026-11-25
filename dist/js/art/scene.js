@@ -15,6 +15,10 @@ const RIDGE = {
   cone: (u, s) => { const c = Math.abs(((u * 0.5 + hash1(Math.floor(u * 0.5), s)) % 1) - 0.5) * 2; return Math.pow(1 - c, 2.2) * (0.5 + 0.5 * hash1(Math.floor(u * 0.5), s + 1)) * 0.8 + fbm(u * 2, s, 2) * 0.2; },
   // one great volcano standing alone on the horizon, with low country either side of it
   volc: (u, s) => { const d = Math.abs(u - 0.35 - (s % 7) * 0.05); return Math.pow(Math.max(0, 1 - d * 0.95), 1.7) * 0.92 * (1 + (fbm(u * 6, s, 2) - 0.5) * 0.12) + fbm(u * 1.3, s + 4, 2) * 0.1; },
+  // towers of rock: three sheer spires shoulder to shoulder on a lower massif, the way granite stands when the softer rock round it has been carried off
+  torres: (u, s) => { const k = Math.floor(u * 0.8), f = u * 0.8 - k, on = hash1(k, s) > 0.3; let v = 0;
+    if (on) for (let i = 0; i < 3; i++) { const c = 0.32 + i * 0.18 + (hash1(k, s + i) - 0.5) * 0.05, wd = 0.085 + 0.03 * hash1(k, s + 5 + i), hh = (i === 1 ? 0.8 : 0.62) + 0.2 * hash1(k, s + 9 + i), d = Math.abs(f - c) / wd; if (d < 1) v = Math.max(v, hh * Math.pow(1 - d, 0.42)); }
+    const mass = on ? Math.pow(Math.sin(Math.PI * clamp((f - 0.12) / 0.76, 0, 1)), 0.7) * 0.34 : 0; return Math.max(v, mass) * 0.9 + fbm(u * 2.2, s + 7, 3) * 0.16; },
   pillar: (u, s) => { const k = Math.floor(u * 1.7), f = u * 1.7 - k, on = hash1(k, s) > 0.42, hh = hash1(k, s + 2); return (on ? smooth(clamp(Math.min(f, 1 - f) * 7, 0, 1)) * (0.45 + 0.55 * hh) : 0) * 0.85 + fbm(u * 0.6, s + 7, 2) * 0.2; },
 };
 

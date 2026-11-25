@@ -26,7 +26,7 @@ export const patagonia = {
       // the ice field and the peaks that stand out of it
       { par: 0.022, scale: 1, base: 0.5, amp: 0.26, style: 'jag', seed: 16, col: t('#8a9cc8'), haze: 0.4, snow: 0.62, snowA: 0.95, lit: 0.1, ribs: 0.14, ribGap: 1.1, bands: [{ col: t('#9fd0f0'), a: 0.45, at: 0.5, th: 0.2, w: 0.2, f: 3, s: 4 }] },
       // the towers: pale granite, with a cap of older, darker rock on some of them
-      { par: 0.045, scale: 0.46, base: 0.56, amp: 0.34, style: 'pillar', seed: 27, col: t('#b8a8a8'), haze: 0.26, lit: 0.16, ribs: 0.3, ribGap: 0.6, facet: 1.6, foot: 0.7, snow: 0.06, snowA: 0.9,
+      { par: 0.045, scale: 0.5, base: 0.565, amp: 0.4, style: 'torres', seed: 27, col: t('#c2b2ae'), haze: 0.22, lit: 0.2, ribs: 0.34, ribGap: 0.5, facet: 1.4, foot: 0.6, snow: 0.72, snowA: 0.5,
         bands: [{ col: t('#4a4450'), a: 0.75, at: 0.0, th: 0.09, w: 0.03, f: 6, s: 2 }, { col: t('#e8d8d0'), a: 0.4, at: 0.3, th: 0.2, w: 0.1, f: 4, s: 6 }], stamps: [{ s: '-', kind: 'flock', every: 1.1, p: 0.7, size: 0.03, seed: 3, n: 2, sink: -0.06 }] },
       // the lake the glacier feeds: milky turquoise, with ice afloat on it
       { kind: 'lake', y: 0.555, h: 0.11, par: 0.07, things: [{ s: 'berg', n: 10, seed: 7, size: 0.05, speed: 0.0009, at: 0.1, span: 0.6 }, { kind: 'spout', cycle: 1e9 }] },
@@ -49,7 +49,7 @@ export const patagonia = {
     { s: 'lenga', every: 5, p: 0.55, size: 1, seed: 1205, sink: 0.2, zone: ['lenga', 'pampa'] },
     { s: 'rockBig', every: 8, p: 0.4, size: 1, seed: 1209, sink: 0.5 },
     { s: 'iceBig', every: 5, p: 0.5, size: 1, seed: 1213, sink: 0.4, zone: ['ice', 'snow'] },
-    { s: 'guanaco', frames: ['guanaco', 'guanacoB'], fps: 0.5, every: 27, p: 0.6, size: 1, seed: 1217, sink: 0.04, zone: ['pampa', 'moraine'], roam: 2, speed: 0.06 },
+    { s: 'guanaco', frames: ['guanaco', 'guanaco', 'guanacoB', 'guanacoB', 'guanacoB'], fps: 0.25, every: 27, p: 0.6, size: 1, seed: 1217, sink: 0.04, zone: ['pampa', 'moraine'], roam: 2, speed: 0.06 },
   ],
   ground(time) {
     const t = tones(time), band = (a, b, c, w = [1, 0.46, 0.13]) => ({ bands: [{ col: t(a), w: w[0] }, { col: t(b), w: w[1] }, { col: t(c), w: w[2] }] });
@@ -98,8 +98,8 @@ export const patagonia = {
     S.drift = v(4, 'pat-drift', (r) => r.range(0.8, 1.5), (r) => r.range(0.16, 0.3), P.mound, () => ({ col: t('#dfeaf8'), lit: t('#ffffff') }));
     S.ice = v(5, 'pat-ice', (r) => r.range(0.3, 0.6), (r) => r.range(0.3, 0.7), P.ice, () => ({ col: t('#c8ecf8'), deep: t('#62acd8') })); S.iceBig = v(4, 'pat-iceb', (r) => r.range(1.4, 2.6), (r) => r.range(1.6, 3.4), P.ice, () => ({ col: t('#bfe6f5'), deep: t('#4f9dcf') }));
     S.berg = v(4, 'pat-berg', (r) => r.range(0.5, 1.2), (r) => r.range(0.3, 0.7), P.ice, () => ({ col: t('#e4f6fc'), deep: t('#5fc0e0') }), { ppu: 64 });
-    const gu = (tail) => () => ({ col: t('#c89a68'), dark: t('#6a4a34'), mane: null, neck: 0.95, head: 0.2, tail, graze: 0, belly: t('#f4ece0') });
-    S.guanaco = v(2, 'pat-gua', 1.8, 2, P.quad, gu(0.2)); S.guanacoB = v(2, 'pat-gua', 1.8, 2, P.quad, gu(0.7)); S.guanacoFar = v(2, 'pat-guaf', 1.8, 2, P.quad, gu(0.4), { ppu: 48 });
+    const gu = (graze, far) => () => ({ col: far ? t.h('#c98f5c', 0.1) : t('#c98f5c'), pale: t('#f6efe2'), dark: t('#8a6244'), face: t('#8a7c78'), graze });
+    S.guanaco = v(2, 'pat-gua', 2, 1.9, P.guanaco, gu(0)); S.guanacoB = v(2, 'pat-guab', 2, 1.9, P.guanaco, gu(0.85)); S.guanacoFar = [...v(2, 'pat-guaf', 2, 1.9, P.guanaco, gu(0, true), { ppu: 48 }), ...v(2, 'pat-guag', 2, 1.9, P.guanaco, gu(0.9, true), { ppu: 48 })];
     S.sheepFar = v(2, 'pat-sheep', 1, 0.75, P.quad, () => ({ col: t('#f4efe4'), dark: t('#2a2422'), neck: 0.2, head: 0.2, tail: 0.1, graze: 1, wool: true }), { ppu: 48 });
     S.condor = v(1, 'pat-condor', 2.6, 1.3, P.condor, () => ({}));
     S.ranch = v(2, 'pat-ranch', 1.3, 0.9, P.house, () => ({ wall: t('#f6f3ec'), roof: t('#b8322a'), win: dark ? '#ffd76a' : t('#2c3644'), trim: t('#3a3f4a') }), { ppu: 64 });
@@ -107,6 +107,11 @@ export const patagonia = {
   },
   slab(w, kind, time) {
     const t = tones(time), r = new RNG('patslab' + w + kind);
+    if (kind === 'corniceL' || kind === 'corniceR') return sprite(w, 2.2, (ctx) => { if (kind === 'corniceR') { ctx.translate(w, 0); ctx.scale(-1, 1); }      // a shelf of wind-packed snow built out from the rim: deep where it joins the ground, thin at the lip
+      const g = ctx.createLinearGradient(0, 0, 0, 2.2); g.addColorStop(0, t('#ffffff')); g.addColorStop(0.25, t('#dcebf8')); g.addColorStop(1, t('#8fb4d8')); ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(-0.3, 0.02); ctx.lineTo(w - 0.3, 0.02); ctx.quadraticCurveTo(w + 0.02, 0.06, w - 0.08, 0.26);
+      ctx.quadraticCurveTo(w * 0.72, 0.36, w * 0.5, 0.9); ctx.quadraticCurveTo(w * 0.3, 1.7, -0.3, 2.2); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = t('#b8d4ee'); ctx.lineWidth = 0.03; for (let i = 0; i < 4; i++) { ctx.beginPath(); ctx.moveTo(0, 0.3 + i * 0.36); ctx.quadraticCurveTo(w * 0.3, 0.28 + i * 0.3, w * (0.78 - i * 0.14), 0.24 + i * 0.16); ctx.stroke(); }
+      ctx.fillStyle = rgba('#ffffff', 0.9); ctx.fillRect(0, 0.02, w - 0.3, 0.07); ctx.fillStyle = t('#eaf6ff'); for (let i = 0; i < 3; i++) { ctx.beginPath(); ctx.moveTo(w - 0.5 - i * 0.5, 0.3 + i * 0.07); ctx.lineTo(w - 0.44 - i * 0.5, 0.62 + r.u() * 0.2 + i * 0.07); ctx.lineTo(w - 0.36 - i * 0.5, 0.31 + i * 0.07); ctx.closePath(); ctx.fill(); } }, { ax: 0.5, ay: 0.01 });
     return sprite(w, 1.3, (ctx) => { const g = ctx.createLinearGradient(0, 0, w, 0); g.addColorStop(0, t(kind === 'ice' ? '#eafcff' : '#d4ccd0')); g.addColorStop(1, t(kind === 'ice' ? '#62acd8' : '#5a5660')); ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(0, 0.04); ctx.lineTo(w, 0.04); ctx.lineTo(w * (0.7 + r.range(-0.1, 0.1)), 1.3); ctx.lineTo(w * (0.3 + r.range(-0.1, 0.1)), 1.3); ctx.closePath(); ctx.fill(); ctx.fillStyle = rgba('#ffffff', 0.4); ctx.fillRect(0.05, 0.04, w - 0.1, 0.05); }, { ax: 0.5, ay: 0 });
   },
 };

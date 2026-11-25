@@ -122,6 +122,14 @@ TRACKS.zhangjiajie = { bpm: 72, len: 128, parts: [
   line('bass', 0.18, 0.4, T(Array.from({ length: 8 }, (_, b) => { const r = [38, 35, 33, 38, 38, 35, 33, 38][b]; return `${r} . . . . . . . ${r + 7} . . . . . . .`; }).join(' '))),
   beat('tick', 0.03, 0.6, 'x...x...x...x.x.', 8), beat('tom', 0.1, 0.75, 'o.......o.....x.', 8),
 ] };
+// Patagonia: six to the bar in A minor, a plucked run like a charango's under a breathy flute, and a low drum like the wind against a tent.
+TRACKS.patagonia = { bpm: 104, len: 96, parts: [
+  chords(0.14, [[57, 60, 64], [55, 59, 62], [53, 57, 60], [52, 55, 59], [57, 60, 64], [60, 64, 67], [55, 59, 62], [57, 60, 64]], 12),
+  line('pluck', 0.18, 0, T(Array.from({ length: 8 }, (_, b) => { const c = [[69, 72, 76], [67, 71, 74], [65, 69, 72], [64, 67, 71], [69, 72, 76], [72, 76, 79], [67, 71, 74], [69, 72, 76]][b]; return `${c[0]} . ${c[1]} ${c[2]} . ${c[1]} ${c[0]} . ${c[2]} ${c[1]} . .`; }).join(' '))),
+  line('flute', 0.11, 0.2, T(['81 . . . . . 84 . . 83 . .', '79 . . . . . 83 . . 81 . .', '77 . . . . . 81 . . 79 . .', '76 . . . . . . . . 79 . .', '81 . . . . . 84 . . 88 . .', '86 . . . . . 84 . . 88 . .', '86 . . 83 . . 79 . . 83 . .', '81 . . . . . . . . . . .'].join(' '))),
+  line('bass', 0.2, 0.4, T(Array.from({ length: 8 }, (_, b) => { const r = [45, 43, 41, 40, 45, 48, 43, 45][b]; return `${r} . . . . . ${r + 7} . . ${r} . .`; }).join(' '))),
+  beat('tom', 0.11, 0.5, 'o.....x..x..', 8), beat('shake', 0.04, 0.65, '..x..x..x..x', 8),
+] };
 export const trackNames = () => Object.keys(TRACKS);
 export function addTrack(name, def) { TRACKS[name] = def; }
 export const tk = { T, line, chords, beat };

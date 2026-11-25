@@ -335,6 +335,21 @@ export const P = {
     ctx.fillStyle = col; ctx.beginPath(); ctx.ellipse(cx, cy, w * 0.07, h * 0.2, 0, 0, TAU); ctx.fill(); ctx.beginPath(); ctx.moveTo(cx - w * 0.06, cy + h * 0.14); ctx.lineTo(cx, cy + h * 0.38); ctx.lineTo(cx + w * 0.06, cy + h * 0.14); ctx.closePath(); ctx.fill();
     ctx.fillStyle = collar; ctx.beginPath(); ctx.ellipse(cx, cy - h * 0.17, w * 0.05, h * 0.05, 0, 0, TAU); ctx.fill(); ctx.fillStyle = head; ctx.beginPath(); ctx.ellipse(cx, cy - h * 0.25, w * 0.03, h * 0.06, 0, 0, TAU); ctx.fill();
   },
+  // a guanaco, the wild cousin of the llama: cinnamon above and white below, a long straight neck, a grey face, and ears that are never still
+  guanaco(ctx, w, h, r, { col = '#c98f5c', pale = '#f6efe2', dark = '#8a6244', face = '#8a7c78', graze = 0 } = {}) {
+    const leg = (x, top, bend, c) => { ctx.fillStyle = c; ctx.beginPath(); ctx.moveTo(w * (x - 0.034), h * top); ctx.lineTo(w * (x + 0.034), h * top); ctx.lineTo(w * (x + bend + 0.016), h * 0.8); ctx.lineTo(w * (x + 0.014), h * 0.985); ctx.lineTo(w * (x - 0.02), h * 0.985); ctx.lineTo(w * (x + bend - 0.018), h * 0.8); ctx.closePath(); ctx.fill(); ctx.fillStyle = '#3a2e2a'; ctx.fillRect(w * (x - 0.022), h * 0.965, w * 0.04, h * 0.03); };
+    leg(0.3, 0.55, -0.02, dark); leg(0.62, 0.55, 0.012, dark);
+    // the neck, thick at the shoulder and slim under the jaw
+    const hx = lerp(0.76, 0.9, graze), hy = lerp(0.1, 0.84, graze); ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(w * 0.56, h * 0.42); ctx.quadraticCurveTo(w * lerp(0.66, 0.74, graze), h * lerp(0.3, 0.5, graze), w * (hx - 0.035), h * (hy + 0.02)); ctx.lineTo(w * (hx + 0.03), h * (hy + 0.07)); ctx.quadraticCurveTo(w * lerp(0.76, 0.84, graze), h * lerp(0.4, 0.62, graze), w * 0.7, h * 0.58); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = pale; ctx.beginPath(); ctx.moveTo(w * 0.7, h * 0.58); ctx.quadraticCurveTo(w * lerp(0.77, 0.84, graze), h * lerp(0.42, 0.63, graze), w * (hx + 0.03), h * (hy + 0.07)); ctx.lineTo(w * (hx + 0.005), h * (hy + 0.06)); ctx.quadraticCurveTo(w * lerp(0.73, 0.8, graze), h * lerp(0.42, 0.6, graze), w * 0.66, h * 0.6); ctx.closePath(); ctx.fill();
+    // the body, and the white of the belly and the insides of the legs
+    ctx.fillStyle = col; ctx.beginPath(); ctx.ellipse(w * 0.46, h * 0.5, w * 0.27, h * 0.135, -0.06, 0, TAU); ctx.fill(); ctx.fillStyle = pale; ctx.beginPath(); ctx.ellipse(w * 0.47, h * 0.57, w * 0.22, h * 0.062, -0.04, 0, TAU); ctx.fill();
+    leg(0.25, 0.52, -0.03, col); leg(0.67, 0.54, 0.008, col); ctx.fillStyle = col; ctx.beginPath(); ctx.ellipse(w * 0.27, h * 0.5, w * 0.1, h * 0.13, 0.25, 0, TAU); ctx.fill();
+    ctx.strokeStyle = col; ctx.lineWidth = w * 0.035; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(w * 0.2, h * 0.42); ctx.quadraticCurveTo(w * 0.14, h * 0.42, w * 0.15, h * 0.5); ctx.stroke();
+    // the head: small, grey in the face, with long ears
+    ctx.fillStyle = col; for (const e of [-0.018, 0.022]) { ctx.beginPath(); ctx.moveTo(w * (hx + e - 0.014), h * (hy + 0.01)); ctx.lineTo(w * (hx + e - 0.012 - graze * 0.02), h * (hy - 0.07)); ctx.lineTo(w * (hx + e + 0.016), h * (hy + 0.005)); ctx.closePath(); ctx.fill(); }
+    ctx.fillStyle = face; ctx.beginPath(); ctx.ellipse(w * (hx + 0.035), h * (hy + 0.035), w * 0.065, h * 0.036, 0.25 + graze * 0.7, 0, TAU); ctx.fill(); ctx.fillStyle = '#2a2224'; ctx.beginPath(); ctx.arc(w * (hx + 0.03), h * (hy + 0.022), w * 0.011, 0, TAU); ctx.fill();
+  },
 };
 
 // Make `n` different sprites with one painter.

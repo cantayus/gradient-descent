@@ -24,6 +24,8 @@ export const SURF = {
   lava:  { mu: 1.0,  muk: 0.68,  crr: 0.02,  e: 0.16 },
   clay:  { mu: 0.85, muk: 0.55,  crr: 0.014, e: 0.14 },
   wood:  { mu: 0.8,  muk: 0.45,  crr: 0.016, e: 0.22 },
+  // deep, loose snow. Anything moving through it has to throw snow aside, and that costs with the square of the speed: fast things are cut down hard, slow ones hardly at all
+  powder: { mu: 0.6, muk: 0.25, crr: 0.08,  e: 0,   plough: 0.085 },
 };
 
 // What the legs can do.
@@ -228,6 +230,7 @@ function resolve(b, c, inp, dt, first) {
     else dv = -Math.sign(vt) * Math.min(Math.abs(vt), BRAKE * dt);
     dv = clamp(dv, -lim, lim); if (dv * vt > 0) b.work += Math.abs(dv * vt) + 0.5 * dv * dv; vt += dv;
   }
+  if (first && S.plough && nImp > 0) { const cutp = Math.min(Math.abs(vt), S.plough * vt * vt * dt) * Math.sign(vt); vt -= cutp; if (b.mode === 'ball') b.w -= cutp / b.r; }
   // Held still by friction, the hero must not creep: take back the little slip this step made before friction caught it.
   if (first && vt === 0 && Math.abs(vt0) < 0.6 && b.mode !== 'ball') { b.x -= tx * vt0 * dt; b.y -= ty * vt0 * dt; }
   b.vx = vn * nx + vt * tx + c.pvx; b.vy = vn * ny + vt * ty + c.pvy;

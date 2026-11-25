@@ -1,7 +1,7 @@
 // The screens round the game: title, levels, the card after a run, the notebook, settings, credits. All plain HTML over the canvas.
 import { save, store, resetSave, record, ghostFor } from '../core/save.js';
 import { WORLDS, levelById, ALL, nextLevel, medals } from '../data/worlds.js';
-import { CARDS, HINTS } from '../data/notebook.js';
+import { CARDS, HINTS, TUTOR } from '../data/notebook.js';
 import { STORY, ROUTE } from '../data/story.js';
 import { audio, initAudio, setVolumes, playMusic, sfx, mute } from '../core/audio.js';
 import { input } from '../core/input.js';
@@ -21,7 +21,7 @@ const clear = () => { ui.replaceChildren(); document.body.classList.remove('dim'
 const MEDAL = ['', 'bronze', 'silver', 'gold'];
 const how = () => (input.touch.used ? 'touch' : input.pad.used ? 'pad' : 'key');
 
-export function initUI(a) { api = a; hud.replaceChildren(el('div.h-lights'), el('div.h-sparks'), el('div.h-bar', {}, el('i')), el('div.h-name', {}, el('small'), el('b'), el('i')), el('div.h-clock'), el('div.h-seeds'), el('div.h-stamp', { title: 'The stamp hidden in this level' }), el('div.h-hint'), el('button.h-pause', { type: 'button', 'aria-label': 'Pause', on: { click: () => pause() } }, 'II')); }
+export function initUI(a) { api = a; hud.replaceChildren(el('div.h-lights'), el('div.h-sparks'), el('div.h-bar', {}, el('i')), el('div.h-name', {}, el('small'), el('b'), el('i')), el('div.h-clock'), el('div.h-seeds'), el('div.h-stamp', { title: 'The stamp hidden in this level' }), el('div.h-hint'), el('div.h-tutor', { hidden: true }), el('button.h-pause', { type: 'button', 'aria-label': 'Pause', on: { click: () => pause() } }, 'II')); }
 
 // ---- title ----
 // A wide, quiet look at the country with the name over it and one line asking for a key; the menu comes only after that.
@@ -31,7 +31,7 @@ const emblem = () => el('div.emblem', { html: '<svg viewBox="0 0 64 64" aria-hid
 export function showTitle() {
   clear(); api.attract(); hud.hidden = true; document.getElementById('touch').hidden = true; if (awake) playMusic('title');
   const next = ALL.find((id) => !save.levels[id]?.done) || ALL[0], any = Object.keys(save.levels).length > 0;
-  const items = [[any ? 'Continue' : 'New game', () => play(next)], any && ['Levels', showLevels], any && ['The story', showStory], any && ['Stamps', showAlbum], ['Notebook', showNotebook], ['How to play', showHow], ['Settings', () => showSettings(showTitle)], ['Also play this!', showAlso], ['Credits', showCredits]].filter(Boolean);
+  const items = [[any ? 'Continue' : 'New game', () => (any || save.seen.tutor ? play(next) : askTutor(next))], any && ['Levels', showLevels], ['Tutorial', () => play('T')], any && ['The story', showStory], any && ['Stamps', showAlbum], ['Notebook', showNotebook], ['How to play', showHow], ['Settings', () => showSettings(showTitle)], ['Also play this!', showAlso], ['Credits', showCredits]].filter(Boolean);
   const menu = el('nav.tmenu', { 'aria-label': 'Menu' }, items.map(([t, f], i) => el('button.titem', { type: 'button', style: `--i:${i}`, on: { click: () => { sfx.ui(true); f(); }, mouseenter: (e) => e.target.focus() } }, t)));
   const root = el('div.cine' + (awake ? '.awake.seen' : ''), {}, el('div.veil'), el('div.logo', {}, emblem(), el('h1', { text: 'Gradient Descent' }), el('div.rule')), el('p.press', { text: 'ontouchstart' in window ? 'Tap to begin' : framed ? 'Click to begin' : 'Press any key' }), menu);
   ui.append(root);
@@ -53,6 +53,19 @@ export function showLevels() {
           s?.done ? el('span.goals', { 'aria-label': `${s.stamp ? 'stamp found' : 'stamp not found'}, ${s.allSeeds ? 'every seed gathered' : 'seeds left behind'}` }, el('i.g-stamp' + (s.stamp ? '.on' : '')), el('i.g-seed' + (s.allSeeds ? '.on' : ''))) : null); }))))));
 }
 
+// ---- the lesson: offered once, before the first level, and always there on the menu ----
+function askTutor(next) {
+  clear(); document.body.classList.add('dim');
+  ui.append(el('div.card.small', {}, el('h2', { text: 'First time here?' }), el('p', { text: 'There is a practice slope with a short lesson: running, jumping, sliding, a turbo, and the things there are to find. It takes about two minutes, and nothing can be lost on it.' }),
+    el('div.row', {}, btn('Take the lesson', () => play('T'), 'big'), btn('Go straight in', () => { save.seen.tutor = true; store(); play(next); }))));
+}
+function tutorDone() {
+  save.seen.tutor = true; store(); const next = ALL.find((id) => !save.levels[id]?.done) || ALL[0], any = Object.keys(save.levels).length > 0;
+  setTimeout(() => { hud.hidden = true; document.body.classList.add('dim'); playMusic('card');
+    ui.append(el('div.card.small', {}, el('h2', { text: 'That is all you need' }), el('p', { text: 'Run, jump, slide, and spend a spark when a gap is too wide. Look for the stamp. Find the lowest ground.' }),
+      el('p.note', { text: 'Two more things come later, in Cappadocia: a roll, and a lift in the air from a bird called Mu. Each is explained when it arrives.' }),
+      el('div.row', {}, btn(any ? 'Continue' : 'Begin', () => play(next), 'big'), btn('Again', () => play('T')), btn('Title', showTitle)))); }, 1500);
+}
 // ---- playing ----
 let run = null, hintT = 0;
 export function play(id, told = false) {
@@ -74,6 +87,9 @@ export function frameUI(p) {
   const hl = hud.querySelector('.h-lights'); if (hl.childElementCount !== p.lightsAll) hl.replaceChildren(...Array.from({ length: p.lightsAll }, () => el('i'))); [...hl.children].forEach((n, i) => n.classList.toggle('out', i >= p.lights));
   const hs = hud.querySelector('.h-sparks'); if (hs.childElementCount !== p.sparksAll) hs.replaceChildren(...Array.from({ length: p.sparksAll }, () => el('i', { text: '✦' }))); [...hs.children].forEach((n, i) => n.classList.toggle('out', i >= p.sparks));
   const bar = hud.querySelector('.h-bar'), left = p.limit - p.clock; bar.hidden = !Number.isFinite(p.limit); if (!bar.hidden) { bar.firstChild.style.width = Math.max(0, Math.min(100, (left / p.limit) * 100)) + '%'; bar.classList.toggle('low', left < 15); }
+  const tu = hud.querySelector('.h-tutor'); tu.hidden = !p.spec.tutorial || p.done;
+  if (p.spec.tutorial) { const ms = p.level.marks.filter((k) => k.kind === 'tutor'); let i = 0; for (let k = 0; k < ms.length; k++) if (p.b.x >= ms[k].x - 1.5) i = k; const dev = how();
+    if (run.step !== i || run.dev !== dev) { if (run.step != null && i > run.step) sfx.ui(true); run.step = i; run.dev = dev; const L = TUTOR[ms[i].text]; tu.replaceChildren(el('small', { text: `Lesson ${i + 1} of ${ms.length}` }), el('b', { text: L.name }), el('span', { text: L[dev] })); tu.classList.remove('in'); void tu.offsetWidth; tu.classList.add('in'); } }
   const hst = hud.querySelector('.h-stamp'); hst.hidden = !p.level.items.some((i) => i.kind === 'stamp'); hst.classList.toggle('got', !!p.stamp);
   hud.querySelector('.h-seeds').textContent = p.level.seeds.length ? `${p.seeds} / ${p.level.seeds.length}` : '';
   const m = p.level.marks.find((k) => k.kind === 'hint' && p.b.x > k.x - 7 && p.b.x < k.x + 16), text = m && !p.done ? HINTS[m.text]?.[how()] : null, h = hud.querySelector('.h-hint');
@@ -126,6 +142,7 @@ export function showFail(why, res) {
 
 // ---- the card after a run ----
 export function showFinish(res) {
+  if (run.f.spec.tutorial) return tutorDone();
   const f = run.f, mt = medals(f.spec), out = record(run.id, res, mt, save.settings.assist), s = save.levels[run.id];
   const card = CARDS[f.spec.card], fresh = card && !save.cards.includes(f.spec.card); if (fresh) { save.cards.push(f.spec.card); store(); }
   setTimeout(() => {
@@ -183,6 +200,15 @@ function cardArt(kind) {
   else if (kind === 'plateau') { const shelf = (u) => 44 + (u < 0.22 ? 50 * (u / 0.22) ** 1.5 : u < 0.74 ? 50 + 4 * (u - 0.22) : 52 + 80 * ((u - 0.74) / 0.26) ** 1.4); fill(shelf); hero(0.45 * 240, shelf(0.45) - 2, 24, { expr: 'worry' }); x.strokeStyle = teal; x.lineWidth = 3; x.setLineDash([2, 7]); x.lineCap = 'round'; x.beginPath(); x.moveTo(0.52 * 240, shelf(0.5) - 14); x.lineTo(0.72 * 240, shelf(0.7) - 14); x.stroke(); x.setLineDash([]); arrow(0.76 * 240, shelf(0.76) - 4, 0.9 * 240, shelf(0.9) - 10); }
   else if (kind === 'batch') { const rr = (n) => { const v = Math.sin(n * 91.7) * 43758.5; return v - Math.floor(v); }; for (let i = 0; i < 70; i++) { const px = 16 + rr(i) * 208, py = 16 + rr(i + 200) * 148, on = i % 9 === 0; x.fillStyle = on ? gold : '#b9cfd2'; x.beginPath(); x.arc(px, py, on ? 7 : 4, 0, 7); x.fill(); if (on) { x.strokeStyle = ink; x.lineWidth = 2; x.stroke(); } } }
   else if (kind === 'noisy') { fill(slope); x.strokeStyle = teal; x.lineWidth = 3; x.lineJoin = 'round'; x.beginPath(); for (let i = 0; i <= 14; i++) { const u = 0.08 + (0.8 * i) / 14, y = slope(u) - 12 + (i % 2 ? -9 : 7) * (1 - i / 16); i ? x.lineTo(u * 240, y) : x.moveTo(u * 240, y); } x.stroke(); x.setLineDash([4, 6]); x.strokeStyle = gold; x.beginPath(); x.moveTo(0.08 * 240, slope(0.08) - 12); x.lineTo(0.88 * 240, slope(0.88) - 12); x.stroke(); x.setLineDash([]); hero(0.9 * 240, slope(0.9) - 2, 24, { expr: 'joy' }); }
+  else if (kind === 'chain' || kind === 'explode' || kind === 'vanish' || kind === 'skip') {   // a chain of layers, and over each the size of the signal passed back to it from the far end
+    const n = 6, bx = (i) => 26 + i * 38, by = 122; x.strokeStyle = ink; x.lineWidth = 3; x.beginPath(); x.moveTo(bx(0), by); x.lineTo(bx(n - 1), by); x.stroke();
+    for (let i = 0; i < n; i++) { x.fillStyle = '#eef6ee'; x.beginPath(); x.arc(bx(i), by, 11, 0, 7); x.fill(); x.stroke(); }
+    const f = kind === 'explode' ? 1.45 : kind === 'vanish' ? 0.62 : 1, h0 = kind === 'vanish' ? 80 : kind === 'explode' ? 12 : 34;
+    for (let i = 0; i < n; i++) { const h = h0 * f ** (n - 1 - i); x.fillStyle = kind === 'chain' || kind === 'skip' ? teal : gold; x.fillRect(bx(i) - 8, by - 20 - h, 16, h); }
+    if (kind === 'skip') { x.strokeStyle = gold; x.lineWidth = 5; x.lineCap = 'round'; x.beginPath(); x.moveTo(bx(4), by - 62); x.quadraticCurveTo(bx(2.5), by - 128, bx(1) + 8, by - 66); x.stroke(); x.fillStyle = gold; x.beginPath(); x.moveTo(bx(1) - 2, by - 58); x.lineTo(bx(1) + 16, by - 62); x.lineTo(bx(1) + 6, by - 78); x.closePath(); x.fill(); }
+    arrow(bx(n - 1) - 4, by + 34, bx(0) + 12, by + 34, kind === 'chain' || kind === 'skip' ? gold : teal); }
+  else if (kind === 'clip') { fill(slope); const u = 0.3, px = u * 240, py = slope(u); hero(px, py - 2, 26); x.setLineDash([4, 8]); x.strokeStyle = gold; x.lineWidth = 4; x.lineCap = 'round'; x.beginPath(); x.moveTo(px + 66, py + 44); x.lineTo(px + 150, py + 100); x.stroke(); x.setLineDash([]);
+    x.strokeStyle = teal; x.lineWidth = 3; x.beginPath(); x.arc(px + 20, py + 12, 62, -0.1, 1.5); x.stroke(); arrow(px + 20, py + 12, px + 62, py + 40); }
   else if (kind === 'local' || kind === 'momentum' || kind === 'start') { // a hollow part-way down, and the deeper valley beyond its rim
     const two = (u) => 40 + 30 * u + 52 * Math.sin(Math.min(1, u / 0.5) * Math.PI) ** 1.3 * (u < 0.5 ? 1 : 0) + (u >= 0.5 ? 26 + 82 * Math.sin(((u - 0.5) / 0.5) * Math.PI) ** 1.2 : 0) - (u >= 0.5 ? 26 * (1 - (u - 0.5) * 2) : 0); fill(two);
     if (kind === 'local') { hero(0.25 * 240, two(0.25) - 2, 24, { expr: 'worry' }); x.fillStyle = teal; x.font = '700 15px Nunito, sans-serif'; x.fillText('lower', 0.66 * 240, two(0.75) - 14); }

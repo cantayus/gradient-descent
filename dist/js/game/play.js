@@ -150,11 +150,12 @@ export class Play {
       this.scene.emit('spark', it.x, it.y, it.kind === 'stamp' ? 26 : 10, { speed: it.kind === 'stamp' ? 5 : 3, spread: 6.3, life: 0.8, size: 0.12, g: 4 }); this.hooks.event?.(it.kind, b);
     }
     if (L.fell(b)) { this.falls++; if (this.sparks > 0) { this.sparks--; this.dead = 0.4; this.hooks.event?.('saved', b); return; }      // a spark in hand: Eta catches the fall, and no light is lost
-      this.lights--; this.hooks.event?.('fall', b); if (this.lights <= 0) { this.dead = 1e9; this._fail('falls'); } else this.dead = 0.55; return; }
+      this.lights--; if (this.spec.tutorial && this.lights <= 0) this.lights = 1;      // on the practice slope the last light never goes out
+      this.hooks.event?.('fall', b); if (this.lights <= 0) { this.dead = 1e9; this._fail('falls'); } else this.dead = 0.55; return; }
     if (!this.done && !this.failed && Math.abs(b.x - L.goal.x) < 1.5 && b.y - L.goal.y < 2.2) { this.done = true; this.rig.feel('proud', 4); for (let i = 0; i < 4; i++) this.scene.emit('spark', L.goal.x, L.goal.y + 0.5, 12, { speed: 7, spread: 2.4, life: 1.2, size: 0.14, g: 5 }); this.hooks.event?.('goal', b); this.hooks.finish?.(this.result()); }
   }
   _fail(why) { if (this.failed || this.done) return; this.failed = why; this.rig.feel('sulk', 6); this.hooks.fail?.(why, this.result()); }
-  _respawn() { const b = this.b, c = this.check; b.x = b.px = c.x; b.y = b.py = c.y + R + 0.05; b.vx = b.vy = b.w = 0; b.mode = 'run'; b.grounded = true; this.rig.feel('sulk', 0.9); this.rig.sq.kick(4); this.scene.emit('dust', c.x, c.y + 0.3, 14, { speed: 2.5, spread: 6.3, life: 0.5, size: 0.16, col: '#ffffff', g: -1 }); this.cam.update(b, 0.016, this.W / this.H, true); this.hooks.event?.('back', b); }
+  _respawn() { const b = this.b, c = this.check; if (this.spec.tutorial && this.sparks < 1) this.sparks = 1; b.x = b.px = c.x; b.y = b.py = c.y + R + 0.05; b.vx = b.vy = b.w = 0; b.mode = 'run'; b.grounded = true; this.rig.feel('sulk', 0.9); this.rig.sq.kick(4); this.scene.emit('dust', c.x, c.y + 0.3, 14, { speed: 2.5, spread: 6.3, life: 0.5, size: 0.16, col: '#ffffff', g: -1 }); this.cam.update(b, 0.016, this.W / this.H, true); this.hooks.event?.('back', b); }
   result() { return { id: this.spec.id, sparks: this.sparks, lights: this.lights, lightsAll: this.lightsAll, limit: this.limit, time: this.clock, seeds: this.seeds, seedsAll: this.level.seeds.length, stamp: this.stamp, li: this.level.li, falls: this.falls, curve: this.curve.slice(), rec: this.rec.slice(), top: this.level.start.y, bottom: this.level.goal.y, maxSpeed: this.maxSpeed }; }
 
   // dust, spray and streaks: small things that say what the body is doing

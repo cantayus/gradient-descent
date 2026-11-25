@@ -25,7 +25,7 @@ function applyGfx() { const s = save.settings.gfx; G.gfx = q.has('gfx') ? +q.get
 function applyText() { document.documentElement.style.setProperty('--fs', save.settings.text || 1); }
 
 // Three lights and a time limit; with assist, five lights and all the time in the world. The limit is generous: a little over twice a good first run.
-export const rules = (spec) => (save.settings.assist ? { lights: 5, limit: Infinity } : { lights: 3, limit: Math.round(spec.par * (spec.boss ? 2.5 : 2.3)) });
+export const rules = (spec) => (spec.tutorial ? { lights: 3, limit: Infinity } : save.settings.assist ? { lights: 5, limit: Infinity } : { lights: 3, limit: Math.round(spec.par * (spec.boss ? 2.5 : 2.3)) });
 export function startLevel(id, opt = {}) {
   const f = levelById(id); if (!f) return null;
   G.play = new Play({ spec: f.spec, theme: f.world.theme, can: { ...f.world.can, ...(f.spec.can || {}) }, ghost: opt.ghost || null, hooks: G.hooks, intro: !!opt.intro, ...rules(f.spec) });
@@ -44,7 +44,7 @@ function greet() { const p = G.play; if (!p || G.mode !== 'title') return; p.rig
 
 // ---- what the hero's doings sound like ----
 const S = { steps: 0, air: 0, wheed: false, idle: 0, yawned: false, last: 0, seeds: 0, reset() { this.steps = this.air = this.idle = this.seeds = 0; this.wheed = this.yawned = false; } };
-const SOFT = { snow: 1, sand: 1, grass: 1, moss: 1, clay: 1 };
+const SOFT = { powder: 1, snow: 1, sand: 1, grass: 1, moss: 1, clay: 1 };
 const say = (fn, gap = 0.25) => { const t = performance.now() / 1000; if (t - S.last < gap) return; S.last = t; fn(); };
 G.hooks = {
   start() {},

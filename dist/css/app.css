@@ -205,3 +205,14 @@ canvas.stamp { display: block; width: 100%; height: auto; filter: drop-shadow(0 
 .leaf .gap { aspect-ratio: 1 / 1.2; border-radius: 3px; border: 2px dashed rgba(255, 255, 255, 0.22); display: grid; place-items: center; color: rgba(255, 255, 255, 0.28); font: 600 1.3rem Fredoka, sans-serif; }
 .album.full h3 { color: #ffd87a; } dl.finds dt { color: #ffd87a; }
 @media (max-width: 720px) { .h-stamp { right: 8.4rem; } .finish .side { flex-direction: column; align-items: flex-end; } ul.goals { grid-template-columns: 1fr; } }
+
+/* the lesson on the practice slope: one thing at a time, in a panel that stays put until the ground asks for the next */
+.h-tutor { left: 50%; bottom: 9%; transform: translateX(-50%); width: min(34rem, 92vw); padding: 0.85rem 1.2rem 0.95rem; border-radius: 1rem; background: rgba(13, 19, 34, 0.78); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2), 0 0.6rem 2rem rgba(0, 0, 0, 0.35); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); text-shadow: none !important; display: grid; grid-template-columns: auto 1fr; column-gap: 0.9rem; align-items: baseline; }
+.h-tutor[hidden] { display: none; }
+.h-tutor small { grid-column: 1 / 3; font: 700 0.72rem Nunito, sans-serif; letter-spacing: 0.18em; text-transform: uppercase; color: #8fe0dc; margin-bottom: 0.2rem; }
+.h-tutor b { font: 600 1.25rem Fredoka, sans-serif; letter-spacing: 0.06em; color: #ffd87a; white-space: nowrap; } .h-tutor span { font: 600 1rem/1.4 Nunito, sans-serif; color: #f2f6f8; }
+.h-tutor.in { animation: tutorin 0.5s cubic-bezier(0.2, 1.3, 0.4, 1) both; } @keyframes tutorin { from { opacity: 0; transform: translate(-50%, 0.8rem); } to { opacity: 1; transform: translate(-50%, 0); } }
+#hud.fresh .h-tutor { opacity: 0; }
+@media (max-width: 720px) { .h-tutor { bottom: 30%; grid-template-columns: 1fr; } .h-tutor span { font-size: 0.92rem; } }
+
+.h-hint { white-space: normal; width: max-content; max-width: min(46rem, 92vw); text-align: center; border-radius: 1.3rem; line-height: 1.35; }

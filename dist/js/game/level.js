@@ -32,7 +32,7 @@ const STROKES = {
 
 export function build(spec, opt = {}) {
   const r = new RNG(spec.seed || spec.id || 'level');
-  const ys = [], surfs = [], platforms = [], waters = [], jets = [], winds = [], pits = [], seeds = [], marks = [], zones = [], rides = [];
+  const ys = [], surfs = [], platforms = [], waters = [], jets = [], winds = [], pits = [], seeds = [], marks = [], zones = [], rides = [], placed = [];
   let x = 0, y = spec.y0 ?? 0;
   const lead = 14; for (let i = 0; i < lead / DX; i++) ys.push(y); x = lead;            // a run-in behind the start
   const start = { x: lead - 3, y };
@@ -50,6 +50,7 @@ export function build(spec, opt = {}) {
     for (const j of opt.jets || []) jets.push({ x: at(j.at), w: j.w || 1.3, top: j.top || 9, v: j.v || 17, every: j.every || 0, phase: j.phase || 0, on: j.every ? pulse(j.every, j.phase || 0, j.len || 1.6) : null });
     for (const w of opt.wind || []) winds.push({ x0: at(w.from ?? 0), x1: at(w.to ?? 1), y0: -1e9, y1: 1e9, wx: w.wx || 0, wy: w.wy || 0, gust: w.gusty ? (t) => 0.55 + 0.45 * Math.sin(t * 1.3 + x0) : null });
     if (opt.seeds) { const list = Array.isArray(opt.seeds) ? opt.seeds : Array.from({ length: opt.seeds }, (_, i) => ({ at: (i + 1) / (opt.seeds + 1) })); for (const s of list) seeds.push({ x: at(s.at), up: s.up ?? 1.3, i0 }); }
+    for (const it of opt.items || []) placed.push({ kind: it.kind, x: at(it.at ?? 0.5), up: it.up ?? 1.3 });
     if (opt.mark) marks.push({ x: at(opt.at ?? 0.5), kind: opt.mark, text: opt.text });
     if (opt.zone) zones.push({ x0, x1, kind: opt.zone });
     if (opt.ride) rides.push({ x: at(opt.ride.at ?? 0.5), x1: at(opt.ride.at ?? 0.5) + opt.ride.to, up: opt.ride.up ?? 12 });
@@ -77,8 +78,9 @@ export function build(spec, opt = {}) {
   }
   // Things to find, besides the seeds. One stamp is hidden in every level, each in a different sort of place. A dewdrop relights a light that has gone out.
   // Where Mu flies, a feather hanging in the air gives her lift back, so a wide gap can be crossed in two beats, and a high stamp reached by a stair of them.
-  const items = [], idn = String(spec.id || ''), li = /-B$/.test(idn) ? 5 : Math.max(0, (parseInt(idn.split('-')[1], 10) || 1) - 1), r2 = new RNG('items:' + idn);
-  if (spec.id && spec.items !== false) {
+  const items = [], idn = String(spec.id || ''), li = spec.li ?? (/-B$/.test(idn) ? 5 : Math.max(0, (parseInt(idn.split('-')[1], 10) || 1) - 1)), r2 = new RNG('items:' + idn);
+  for (const o of placed) items.push({ kind: o.kind, x: o.x, y: gy(o.x) + o.up, how: 'placed' });      // a level may place its own
+  if (spec.id && spec.items !== false && spec.items !== 'own') {
     const near = (list, px, m) => list.some((q) => px > (q.x0 ?? q.x) - m && px < (q.x1 ?? q.x) + m);
     const clear = (px) => px > start.x + 8 && px < goal.x - 9 && Math.abs(T.dh(px)) < 0.4 && !near(pits, px, 3) && !near(waters, px, 3) && !near(winds, px, 2) && !near(jets, px, 4) && !near(platforms, px, 7) && !near(rides, px, 7) && !zones.some((z) => z.kind === 'drum' && px > z.x0 - 2 && px < z.x1 + 2);
     const span = goal.x - start.x, pickX = (u0, u1, crest, avoid) => { let best = null, bs = -1e9; for (let px = start.x + span * u0; px < start.x + span * u1; px += 0.5) { if (!clear(px) || (avoid != null && Math.abs(px - avoid) < 5)) continue; const hh = T.h(px), sc = (crest ? Math.min(hh - T.h(px - 4), hh - T.h(px + 4), 1.5) : 0) + r2.u() * 0.4; if (sc > bs) { bs = sc; best = px; } } return best; };

@@ -6,6 +6,7 @@ import { cappadocia } from '../art/worlds/cappadocia.js';
 import { galapagos } from '../art/worlds/galapagos.js';
 import { namib } from '../art/worlds/namib.js';
 import { zhangjiajie } from '../art/worlds/zhangjiajie.js';
+import { patagonia } from '../art/worlds/patagonia.js';
 
 const m = 'meadow', g = 'grass';
 const ICE = [
@@ -193,6 +194,53 @@ const ZHA = [
       ...tops([9, 9, 6, 12], [5.8, 3.4, 5.4]), run(24, -8, MO, 3, 'moss'), ['flat', 10, { zone: MO, surf: 'moss' }], ['bowl', 22, 4.2, 4.4, { zone: MO, surf: 'moss' }]] },
 ];
 
+// ---- Patagonia: a long chain, and what happens to a thing passed along it ----
+const GN = 'granite', MR = 'moraine', PM = 'pampa', LG = 'lenga', IC = 'ice', SN = 'snow';
+const chute = (L, dy, seeds = 3) => ['slope', L, dy, { zone: IC, surf: 'ice', seeds }];                // blue ice: nothing holds you back, and whatever speed you bring is multiplied
+const drift = (L = 12, seeds = 0) => ['flat', L, { zone: SN, surf: 'powder', seeds }];                // deep snow: a limit. However fast you come in, you go out at much the same speed
+const scree = (L, dy, seeds = 3, zone = MR) => ['slope', L, dy, { zone, seeds }];
+const grass = (L, seeds = 2, zone = PM) => ['flat', L, { zone, surf: g, seeds }];
+// The wind off the ice field, at your back or in your face. It is in the picture as streaks, and it is the same wind for the ghost.
+const blow = (L, wx, o = {}) => ['flat', L, { zone: PM, surf: g, wind: [{ from: 0, to: 1, wx, gusty: true }], seeds: [{ at: 0.3, up: 2.6 }, { at: 0.55, up: 3 }, { at: 0.8, up: 2.6 }], ...o }];
+// A glacier lake, with ice afloat on it.
+const berg = (at, w = 2.8) => ({ at, up: -0.1, w, float: true, kind: 'ice' });
+const lake = (L, depth, things, o = {}) => ['valley', L, depth, 0, { zone: MR, water: [0.08, 0.92, -0.42], tide: { amp: 0.25, per: 5 }, plat: things, seeds: things.map((p) => ({ at: p.at, up: 0.75 })), ...o }];
+// The short way: a shelf of wind-packed snow built out from each rim of a deep cut, with a jump between them. The long way is down one side and up the other, and it takes all the speed you had.
+const cut = (L, depth, gap = 5, o = {}) => { const w = (L - gap) / 2; return ['valley', L, depth, 0, { zone: SN, surf: 'snow', plat: [{ at: w / 2 / L, up: 0, w, kind: 'corniceL', type: 'snow' }, { at: 1 - w / 2 / L, up: 0, w, kind: 'corniceR', type: 'snow' }], seeds: [{ at: 0.5, up: 1.7 }, { at: 0.5, up: 0.9 - depth }, { at: 0.2, up: 1 }, { at: 0.8, up: 1 }], ...o }]; };
+const PAT = [
+  { id: '6-1', name: 'Link by Link', time: 'dawn', zone: MR, card: 'chain', par: 45,
+    strokes: [['flat', 10, { zone: PM, surf: g }], scree(30, -10, 3, PM), grass(12), scree(30, -10), drift(10), scree(30, -10), grass(14, 2, LG), scree(30, -10, 3, LG), ['gap', 3], grass(12), blow(30, 11, { mark: 'hint', text: 'gale', at: 0.1 }), scree(30, -10),
+      grass(12), chute(30, -10), drift(12), lake(24, 2.2, [berg(0.3), berg(0.52), berg(0.74)]), scree(30, -10, 3, LG), grass(12, 2, LG), scree(30, -10, 3, MR), ['gap', 3.2], grass(10, 1, MR), blow(30, 11), scree(30, -10), drift(12), chute(30, -10), drift(12), scree(30, -10, 3, GN), ['gap', 3.4], grass(12, 2, GN), scree(28, -9, 3, PM), drift(14), grass(10), ['bowl', 22, 4, 4, { zone: PM, surf: g }]] },
+  { id: '6-2', name: 'Too Much', time: 'day', zone: MR, card: 'explode', par: 48,
+    strokes: [['flat', 10, { zone: GN }], chute(20, -3, 2), drift(6), chute(22, -6), chute(24, -11, 4), ['kicker', 6, 2.2, { zone: IC, surf: 'ice' }], ['gap', 9, -5], drift(20, 2), scree(24, -8), grass(12), chute(18, -4, 2), chute(22, -9), chute(26, -16, 4), drift(16),
+      ['gap', 4, -1], grass(14), scree(26, -9, 3, LG), blow(30, 12), chute(20, -5), chute(24, -12, 4), ['kicker', 7, 2.6, { zone: IC, surf: 'ice' }], ['gap', 11, -7], drift(22, 2), scree(24, -8, 3, PM), grass(12), chute(18, -3, 2), chute(20, -6), chute(22, -10), chute(24, -15, 4), drift(18), ['gap', 4.5, -1], grass(12), scree(24, -8, 3, PM), drift(14), grass(10), ['bowl', 24, 4.4, 4.4, { zone: PM, surf: g }]] },
+  { id: '6-3', name: 'Almost Nothing', time: 'golden', zone: MR, card: 'vanish', par: 46,
+    strokes: [['flat', 10, { zone: MR }], scree(26, -12), scree(24, -6), scree(22, -3, 2), scree(20, -1.5, 2), drift(24, 3), ['flat', 30, { zone: IC, surf: 'ice', seeds: 3 }], scree(26, -10), lake(24, 2.2, [berg(0.3), berg(0.52), berg(0.74)]), grass(12), scree(24, -10),
+      scree(22, -5), scree(20, -2.5, 2), blow(30, -11, { mark: 'hint', text: 'head', at: 0.1 }), ['gap', 3.2], grass(12), scree(26, -11, 3, LG), scree(22, -5, 2, LG), drift(20, 2), ['flat', 26, { zone: IC, surf: 'ice', seeds: 3 }], scree(24, -9),
+      lake(26, 2.4, [berg(0.28), berg(0.5), berg(0.72)]), grass(12), ['bowl', 22, 4, 4, { zone: PM, surf: g }]] },
+  { id: '6-4', name: 'A Limit', time: 'dusk', zone: MR, card: 'clip', par: 45,
+    strokes: [['flat', 10, { zone: GN }], chute(24, -12, 3), drift(14, 0), ['gap', 4], drift(8), chute(26, -14, 4), drift(14), ['gap', 4.5, -1], grass(12), blow(34, 13), scree(26, -10), chute(24, -13), ['flat', 16, { zone: SN, surf: 'powder', mark: 'hint', text: 'drift', at: 0.1 }], ['gap', 5, -1], drift(8),
+      chute(28, -16, 4), drift(18, 2), ...hollow(26, 10, 3.2, 3.6, { zone: MR }), land(MR, 16), chute(22, -11), drift(14), ['gap', 4], grass(14), scree(24, -8, 3, PM), drift(14), grass(10), ['bowl', 22, 4.2, 4, { zone: PM, surf: g }]] },
+  { id: '6-5', name: 'The Short Way', time: 'mist', zone: MR, card: 'skip', par: 54,
+    strokes: [['flat', 10, { zone: SN, surf: 'snow' }], scree(26, -9), ['flat', 8, { zone: MR, mark: 'hint', text: 'short', at: 0.2 }], cut(22, 4, 4.5), scree(26, -10), grass(12), cut(24, 5, 5), chute(24, -10), drift(12), lake(24, 2.2, [berg(0.3), berg(0.52), berg(0.74)]), scree(26, -10, 3, LG),
+      cut(26, 5.5, 5.5), blow(30, 12), scree(24, -9), ['gap', 3.4], grass(10), cut(28, 6, 6.5), scree(26, -10, 3, MR), grass(12), cut(22, 4.5, 4.5), chute(24, -10), drift(12), lake(26, 2.4, [berg(0.28), berg(0.5), berg(0.72)]), scree(24, -9, 3, PM), cut(26, 5.5, 5.5), scree(24, -8, 3, PM), drift(12), grass(8), ['bowl', 22, 4, 4, { zone: PM, surf: g }]] },
+  { id: '6-B', name: 'The Towers', time: 'night', zone: MR, boss: 'towers', par: 56, music: 'boss',
+    strokes: [['flat', 10, { zone: GN }], chute(22, -8), chute(24, -13, 4), drift(14), ['gap', 4.5, -1], grass(12), blow(34, 13), scree(26, -10), cut(24, 5, 5), scree(24, -8), scree(22, -4, 2), scree(20, -2, 2), ['flat', 26, { zone: IC, surf: 'ice', seeds: 3 }],
+      lake(26, 2.4, [berg(0.28), berg(0.5), berg(0.72)]), scree(26, -11, 3, LG), blow(30, -11), ['gap', 3.2], grass(12, 2, LG), chute(22, -6), chute(26, -15, 4), ['kicker', 7, 2.6, { zone: IC, surf: 'ice' }], ['gap', 11, -7], drift(22, 2), cut(28, 6, 6.5),
+      ...hollow(28, 12, 3.6, 4.2, { zone: MR }, 4), land(MR, 18), blow(34, 14), scree(28, -11, 3, PM), drift(16), grass(10), ['bowl', 24, 4.6, 4.4, { zone: PM, surf: g }]] },
+];
+
+// ---- the practice slope: a short lesson, one thing at a time, on which nothing can be lost ----
+export const TUTORIAL = { id: 'T', name: 'The Practice Slope', time: 'day', tutorial: true, par: 60, li: 6, items: 'own', zone: 'moss', checkEvery: 14,
+  strokes: [['flat', 14, { zone: 'moss', surf: g, mark: 'tutor', text: 'run', at: 0 }], ['slope', 16, -4, { zone: m, surf: g, seeds: 2 }],
+    ['flat', 9, { zone: 'moss', surf: g, mark: 'tutor', text: 'jump', at: 0 }], ['steps', 8, 2, 1, { zone: 'rock' }], ['flat', 8, { zone: 'rock' }], ['gap', 2.5], ['flat', 8, { zone: 'rock' }],
+    ['flat', 10, { zone: 'sand', mark: 'tutor', text: 'leap', at: 0 }], ['gap', 5.5], ['flat', 10, { zone: 'sand', seeds: 1 }],
+    ['flat', 9, { zone: 'snow', surf: 'snow', mark: 'tutor', text: 'slide', at: 0 }], ['slope', 40, -16, { zone: 'ice', surf: 'ice', seeds: 5 }], ['flat', 16, { zone: 'snow', surf: 'powder' }],
+    ['flat', 14, { zone: 'sand', mark: 'tutor', text: 'turbo', at: 0 }], ['kicker', 5, 1.4, { zone: 'sand' }], ['gap', 12, -2], ['flat', 16, { zone: 'moss', surf: g }],
+    ['flat', 16, { zone: m, surf: g, mark: 'tutor', text: 'lights', at: 0, items: [{ kind: 'dew', at: 0.7, up: 1.25 }] }],
+    ['flat', 16, { zone: 'moss', surf: g, mark: 'tutor', text: 'stamp', at: 0, items: [{ kind: 'stamp', at: 0.7, up: 2.4 }] }],
+    ['slope', 26, -9, { zone: m, surf: g, seeds: 3, mark: 'tutor', text: 'goal', at: 0 }], ['bowl', 22, 4, 4, { zone: m, surf: g }]] };
+
 // the ground behind the title: a mossy ledge above a long green slope
 export const TITLE = (z1, z2) => ({ id: 'title', name: '', time: 'golden', strokes: [['flat', 6, { zone: z1 }], ['hill', 8, 0.9, -0.4, { zone: z2, surf: g }], ['slope', 13, -9, { zone: z2, surf: g }], ['slope', 30, -9, { zone: z1 }], ['waves', 30, 1.2, 2, -6, { zone: z2, surf: g }], ['bowl', 20, 3, 3, { zone: z2, surf: g }]] });
 
@@ -202,8 +250,9 @@ export const WORLDS = [
   { id: 'galapagos', n: 3, name: 'Galápagos', theme: galapagos, music: 'galapagos', can: { slide: true, roll: true, spread: true, mu: true }, title: ['lava', 'green'], levels: GAL },
   { id: 'namib', n: 4, name: 'Namib', theme: namib, music: 'namib', can: { slide: true, roll: true, spread: true, mu: true }, title: ['gravel', 'grassy'], levels: NAM },
   { id: 'zhangjiajie', n: 5, name: 'Zhangjiajie', theme: zhangjiajie, music: 'zhangjiajie', can: { slide: true, roll: true, spread: true, mu: true }, title: ['ledge', 'forest'], cautious: true, levels: ZHA },
+  { id: 'patagonia', n: 6, name: 'Patagonia', theme: patagonia, music: 'patagonia', can: { slide: true, roll: true, spread: true, mu: true }, title: ['pampa', 'lenga'], levels: PAT },
 ];
-export const levelById = (id) => { for (const w of WORLDS) for (const l of w.levels) if (l.id === id) return { world: w, spec: l }; return null; };
+export const levelById = (id) => { if (id === 'T') return { world: WORLDS[0], spec: TUTORIAL }; for (const w of WORLDS) for (const l of w.levels) if (l.id === id) return { world: w, spec: l }; return null; };
 export const ALL = WORLDS.flatMap((w) => w.levels.map((l) => l.id));
 export const nextLevel = (id) => { const i = ALL.indexOf(id); return i >= 0 && i < ALL.length - 1 ? ALL[i + 1] : null; };
 // Gold is a clean, quick run. Silver and bronze give more room.

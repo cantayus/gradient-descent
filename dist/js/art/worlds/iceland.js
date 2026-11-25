@@ -16,7 +16,7 @@ function tones(time) { const t = (hex) => mix(hex, time.shade, time.dark); t.h =
 
 export const iceland = {
   id: 'iceland', name: 'Iceland', zone: 'sand', times: TIMES,
-  stamps: [{ s: 'puffin', name: 'Atlantic puffin' }, { s: 'turf', name: 'Turf house' }, { s: 'horse', name: 'Icelandic horse' }, { s: 'basalt', name: 'Basalt columns' }, { s: 'church', name: 'Country church' }, { s: 'light', name: 'Lighthouse' }],
+  stamps: [{ s: 'puffin', name: 'Atlantic puffin' }, { s: 'turf', name: 'Turf house' }, { s: 'horse', name: 'Icelandic horse' }, { s: 'basalt', name: 'Basalt columns' }, { s: 'church', name: 'Country church' }, { s: 'light', name: 'Lighthouse' }, { s: 'cairn', name: 'Cairn' }],
   note: 'Iceland sits on the Mid-Atlantic Ridge, where two plates of the Earth’s crust pull apart.',
 
   far(time) {

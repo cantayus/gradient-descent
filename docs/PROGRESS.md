@@ -92,10 +92,27 @@ After the last world a sandbox opens: pick a landscape, set learning rate, momen
 - Sound (`js/core/audio.js`): music for title, Iceland, boss and card, written as notes; effects; Theta's wordless voice; rain and wind.
 - Saves (`js/core/save.js`): best times, medals, ghosts, notebook pages, settings.
 
+- Patagonia, the sixth world (`js/art/worlds/patagonia.js`, levels `PAT` in `worlds.js`, track `patagonia`): granite spires (ridge style `torres`), the ice field,
+  a turquoise lake with bergs, red lenga woods, gold pampa, guanacos (`P.guanaco`), flag trees, a condor. Lessons: the chain rule (backpropagation), exploding
+  and vanishing gradients, clipping, skip connections. Mechanics: blue-ice chutes that multiply speed, deep powder snow that limits it (a new surface, `powder`,
+  with drag that grows with the square of the speed, so it is a true limit and not a fixed toll), winds at the back and in the face, glacier lakes with bergs
+  afloat, and cuts bridged by two snow cornices with a jump between them.
+- Mu's lift (owner request "add a mid-air hop"): from Cappadocia on, jump again in the air and Mu lifts Theta once between one footing and the next
+  (`HOP_V`, `HOP_J` in `physics.js`; `b.hops`). It is a push of limited size, so it checks a fast fall and does not cancel it. It refreshes on any footing and in
+  water, which means a high tide can be left without the raft; that still needs the wait for the tide, so the lesson stands.
+- More than one thing to find, and more than one goal (owner request): besides seeds there are dewdrops (relight a light, or become a spark), Mu's feathers
+  (give the lift back in mid-air; over gaps 5.75 wide or more, and as a stair to a high stamp) and one stamp hidden in every level. `level.js` places them
+  (`items`; a level may place its own with a stroke's `items` option and `items: 'own'`). Stamp places by level number: in plain sight, a high crest,
+  behind the start, a feather stair, over a gap, a high crest near the end. Each country's theme names six stamps (`stamps`), drawn from its own sprites
+  (`js/art/stamps.js`). The album is on the title menu. The finish card shows four goals: the valley, the stamp, every seed, no light lost.
+  `tests/items.test.mjs` proves every stamp can be reached with what the hero can do in that country.
+- A tutorial (owner request): "The Practice Slope" (`TUTORIAL` in `worlds.js`, id `T`), eight lessons shown one at a time where the ground asks for them
+  (run, jump, leap, slide, turbo, lights, stamps, the valley). Offered once before the first level and always on the title menu. Nothing can be lost on it.
+  A check proves its three gaps ask for exactly a tap, a held jump and a turbo.
+
 ## Not built yet
 
-- Worlds 6 and 7 (themes, music, mechanics, bosses, notebook pages). Next: Patagonia (exploding and vanishing gradients, clipping; granite towers, glaciers, hard wind, condors, guanacos, turquoise lakes, an ice field), then Yakushima (overfitting, early stopping; ancient cedars, moss, rain, Yaku deer and macaques, streams; the finale and the Memorizer, who is not a villain).
-- More powers were offered to the owner as possible: a second hop carried by Mu. Not built; it would let a standing jump clear the rims that are meant to need speed.
+- World 7, Yakushima (overfitting, early stopping; ancient cedars, moss, rain, Yaku deer and macaques, streams; the finale and the Memorizer, who is not a villain).
 - An ending scene for the last chapter of the story.
 - Cappadocia still wants: a scene in which Mu joins (like the opening scene), a boss with something of its own (now it is a hard run of hollows), a play-through by hand for feel, better poplars.
 - The wordless story scenes, Sort! bonus stages, the daily valley, endless mode, the lab with sliders, the teacher page, the share card.
