@@ -1,0 +1,163 @@
+// The screens round the game: title, levels, the card after a run, the notebook, settings, credits. All plain HTML over the canvas.
+import { save, store, resetSave, record, ghostFor } from '../core/save.js';
+import { WORLDS, levelById, ALL, nextLevel, medals } from '../data/worlds.js';
+import { CARDS, HINTS } from '../data/notebook.js';
+import { audio, initAudio, setVolumes, playMusic, sfx, mute } from '../core/audio.js';
+import { input } from '../core/input.js';
+import { drawTheta, POSE } from '../game/theta.js';
+
+let api = null;
+const ui = document.getElementById('ui'), hud = document.getElementById('hud');
+export function el(spec, attrs = {}, ...kids) {
+  const [tag, ...cls] = spec.split('.'), n = document.createElement(tag || 'div'); if (cls.length) n.className = cls.join(' ');
+  for (const [k, v] of Object.entries(attrs || {})) { if (k === 'on') for (const [e, f] of Object.entries(v)) n.addEventListener(e, f); else if (k === 'text') n.textContent = v; else if (k === 'html') n.innerHTML = v; else if (v !== false && v != null) n.setAttribute(k, v); }
+  for (const kid of kids.flat()) if (kid != null && kid !== false) n.append(kid); return n;
+}
+const btn = (label, fn, cls = '') => el('button.btn' + (cls ? '.' + cls : ''), { type: 'button', on: { click: () => { initAudio(); sfx.ui(true); fn(); } } }, label);
+export const fmt = (t) => (t == null ? '–' : `${Math.floor(t / 60)}:${(t % 60).toFixed(1).padStart(4, '0')}`);
+const clear = () => { ui.replaceChildren(); document.body.classList.remove('dim'); };
+const MEDAL = ['', 'bronze', 'silver', 'gold'];
+const how = () => (input.touch.used ? 'touch' : input.pad.used ? 'pad' : 'key');
+
+export function initUI(a) { api = a; hud.replaceChildren(el('div.h-name', {}, el('small'), el('b'), el('i')), el('div.h-clock'), el('div.h-seeds'), el('div.h-hint'), el('button.h-pause', { type: 'button', 'aria-label': 'Pause', on: { click: () => pause() } }, 'II')); }
+
+// ---- title ----
+// A wide, quiet look at the country with the name over it and one line asking for a key; the menu comes only after that.
+// (A browser will not play sound before the player has touched something, so the first key is also what starts the music.)
+let awake = false;
+const emblem = () => el('div.emblem', { html: '<svg viewBox="0 0 64 64" aria-hidden="true"><ellipse cx="32" cy="32" rx="19" ry="26" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M13.5 27 C 24 27, 27 38, 38 38 S 47 36, 50.5 36" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="38" cy="38" r="2.6" fill="#ffd76a"/></svg>' });
+export function showTitle() {
+  clear(); api.attract(); hud.hidden = true; document.getElementById('touch').hidden = true; if (awake) playMusic('title');
+  const next = ALL.find((id) => !save.levels[id]?.done) || ALL[0], any = Object.keys(save.levels).length > 0;
+  const items = [[any ? 'Continue' : 'New game', () => play(next)], any && ['Levels', showLevels], ['Notebook', showNotebook], ['How to play', showHow], ['Settings', () => showSettings(showTitle)], ['Also play this!', showAlso], ['Credits', showCredits]].filter(Boolean);
+  const menu = el('nav.tmenu', { 'aria-label': 'Menu' }, items.map(([t, f], i) => el('button.titem', { type: 'button', style: `--i:${i}`, on: { click: () => { sfx.ui(true); f(); }, mouseenter: (e) => e.target.focus() } }, t)));
+  const root = el('div.cine' + (awake ? '.awake.seen' : ''), {}, el('div.veil'), el('div.logo', {}, emblem(), el('h1', { text: 'Gradient Descent' }), el('div.rule')), el('p.press', { text: 'ontouchstart' in window ? 'Tap to begin' : 'Press any key' }), menu);
+  ui.append(root);
+  if (awake) { menu.firstChild.focus(); return; }
+  const wake = (e) => { if (!root.isConnected) return off(); if (e.type === 'keydown' && /^(F\d+|Tab|Meta|Control|Alt|Shift)/.test(e.key)) return; off(); awake = true; initAudio(); playMusic('title'); sfx.wake(); root.classList.add('awake'); api.greet(); setTimeout(() => menu.firstChild.focus(), 60); e.preventDefault?.(); };
+  const off = () => { removeEventListener('keydown', wake, true); removeEventListener('pointerdown', wake, true); };
+  addEventListener('keydown', wake, true); addEventListener('pointerdown', wake, true);
+}
+
+// ---- levels ----
+export function showLevels() {
+  clear(); hud.hidden = true; api.attract(); document.body.classList.add('dim');
+  const open = (id) => { const i = ALL.indexOf(id); return api.unlockAll || i === 0 || save.levels[ALL[i - 1]]?.done; };
+  ui.append(sheet('Levels', showTitle,
+    WORLDS.map((w) => el('section.world', {}, el('h3', { text: w.name }), el('p.note', { text: w.theme.note || '' }),
+      el('div.stones', {}, w.levels.map((l, i) => { const s = save.levels[l.id], ok = open(l.id);
+        return el('button.stone' + (ok ? '' : '.locked') + (l.boss ? '.boss' : ''), { type: 'button', disabled: !ok, on: { click: () => { initAudio(); play(l.id); } } },
+          el('span.num', { text: l.boss ? '★' : String(i + 1) }), el('span.nm', { text: l.name }), el('span.tm', { text: s?.best != null ? fmt(s.best) : ok ? 'new' : '' }), el('span.md.' + (MEDAL[s?.medal || 0] || 'none'))); }))))));
+}
+
+// ---- playing ----
+let run = null, hintT = 0;
+export function play(id) {
+  clear(); hud.hidden = false; const f = levelById(id); run = { id, f, shown: null };
+  const p = api.startLevel(id, { ghost: ghostFor(id) }); if (!p) return showTitle();
+  playMusic(f.spec.music || f.world.music); hud.querySelector('.h-name small').textContent = f.world.name; hud.querySelector('.h-name b').textContent = f.spec.name; hud.classList.remove('fresh'); void hud.offsetWidth; hud.classList.add('fresh'); clearTimeout(run.cardT); run.cardT = setTimeout(() => hud.classList.remove('fresh'), 4200);
+  document.getElementById('touch').hidden = !('ontouchstart' in window); api.G.paused = false;
+}
+export function frameUI(p) {
+  if (!p || hud.hidden || !run) return;
+  if (p.started && hud.classList.contains('fresh') && p.clock > 0.6) hud.classList.remove('fresh');
+  hud.querySelector('.h-clock').textContent = p.started ? fmt(p.clock) : '';
+  hud.querySelector('.h-seeds').textContent = p.level.seeds.length ? `${p.seeds} / ${p.level.seeds.length}` : '';
+  const m = p.level.marks.find((k) => k.kind === 'hint' && p.b.x > k.x - 7 && p.b.x < k.x + 16), text = m && !p.done ? HINTS[m.text]?.[how()] : null, h = hud.querySelector('.h-hint');
+  if (text !== run.shown) { run.shown = text; h.textContent = text || ''; h.classList.toggle('on', !!text); }
+}
+export function pause() {
+  if (!api.G.play || hud.hidden || api.G.paused || api.G.play.done) return; api.G.paused = true; document.body.classList.add('dim');
+  const back = () => { clear(); api.G.paused = false; };
+  ui.append(el('div.card.small', {}, el('h2', { text: 'Paused' }), el('div.menu', {}, btn('Go on', back, 'big'), btn('Start again', () => play(run.id)), btn('Settings', () => showSettings(() => { clear(); api.G.paused = false; pause(); })), btn('Levels', showLevels), btn('Title', showTitle))));
+}
+export function restart() { if (run && !hud.hidden) play(run.id); }
+
+// ---- the card after a run ----
+export function showFinish(res) {
+  const f = run.f, mt = medals(f.spec), out = record(run.id, res, mt, save.settings.assist), s = save.levels[run.id];
+  const card = CARDS[f.spec.card], fresh = card && !save.cards.includes(f.spec.card); if (fresh) { save.cards.push(f.spec.card); store(); }
+  setTimeout(() => {
+    hud.hidden = true; document.body.classList.add('dim'); playMusic('card'); if (out.medal) sfx.medal(out.medal - 1);
+    const nx = nextLevel(run.id), chart = el('canvas.curve', { width: 720, height: 300 });
+    const medalRow = el('div.medals', {}, [3, 2, 1].map((k) => el('div.medal.' + MEDAL[k] + (out.medal >= k ? '.won' : ''), {}, el('i'), el('span', { text: fmt(mt[3 - k]) }))));
+    ui.append(el('div.card.finish', {},
+      el('div.top', {}, el('div', {}, el('h2', { text: f.spec.name }), el('p.time', {}, el('b', { text: fmt(res.time) }), out.newBest && !out.first ? el('span.tag', { text: 'your best' }) : null, save.settings.assist ? el('span.tag.soft', { text: 'with assist' }) : null),
+        el('p.sub', { text: `Seeds ${res.seeds} of ${res.seedsAll}` + (res.falls ? ` · ${res.falls} ${res.falls === 1 ? 'fall' : 'falls'}` : '') })), medalRow),
+      el('div.chartwrap', {}, chart, el('p.cap', { text: 'Your run as a loss curve: how high you stood, moment by moment. Lower is better.' })),
+      card ? el('div.note' + (fresh ? '.fresh' : ''), {}, cardArt(card.draw), el('div', {}, el('h3', { text: (fresh ? 'New in the notebook: ' : '') + card.name }), ...card.text.slice(0, fresh ? 3 : 1).map((t) => el('p', { text: t })))) : null,
+      el('div.row', {}, nx ? btn('Next', () => play(nx), 'big') : btn('Levels', showLevels, 'big'), btn('Again', () => play(run.id)), nx ? btn('Levels', showLevels) : null)));
+    drawCurve(chart, res.curve, out.bestBefore != null && !out.newBest ? s.curve : null, res.top, res.bottom);
+  }, 1500);
+}
+// The run drawn the way a training chart is drawn: loss against steps.
+export function drawCurve(c, curve, best, top, bottom) {
+  const x = c.getContext('2d'), W = c.width, H = c.height, L = 64, R = 18, T = 18, B = 44, n = Math.max(curve.length, best ? best.length : 0, 2), lo = Math.min(bottom, ...curve) - 0.5, hi = Math.max(top, ...curve) + 0.5;
+  const px = (i) => L + (i / (n - 1)) * (W - L - R), py = (v) => T + (1 - (v - lo) / (hi - lo)) * (H - T - B);
+  x.clearRect(0, 0, W, H); x.strokeStyle = 'rgba(255,255,255,0.12)'; x.lineWidth = 1; for (let k = 0; k <= 4; k++) { const y = T + (k / 4) * (H - T - B); x.beginPath(); x.moveTo(L, y); x.lineTo(W - R, y); x.stroke(); }
+  x.strokeStyle = 'rgba(255,255,255,0.55)'; x.lineWidth = 2; x.beginPath(); x.moveTo(L, T); x.lineTo(L, H - B); x.lineTo(W - R, H - B); x.stroke();
+  x.fillStyle = '#a8b7c6'; x.font = '700 19px Nunito, sans-serif'; x.textAlign = 'center'; x.fillText('time', (L + W - R) / 2, H - 10); x.save(); x.translate(22, (T + H - B) / 2); x.rotate(-Math.PI / 2); x.fillText('loss', 0, 0); x.restore();
+  const path = (d) => { x.beginPath(); d.forEach((v, i) => (i ? x.lineTo(px(i), py(v)) : x.moveTo(px(i), py(v)))); };
+  if (best) { path(best); x.strokeStyle = 'rgba(255,216,122,0.6)'; x.lineWidth = 3; x.setLineDash([8, 7]); x.stroke(); x.setLineDash([]); }
+  path(curve); x.lineTo(px(curve.length - 1), H - B); x.lineTo(L, H - B); x.closePath(); const g = x.createLinearGradient(0, T, 0, H - B); g.addColorStop(0, 'rgba(111,208,208,0.4)'); g.addColorStop(1, 'rgba(111,208,208,0.03)'); x.fillStyle = g; x.fill();
+  path(curve); x.strokeStyle = '#7fe0dc'; x.lineWidth = 4; x.lineJoin = 'round'; x.stroke();
+  x.fillStyle = '#ffd87a'; x.strokeStyle = '#0d1322'; x.lineWidth = 2; x.beginPath(); x.arc(px(curve.length - 1), py(curve[curve.length - 1]), 7, 0, 7); x.fill(); x.stroke();
+}
+
+// ---- notebook ----
+export function showNotebook() {
+  clear(); hud.hidden = true; api.attract(); document.body.classList.add('dim'); sfx.page();
+  const ids = Object.keys(CARDS);
+  ui.append(sheet('Notebook', showTitle, ids.some((id) => save.cards.includes(id)) ? null : el('p.note', { text: 'Each level you finish adds a page here.' }),
+    el('div.pages', {}, ids.map((id) => { const c = CARDS[id], has = save.cards.includes(id) || api.unlockAll;
+      return has ? el('article.page', {}, cardArt(c.draw), el('div', {}, el('h3', { text: c.name }), ...c.text.map((t) => el('p', { text: t })), c.math ? el('p.math', { text: c.math }) : null, c.key ? el('p.key', { text: c.key }) : null, c.who ? el('p.who', { text: c.who }) : null))
+        : el('article.page.blank', {}, el('div.q', { text: '?' }), el('div', {}, el('h3', { text: 'Not found yet' }))); }))));
+}
+// Small drawings for the notebook pages, made here like every other picture.
+function cardArt(kind) {
+  const c = el('canvas.art', { width: 240, height: 180 }), x = c.getContext('2d'), ink = '#23434d', teal = '#3f8f95', gold = '#ffc23d';
+  const hill = (f) => { x.beginPath(); for (let i = 0; i <= 240; i += 4) { const y = f(i / 240); i ? x.lineTo(i, y) : x.moveTo(i, y); } };
+  const fill = (f) => { hill(f); x.lineTo(240, 180); x.lineTo(0, 180); x.closePath(); const g = x.createLinearGradient(0, 40, 0, 180); g.addColorStop(0, '#bfe3df'); g.addColorStop(1, '#eef6ee'); x.fillStyle = g; x.fill(); hill(f); x.strokeStyle = ink; x.lineWidth = 3; x.lineJoin = 'round'; x.stroke(); };
+  const hero = (px, py, s = 26, o = {}) => { x.save(); x.translate(px, py - s * 0.46); x.scale(s, s); drawTheta(x, { ...POSE(), turn: 0.8, ...o }); x.restore(); };
+  const arrow = (x0, y0, x1, y1, col = gold) => { const a = Math.atan2(y1 - y0, x1 - x0); x.strokeStyle = col; x.fillStyle = col; x.lineWidth = 5; x.lineCap = 'round'; x.beginPath(); x.moveTo(x0, y0); x.lineTo(x1, y1); x.stroke(); x.beginPath(); x.moveTo(x1 + Math.cos(a) * 9, y1 + Math.sin(a) * 9); x.lineTo(x1 + Math.cos(a + 2.4) * 11, y1 + Math.sin(a + 2.4) * 11); x.lineTo(x1 + Math.cos(a - 2.4) * 11, y1 + Math.sin(a - 2.4) * 11); x.closePath(); x.fill(); };
+  const slope = (u) => 46 + 104 * u * u * (3 - 2 * u), vee = (u) => 44 + 96 * (1 - Math.abs(u - 0.5) * 2) ** 1.4, bowl = (u) => 50 + 100 * Math.sin(u * Math.PI) ** 1.2;
+  if (kind === 'loss') { fill(slope); hero(52, slope(52 / 240) - 2, 30); x.setLineDash([5, 6]); x.strokeStyle = teal; x.lineWidth = 2; x.beginPath(); x.moveTo(214, 36); x.lineTo(214, 150); x.stroke(); x.setLineDash([]); x.fillStyle = teal; x.font = '700 17px Nunito, sans-serif'; x.fillText('high', 176, 46); x.fillText('low', 180, 142); }
+  else if (kind === 'gradient') { fill(slope); const u = 0.42, px = u * 240, py = slope(u); hero(px, py - 2, 28); arrow(px + 20, py + 14, px + 78, py + 62); }
+  else if (kind === 'rate') { fill(bowl); x.strokeStyle = teal; x.lineWidth = 3; x.setLineDash([2, 7]); x.lineCap = 'round'; for (const [a, b, h] of [[0.08, 0.2, 26], [0.2, 0.32, 24]]) { x.beginPath(); x.moveTo(a * 240, bowl(a) - 6); x.quadraticCurveTo((a + b) * 120, bowl(a) - h - 14, b * 240, bowl(b) - 6); x.stroke(); } x.strokeStyle = gold; x.beginPath(); x.moveTo(0.08 * 240, bowl(0.08) - 6); x.quadraticCurveTo(0.3 * 240, -14, 0.52 * 240, bowl(0.52) - 6); x.stroke(); x.setLineDash([]); hero(0.08 * 240, bowl(0.08) - 2, 24); }
+  else if (kind === 'overshoot') { fill(vee); x.strokeStyle = gold; x.lineWidth = 3; x.setLineDash([2, 7]); x.lineCap = 'round'; const P = [0.3, 0.76, 0.2, 0.86]; for (let i = 0; i < 3; i++) { x.beginPath(); x.moveTo(P[i] * 240, vee(P[i]) - 6); x.quadraticCurveTo(120, vee(P[i]) - 70 + i * 6, P[i + 1] * 240, vee(P[i + 1]) - 6); x.stroke(); } x.setLineDash([]); hero(P[3] * 240, vee(P[3]) - 2, 24, { expr: 'worry' }); }
+  else { fill(bowl); let u = 0.06; x.fillStyle = teal; for (let i = 0; i < 7; i++) { const nu = u + 0.075 * Math.cos(u * Math.PI) + 0.012; x.strokeStyle = teal; x.lineWidth = 3; x.beginPath(); x.moveTo(u * 240, bowl(u) - 5); x.lineTo(nu * 240, bowl(nu) - 5); x.stroke(); x.beginPath(); x.arc(u * 240, bowl(u) - 5, 4.5, 0, 7); x.fill(); u = nu; } hero(u * 240, bowl(u) - 2, 26, { expr: 'proud' }); }
+  return c;
+}
+
+// ---- the rest ----
+function sheet(title, back, ...kids) { return el('div.card.sheet', {}, el('header', {}, el('h2', { text: title }), btn('Back', back, 'ghost')), el('div.body', {}, ...kids)); }
+export function showHow() {
+  clear(); document.body.classList.add('dim');
+  const k = how(), rows = k === 'touch' ? [['Run', 'Slide your left thumb left or right.'], ['Jump', 'The upper button. Tap for a hop, hold for a leap.'], ['Slide', 'Hold the lower button on ice and snow.'], ['Float', 'Hold jump in the air to spread wide and fall slowly.']]
+    : [['Run', '← → or A D'], ['Jump', 'Space. Tap for a hop, hold for a leap.'], ['Slide', 'Hold Shift on ice and snow.'], ['Float', 'Hold Space in the air to spread wide and fall slowly.'], ['Start again', 'R'], ['Pause', 'Esc or P'], ['Sound off', 'M']];
+  ui.append(sheet('How to play', showTitle, el('p.lead', { text: 'Find the lowest ground. Every level ends in the deepest valley, where a light is waiting.' }), el('dl.keys', {}, rows.flatMap(([a, b]) => [el('dt', { text: a }), el('dd', { text: b })])),
+    el('p.note', { text: 'Height is the lesson. The higher you stand, the worse the guess, so the way to go is always down. The seeds along the way are worth the detour, and the clock only matters if you want it to.' })));
+}
+export function showSettings(back) {
+  clear(); document.body.classList.add('dim'); const s = save.settings;
+  const slider = (label, key) => el('label.set', {}, el('span', { text: label }), el('input', { type: 'range', min: 0, max: 1, step: 0.05, value: s[key], on: { input: (e) => { s[key] = +e.target.value; setVolumes({ music: s.music, sfx: s.sfx, voice: s.voice }); store(); } } }));
+  const pick = (label, key, opts, after) => el('label.set', {}, el('span', { text: label }), el('div.seg', {}, opts.map(([v, t]) => el('button' + (s[key] === v ? '.on' : ''), { type: 'button', on: { click: () => { s[key] = v; store(); after?.(); showSettings(back); } } }, t))));
+  ui.append(sheet('Settings', back, slider('Music', 'music'), slider('Sound', 'sfx'), slider('Theta’s voice', 'voice'),
+    pick('Picture', 'gfx', [[-1, 'Auto'], [0, 'Plain'], [1, 'Good'], [2, 'Full']], api.applyGfx), pick('Motion', 'motion', [[true, 'Full'], [false, 'Reduced']]), pick('Text', 'text', [[1, 'Normal'], [1.2, 'Larger'], [1.4, 'Largest']], api.applyText),
+    pick('Assist', 'assist', [[false, 'Off'], [true, 'On']]), el('p.note', { text: 'Assist slows the game by a fifth. Times set with it are kept apart and win no medals.' }),
+    pick('Colours', 'safe', [[false, 'Standard'], [true, 'High contrast']], api.applyGfx),
+    el('div.row', {}, btn('Forget my progress', () => { if (confirm('Forget every time, medal and notebook page?')) { resetSave(); showSettings(back); } }, 'ghost'))));
+}
+export function showAlso() {
+  clear(); document.body.classList.add('dim');
+  ui.append(sheet('Also play this!', showTitle, el('div.also', {},
+    el('a.link', { href: 'https://thesocietyatlas.net/', target: '_blank', rel: 'noopener' }, el('b', { text: 'The Society Atlas' }), el('span', { text: 'A walk through the social sciences, campus by campus.' })),
+    el('a.link', { href: 'https://cantayus.github.io/the-missing-variable/', target: '_blank', rel: 'noopener' }, el('b', { text: 'The Missing Variable' }), el('span', { text: 'Data science and artificial intelligence, and a library that keeps getting narrower.' })))));
+}
+export function showCredits() {
+  clear(); document.body.classList.add('dim');
+  ui.append(sheet('Credits', showTitle, el('section', {}, el('h3', { text: 'Created by' }), el('p.big', { text: 'Cantay Caliskan' }), el('p', { text: 'He teaches data science and artificial intelligence, and studies politics and society with computational methods.' }), el('p', {}, el('a', { href: 'https://www.cantaycaliskan.net/', target: '_blank', rel: 'noopener', text: 'cantaycaliskan.net' }))),
+    el('section', {}, el('h3', { text: 'Made with' }), el('p', { text: 'Typefaces: Fredoka and Nunito, under the SIL Open Font Licence. All pictures are drawn by the program. All sound is made in your browser.' }))));
+}
+addEventListener('keydown', (e) => { if (e.code === 'Escape' || e.code === 'KeyP') { if (api?.G.paused) { clear(); api.G.paused = false; } else pause(); } else if (e.code === 'KeyR') restart(); else if (e.code === 'KeyM') mute(); else if (e.code === 'Enter' || e.code === 'Space') { if (document.activeElement?.tagName !== 'BUTTON') { const b = ui.querySelector('.btn.big'); if (b) { b.click(); e.preventDefault(); } } }
+  else if (/^Arrow(Up|Down)$|^Key[WS]$/.test(e.code)) { const list = [...ui.querySelectorAll('.titem, .menu .btn')]; if (list.length) { const i = list.indexOf(document.activeElement), d = /Up|KeyW/.test(e.code) ? -1 : 1; list[(i + d + list.length) % list.length].focus(); sfx.ui(); } } });

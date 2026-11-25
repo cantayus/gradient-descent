@@ -1,0 +1,42 @@
+<!doctype html><meta charset="utf-8"><title>Theta: design sheet</title>
+<style>
+@font-face { font-family: Fredoka; src: url(../fonts/fredoka-latin-600-normal.woff2); font-weight: 600; }
+@font-face { font-family: Nunito; src: url(../fonts/nunito-latin-700-normal.woff2); font-weight: 700; }
+body { margin: 0; background: #f4ede2; } canvas { display: block; }
+</style>
+<canvas id="c" width="2400" height="1500"></canvas>
+<script type="module">
+import { drawTheta, POSE, COL } from '../js/game/theta.js';
+await document.fonts.load('600 40px Fredoka'); await document.fonts.load('700 20px Nunito');
+const c = document.getElementById('c'), x = c.getContext('2d');
+const bg = x.createLinearGradient(0, 0, 0, 1500); bg.addColorStop(0, '#f8f1e6'); bg.addColorStop(1, '#efe4d3'); x.fillStyle = bg; x.fillRect(0, 0, 2400, 1500);
+const label = (t, px, py, big) => { x.fillStyle = big ? '#23434d' : '#56707a'; x.font = big ? '600 46px Fredoka' : '700 21px Nunito'; x.textAlign = big ? 'left' : 'center'; x.fillText(t, px, py); };
+const put = (px, py, S, o, t, dark) => { if (dark) { x.fillStyle = dark; x.beginPath(); x.roundRect(px - S * 0.8, py - S * 0.95, S * 1.6, S * 1.75, 24); x.fill(); } x.save(); x.translate(px, py); x.fillStyle = 'rgba(60,40,70,0.13)'; x.beginPath(); x.ellipse(0, S * 0.5, S * 0.42, S * 0.06, 0, 0, 7); x.fill(); x.scale(S, S); drawTheta(x, { ...POSE(), ...o }); x.restore(); if (t) label(t, px, py + S * 0.5 + 44); };
+label('Theta', 70, 90, true); label('the hero of Gradient Descent', 420, 86); x.textAlign = 'left';
+// row 1: turnaround
+put(260, 420, 330, { turn: 0, lookX: 0 }, 'front');
+put(680, 420, 330, { turn: 0.9, lookX: 0.4 }, 'three-quarter');
+put(1100, 420, 330, { turn: 0.9, face: -1, lookX: 0.4 }, 'facing left');
+put(1500, 420, 300, { tuck: 1, roll: 0 }, 'rolled');
+put(1860, 420, 300, { tuck: 1, roll: 1.2, expr: 'glee' }, 'rolling');
+put(2200, 420, 300, { tuck: 1, roll: 2.8, expr: 'glee' }, '');
+// row 2: action
+const y2 = 930, S2 = 220;
+put(170, y2, S2, { runAmt: 1, run: 0.5, lean: 0.2, turn: 0.9, expr: 'joy', earL: -0.5, earR: -0.5, lookX: 0.6 }, 'run');
+put(470, y2, S2, { runAmt: 1, run: 2.2, lean: 0.2, turn: 0.9, expr: 'joy', earL: -0.5, earR: -0.5, lookX: 0.6 }, '');
+put(770, y2, S2, { crouch: 1, sy: 0.8, turn: 0.9, expr: 'effort', lookY: -0.6 }, 'crouch');
+put(1070, y2 - 60, S2, { air: 1, sy: 1.18, turn: 0.9, expr: 'joy', earL: 0.3, earR: 0.3, lean: 0.12, lookY: -0.7 }, 'leap');
+put(1370, y2 - 60, S2, { air: -1, sy: 1.1, turn: 0.9, expr: 'wow', earL: -0.6, earR: -0.6, lean: -0.1, lookY: 0.8 }, 'fall');
+put(1700, y2 - 60, S2, { air: -0.4, spread: 1, sy: 0.92, turn: 0.7, expr: 'effort', earL: -0.5, earR: -0.5, lookY: 0.6 }, 'spread wide');
+put(2030, y2, S2, { sy: 0.66, turn: 0.9, expr: 'squint' }, 'hard landing');
+put(2270, y2 + 10, S2 * 0.8, { slide: 1, sy: 0.8, lean: 1.15, turn: 0.9, expr: 'glee', earL: -0.7, earR: -0.7 }, 'slide');
+// row 3: faces
+const y3 = 1310, S3 = 180, faces = [['smile', 'at rest'], ['joy', 'joy'], ['glee', 'glee'], ['effort', 'effort'], ['worry', 'worry'], ['wow', 'surprise'], ['proud', 'pride'], ['sulk', 'sulk'], ['sleepy', 'sleepy'], ['dizzy', 'dizzy']];
+faces.forEach(([e, t], i) => put(140 + i * 205, y3, S3, { expr: e, turn: 0.4, lid: e === 'sleepy' ? 1 : 0, t: 0.3 }, t));
+// on dark and on light ground, and the ghost
+put(2190, y3 - 30, 150, { turn: 0.9 }, '', '#1d2533'); put(2330, y3 - 30, 0, {}, '');
+// colours
+const sw = [['body', COL.body], ['band', COL.band], ['eyes', COL.iris], ['cheek', COL.cheek], ['seed', COL.seed], ['line', COL.line]];
+sw.forEach(([n, col], i) => { x.fillStyle = col; x.strokeStyle = '#23434d'; x.lineWidth = 2; x.beginPath(); x.roundRect(1560 + i * 135, 50, 110, 46, 12); x.fill(); x.stroke(); x.fillStyle = '#56707a'; x.font = '700 17px Nunito'; x.textAlign = 'center'; x.fillText(n, 1615 + i * 135, 122); });
+window.__ready = true;
+</script>

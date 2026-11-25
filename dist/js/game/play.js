@@ -1,0 +1,111 @@
+// One run of one level: the body, the rig, the camera, the clock, the ghost, and everything that happens along the way.
+import { Body, advance, R, STEP } from './physics.js';
+import { build } from './level.js';
+import { Rig, POSE } from './theta.js';
+import { Scene } from '../art/scene.js';
+import { clamp, lerp, smooth } from '../art/paint.js';
+import { Geyser } from './boss.js';
+
+export class Camera {
+  constructor(x, y) { this.x = x; this.y = y; this.vh = 12.5; this.vw = 22; this.lx = 3; this.ly = 0.9; }
+  update(b, dt, aspect, snap = false, wide = false) {
+    const sp = b.speed(), vh = (wide ? 20 : lerp(12.5, 19, smooth(clamp((sp - 9) / 22, 0, 1)))) * (aspect < 1 ? 1.3 : 1);     // wide: the long look at a level before the first step
+    if (snap && wide) this.vh = vh;
+    this.vh += (vh - this.vh) * Math.min(1, dt * 1.4); this.vw = this.vh * aspect;
+    // look where the hero is going, and a little below, since the way is down
+    this.lx += (clamp(b.vx * 0.42, -7, 9) + b.face * 1.6 - this.lx) * Math.min(1, dt * 2.2);
+    this.ly += (clamp(b.vy * 0.2, -5.5, 2.5) + 0.9 - this.ly) * Math.min(1, dt * 2.6);
+    const tx = b.x + this.lx * Math.min(1, this.vw / 26), ty = b.y + this.ly + this.vh * 0.11;      // the hero rides below the middle of the picture: more country, less cut earth
+    if (snap) { this.x = tx; this.y = ty; } else { this.x += (tx - this.x) * Math.min(1, dt * 7); this.y += (ty - this.y) * Math.min(1, dt * 6); }
+    // never lose the hero: keep them inside the middle of the picture whatever the springs say
+    this.x = clamp(this.x, b.x - this.vw * 0.36, b.x + this.vw * 0.36); this.y = clamp(this.y, b.y - this.vh * 0.26, b.y + this.vh * 0.36);
+  }
+}
+
+// Eta, the firefly: the learning rate. Eta flies ahead of Theta, further and brighter the faster the going.
+class Eta {
+  constructor(x, y) { this.x = x; this.y = y; this.glow = 0.6; }
+  update(b, dt, t) { const sp = b.speed(), ahead = 1.3 + clamp(sp * 0.16, 0, 4.2), tx = b.x + b.face * ahead + Math.sin(t * 2.3) * 0.25, ty = b.y + 1.05 + Math.sin(t * 3.1) * 0.22 + clamp(b.vy * 0.06, -0.8, 0.8); this.x += (tx - this.x) * Math.min(1, dt * 5); this.y += (ty - this.y) * Math.min(1, dt * 5); this.glow += (0.55 + clamp(sp / 22, 0, 1) * 0.7 - this.glow) * Math.min(1, dt * 3); }
+  draw(ctx, t, fx) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = Math.min(1, this.glow); const s = 1.5 + this.glow * 1.4 + Math.sin(t * 9) * 0.08; ctx.drawImage(fx.c, -s / 2, -s / 2, s, s); ctx.restore();
+    ctx.fillStyle = 'rgba(255,255,255,0.75)'; const w = Math.sin(t * 38) * 0.5; ctx.beginPath(); ctx.ellipse(-0.05, -0.05, 0.09, 0.04 + 0.03 * w, -0.6, 0, 7); ctx.ellipse(0.05, -0.05, 0.09, 0.04 - 0.03 * w, 0.6, 0, 7); ctx.fill();
+    ctx.fillStyle = '#4a3a20'; ctx.beginPath(); ctx.ellipse(0, 0, 0.045, 0.075, 0.3, 0, 7); ctx.fill(); ctx.fillStyle = '#fff6b0'; ctx.beginPath(); ctx.arc(0.012, 0.045, 0.045, 0, 7); ctx.fill(); }
+}
+
+export class Play {
+  constructor({ spec, theme, can = {}, ghost = null, hooks = {}, cine = false }) {
+    this.cine = cine; this.spec = spec; this.theme = theme; this.level = build(spec); this.T = this.level.T; this.hooks = hooks;
+    this.scene = new Scene(theme, this.level, spec.time || 'day');
+    this.b = new Body(this.level.start.x, this.level.start.y + R); Object.assign(this.b.can, { slide: true, roll: true, spread: true }, can); this.b.grounded = true;
+    this.rig = new Rig(); this.cam = new Camera(this.b.x, this.b.y); this.eta = new Eta(this.b.x, this.b.y + 1);
+    this.acc = 0; this.t = 0; this.clock = 0; this.started = false; this.done = false; this.dead = 0; this.falls = 0; this.seeds = 0;
+    this.curve = []; this.rec = []; this.recT = 0; this.curT = 0; this.ghostData = ghost; this.ghost = ghost ? { b: { x: 0, y: 0, r: R }, pose: POSE() } : null;
+    this.check = this.level.checks[0]; this.trailT = 0; this.maxSpeed = 0;
+    this.flyers = [{ x: 0, y: 0, draw: (ctx, t) => this.eta.draw(ctx, t, this.scene.fx.warm) }];
+    // one weather for the picture and the physics
+    this.weather = this.scene.wx; this.scene.own = false; this.T.air = (t) => this.weather.windAt(t);
+    if (spec.boss === 'geyser') { this.boss = new Geyser(this.level, this.T); this.scene.overlay = (ctx, x0, x1) => this.boss.draw(ctx, x0, x1, this.t, this.scene.time.hot); }
+    if (cine) { this.rig.awake = true; this._cine(0); const tm = this.scene.time; { if (tm.sun && !tm.stars) { tm.sun = { ...tm.sun, x: 0.705, y: 0.235 }; tm.bloom = 0.4; tm.shafts = (tm.shafts || 0.05) * 0.7; } this.scene.drop = 0.075; } }      // on the title the sun stands over the valley the hero is looking into else this.cam.update(this.b, 0.016, 16 / 9, true, true);
+  }
+  // the title's camera: a wide, slow look across the country, the hero small in one corner of it
+  _cine(dt) { const c = this.cam, b = this.b, a = (this.W || 16) / (this.H || 9), t = this.t; c.vh = (16.5 + Math.sin(t * 0.05) * 0.6) * (a < 1 ? 1.35 : 1); c.vw = c.vh * a; c.x = b.x + c.vw * 0.21 + Math.sin(t * 0.06) * 1.8; c.y = b.y + c.vh * 0.25 + Math.sin(t * 0.045) * 0.3; }
+  resize(W, H) { this.W = W; this.H = H; this.scene.resize(W, H); }
+
+  update(dt, inp) {
+    const b = this.b, sc = this.scene; this.t += dt;
+    if (!this.started && !this.cine && (inp.move || inp.jump || inp.tuck)) { this.started = true; this.hooks.start?.(); }
+    this.weather.set(b.t + (this.cine ? this.t : 0), dt); this.rig.wind = this.weather.wind; this.rig.rain = this.weather.rain * (1 - this.scene.coldNow);
+    if (this.dead > 0) { this.dead -= dt; if (this.dead <= 0) this._respawn(); }
+    else if (!this.done) {
+      this.acc = advance(b, this.T, inp, this.acc, dt, () => this._onStep());
+      if (this.started) this.clock += dt;
+    } else { // at the goal the hero is let down gently and the level is over
+      this.acc = advance(b, this.T, { move: 0, jump: false, jumpNow: false, tuck: false }, this.acc, dt);
+    }
+    const pose = this.rig.update(b, dt, inp);
+    pose.seed = 0.7 + 0.3 * clamp((this.level.hi - b.y) / Math.max(1, this.level.hi - this.level.lo), 0, 1);   // the seed glows warmer the lower Theta gets
+    this.eta.update(b, dt, this.t); this.flyers[0].x = this.eta.x; this.flyers[0].y = this.eta.y;
+    if (this.cine) this._cine(dt); else this.cam.update(b, dt, this.W / this.H, false, !this.started); sc.update(dt, this.cam);
+    this._effects(dt);
+    // the record of the run: where the hero was (for the ghost) and how high (for the loss curve)
+    if (this.started && !this.done) {
+      this.recT -= dt; if (this.recT <= 0) { this.recT += 1 / 30; this.rec.push(+b.x.toFixed(2), +b.y.toFixed(2), +pose.tuck.toFixed(2), +pose.roll.toFixed(2), +pose.lean.toFixed(2), b.face); }
+      this.curT -= dt; if (this.curT <= 0) { this.curT += 0.1; this.curve.push(+b.y.toFixed(2)); }
+    }
+    if (this.ghost && this.started) { const d = this.ghostData, i = Math.min(Math.floor(this.clock * 30), d.length / 6 - 1) * 6, g = this.ghost; if (i >= 0) { g.b.x = d[i]; g.b.y = d[i + 1]; Object.assign(g.pose, { tuck: d[i + 2], roll: d[i + 3], lean: d[i + 4], face: d[i + 5], seed: 0, expr: 'smile' }); g.show = Math.abs(g.b.x - b.x) > 0.6; } }
+    this.maxSpeed = Math.max(this.maxSpeed, b.speed());
+  }
+
+  _onStep() {
+    const b = this.b, L = this.level;
+    for (const e of b.events) this.hooks.event?.(e, b);
+    if (this.boss) { this.boss.step(b, STEP); for (const e of this.boss.events) { this.hooks.event?.(e, b, this.boss.p); if (e === 'erupt') { this.scene.shake = 0.6; this.rig.dizzy = 3.2; } else this.scene.emit('steam', b.x, b.y - 0.3, 3, { speed: 1.2, life: 1.2, size: 0.5, col: '#ffffff', g: -1.2, drag: 0.6 }); } }
+    if (b.grounded && Math.abs(this.T.dh(b.x)) < 0.35) { const c = L.checkFor(b.x); if (c.x > this.check.x) this.check = c; }
+    for (const s of L.seeds) if (!s.got && Math.abs(s.x - b.x) < 0.75 && Math.abs(s.y - b.y) < 0.85) { s.got = true; this.seeds++; this.scene.emit('spark', s.x, s.y, 8, { speed: 3, spread: 6.3, life: 0.5, size: 0.12, g: 4 }); this.hooks.event?.('seed', b, this.seeds); }
+    if (L.fell(b)) { this.dead = 0.55; this.falls++; this.hooks.event?.('fall', b); return; }
+    if (!this.done && Math.abs(b.x - L.goal.x) < 1.5 && b.y - L.goal.y < 2.2) { this.done = true; this.rig.feel('proud', 4); for (let i = 0; i < 4; i++) this.scene.emit('spark', L.goal.x, L.goal.y + 0.5, 12, { speed: 7, spread: 2.4, life: 1.2, size: 0.14, g: 5 }); this.hooks.event?.('goal', b); this.hooks.finish?.(this.result()); }
+  }
+  _respawn() { const b = this.b, c = this.check; b.x = c.x; b.y = c.y + R + 0.05; b.vx = b.vy = b.w = 0; b.mode = 'run'; b.grounded = true; this.rig.feel('sulk', 0.9); this.rig.sq.kick(4); this.scene.emit('dust', c.x, c.y + 0.3, 14, { speed: 2.5, spread: 6.3, life: 0.5, size: 0.16, col: '#ffffff', g: -1 }); this.cam.update(b, 0.016, this.W / this.H, true); this.hooks.event?.('back', b); }
+  result() { return { id: this.spec.id, time: this.clock, seeds: this.seeds, seedsAll: this.level.seeds.length, falls: this.falls, curve: this.curve.slice(), rec: this.rec.slice(), top: this.level.start.y, bottom: this.level.goal.y, maxSpeed: this.maxSpeed }; }
+
+  // dust, spray and streaks: small things that say what the body is doing
+  _effects(dt) {
+    const b = this.b, sc = this.scene, T = this.T, sp = b.speed(), gy = b.y - b.r, z = sc.zoneAt(b.x);
+    const soil = { snow: '#ffffff', ice: '#dff6ff', sand: '#5a5d6a', moss: '#a9c94f', meadow: '#9cc267', hot: '#e0b070', rock: '#8a90a0', basalt: '#8a90a0', wet: '#bfd9ea' }[z] || '#bbbbbb';
+    for (const e of b.events) {
+      if (e === 'jump') sc.emit('dust', b.x, gy, 6, { speed: 2.2, spread: 2.6, life: 0.4, size: 0.11, col: soil, g: 3 });
+      if (e === 'land') { const n = Math.round(clamp(b.impact * 0.9, 3, 16)); sc.emit('dust', b.x, gy, n, { speed: clamp(b.impact * 0.3, 1.5, 5), spread: 3.1, dir: Math.PI / 2, life: 0.5, size: 0.13, col: soil, g: 2 }); if (b.impact > 13) sc.shake = Math.min(0.5, b.impact * 0.02); }
+      if (e === 'splash') sc.emit('drop', b.x, gy + 0.3, 16, { speed: 6, spread: 1.6, life: 0.7, size: 0.09, col: '#eaf7ff', g: 22 });
+    }
+    this.trailT -= dt;
+    if (b.grounded && this.trailT <= 0 && sp > 3) {
+      this.trailT = 0.035;
+      if (b.mode === 'slide') sc.emit(z === 'ice' || z === 'snow' ? 'snow' : 'dust', b.x - b.face * 0.3, gy, 2, { speed: sp * 0.25, dir: b.face > 0 ? 2.6 : 0.5, spread: 0.7, life: 0.45, size: 0.09, col: soil, g: 9 });
+      else if (b.mode === 'ball' && sp > 8) sc.emit('dust', b.x - b.face * 0.2, gy, 1, { speed: 1.5, dir: b.face > 0 ? 2.6 : 0.5, spread: 0.8, life: 0.4, size: 0.1, col: soil, g: 2 });
+      else if (b.mode === 'run' && sp > 6 && Math.random() < 0.5) sc.emit('dust', b.x - b.face * 0.2, gy, 1, { speed: 1.2, dir: b.face > 0 ? 2.5 : 0.6, spread: 0.6, life: 0.32, size: 0.08, col: soil, g: 2 });
+    }
+    if (sp > 17 && Math.random() < dt * 40) sc.emit('line', b.x + (Math.random() - 0.5) * 2, b.y + (Math.random() - 0.5) * 1.6, 1, { speed: 0, life: 0.22, size: 0.08, col: '#ffffff', g: 0, vx: -b.vx * 0.5, vy: -b.vy * 0.5, drag: 0 });
+    if (b.inJet > 0.2 && Math.random() < 0.6) sc.emit('drop', b.x, b.y - 0.3, 2, { speed: 4, spread: 2.6, life: 0.5, size: 0.08, col: '#eaf7ff', g: 20 });
+  }
+
+  draw(ctx) { this.scene.draw(ctx, this.cam, { hero: this.dead > 0 ? null : { b: this.b, pose: this.rig.p }, ghost: this.ghost && this.ghost.show ? this.ghost : null, flyers: this.flyers }); }
+}
