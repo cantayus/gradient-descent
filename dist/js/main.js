@@ -58,6 +58,10 @@ G.hooks = {
     else if (name === 'back') { sfx.back(); setTimeout(() => voice.grumble(), 250); }
     else if (name === 'goal') { sfx.goal(); setTimeout(() => voice.trill(), 300); }
     else if (name === 'thump') sfx.drum(extra);
+    else if (name === 'hop') { sfx.hop(); say(() => voice.hup(0.9), 0); }
+    else if (name === 'stamp') { sfx.stamp(); setTimeout(() => voice.trill(), 200); }
+    else if (name === 'dew') sfx.dew();
+    else if (name === 'feather') sfx.feather();
     else if (name === 'turbo') { sfx.turbo(); say(() => voice.whee(0.6), 0); }
     else if (name === 'spark') sfx.medal(0);
     else if (name === 'saved') { sfx.back(); say(() => voice.eep(), 0); }

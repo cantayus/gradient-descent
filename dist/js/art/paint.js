@@ -312,6 +312,29 @@ export const P = {
     ctx.fillStyle = post; for (const x of [0.24, 0.72]) ctx.fillRect(x * w, h * 0.45, w * 0.05, h * 0.5); ctx.fillStyle = lamp; ctx.fillRect(w * 0.42, h * 0.55, w * 0.16, h * 0.2); ctx.fillStyle = '#6a5a4a'; ctx.fillRect(w * 0.14, h * 0.93, w * 0.72, h * 0.07);
     ctx.fillStyle = roof; ctx.beginPath(); ctx.moveTo(0, h * 0.5); ctx.quadraticCurveTo(w * 0.22, h * 0.42, w * 0.5, h * 0.08); ctx.quadraticCurveTo(w * 0.78, h * 0.42, w, h * 0.5); ctx.quadraticCurveTo(w * 0.5, h * 0.36, 0, h * 0.5); ctx.fill(); ctx.fillRect(w * 0.47, 0, w * 0.06, h * 0.12);
   },
+  // a tree that has grown up in a wind that never stops: the trunk leans and everything green streams off to one side
+  flagtree(ctx, w, h, r, { col = '#3f6a3a', lit = '#8fb858', trunk = '#4a3a30' } = {}) {
+    ctx.strokeStyle = trunk; ctx.lineWidth = w * 0.045; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(w * 0.22, h); ctx.quadraticCurveTo(w * 0.24, h * 0.55, w * 0.42, h * 0.3); ctx.stroke(); for (let i = 0; i < 4; i++) { ctx.lineWidth = w * 0.02; ctx.beginPath(); ctx.moveTo(w * (0.28 + i * 0.04), h * (0.55 - i * 0.07)); ctx.lineTo(w * (0.6 + i * 0.08), h * (0.42 - i * 0.08)); ctx.stroke(); }
+    for (let i = 0; i < 80; i++) { const u = r.u(), x = w * (0.3 + 0.66 * u), y = h * (0.34 - 0.22 * u + r.range(-0.12, 0.12) * (1 - u * 0.5)); ctx.fillStyle = mix(col, lit, clamp(1 - y / (h * 0.5) + r.range(-0.2, 0.2), 0, 1)); ctx.beginPath(); ctx.ellipse(x, y, w * 0.07, w * 0.028, -0.3, 0, TAU); ctx.fill(); }
+  },
+  // the beetle that stands on its head on a dune crest in the morning fog and drinks what runs down its back
+  beetle(ctx, w, h, r, { col = '#1e1a1c', lit = '#6a6470', leg = '#2a2224' } = {}) {
+    ctx.save(); ctx.translate(w * 0.5, h * 0.62); ctx.rotate(-0.5); ctx.strokeStyle = leg; ctx.lineWidth = w * 0.035; ctx.lineCap = 'round';
+    for (const [a, b, c] of [[-0.2, 0.3, 0.42], [0, 0.34, 0.36], [0.18, 0.4, 0.3]]) { ctx.beginPath(); ctx.moveTo(w * a, 0); ctx.lineTo(w * (a + 0.05), h * 0.16); ctx.lineTo(w * (a + b * 0.3), h * c); ctx.stroke(); }
+    const g = ctx.createLinearGradient(0, -h * 0.3, 0, h * 0.12); g.addColorStop(0, lit); g.addColorStop(0.6, col); ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(-w * 0.04, -h * 0.04, w * 0.3, h * 0.2, 0, 0, TAU); ctx.fill();
+    ctx.fillStyle = col; ctx.beginPath(); ctx.ellipse(w * 0.28, 0, w * 0.1, h * 0.1, 0, 0, TAU); ctx.fill(); ctx.strokeStyle = 'rgba(255,255,255,0.35)'; ctx.lineWidth = w * 0.012; ctx.beginPath(); ctx.moveTo(-w * 0.3, -h * 0.05); ctx.lineTo(w * 0.2, -h * 0.05); ctx.stroke();
+    ctx.fillStyle = 'rgba(220,240,255,0.9)'; for (let i = 0; i < 4; i++) { ctx.beginPath(); ctx.arc(-w * 0.2 + i * w * 0.11, -h * (0.17 + 0.03 * Math.sin(i * 2)), w * 0.022, 0, TAU); ctx.fill(); } ctx.restore();
+  },
+  // a condor on the wind: long plank wings with the feathers at the tips spread like fingers, and a white collar
+  condor(ctx, w, h, r, { col = '#1c1c22', lit = '#5a5a66', collar = '#f4f0e8', head = '#c88a7a' } = {}) {
+    const cx = w * 0.5, cy = h * 0.55; ctx.fillStyle = col;
+    for (const s of [-1, 1]) { ctx.beginPath(); ctx.moveTo(cx, cy - h * 0.1); ctx.quadraticCurveTo(cx + s * w * 0.25, cy - h * 0.36, cx + s * w * 0.44, cy - h * 0.3);
+      for (let i = 0; i < 5; i++) { const u = i / 4; ctx.lineTo(cx + s * w * (0.5 - u * 0.05), cy - h * (0.34 - u * 0.2) - h * 0.1); ctx.lineTo(cx + s * w * (0.43 - u * 0.03), cy - h * (0.22 - u * 0.2)); }
+      ctx.quadraticCurveTo(cx + s * w * 0.2, cy + h * 0.12, cx, cy + h * 0.1); ctx.closePath(); ctx.fill(); }
+    ctx.fillStyle = lit; for (const s of [-1, 1]) { ctx.beginPath(); ctx.moveTo(cx + s * w * 0.08, cy - h * 0.12); ctx.quadraticCurveTo(cx + s * w * 0.25, cy - h * 0.3, cx + s * w * 0.4, cy - h * 0.26); ctx.quadraticCurveTo(cx + s * w * 0.25, cy - h * 0.18, cx + s * w * 0.08, cy - h * 0.02); ctx.closePath(); ctx.fill(); }
+    ctx.fillStyle = col; ctx.beginPath(); ctx.ellipse(cx, cy, w * 0.07, h * 0.2, 0, 0, TAU); ctx.fill(); ctx.beginPath(); ctx.moveTo(cx - w * 0.06, cy + h * 0.14); ctx.lineTo(cx, cy + h * 0.38); ctx.lineTo(cx + w * 0.06, cy + h * 0.14); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = collar; ctx.beginPath(); ctx.ellipse(cx, cy - h * 0.17, w * 0.05, h * 0.05, 0, 0, TAU); ctx.fill(); ctx.fillStyle = head; ctx.beginPath(); ctx.ellipse(cx, cy - h * 0.25, w * 0.03, h * 0.06, 0, 0, TAU); ctx.fill();
+  },
 };
 
 // Make `n` different sprites with one painter.

@@ -171,6 +171,11 @@ export const sfx = {
   drum(p = 0) { if (!A.ctx) return; const t = now(); tone(A.sfx, 'sine', 70 + p * 60, t, 0.5, 0.5, { a: 0.004, r: 0.4, f2: 46 + p * 30, send: 0.3 }); hiss(A.sfx, t, 0.25 + p * 0.5, 0.06 + p * 0.14, { f: 1800, f2: 4200, q: 0.7 }); },
   thunder() { if (!A.ctx) return; const t = now() + 0.8 + Math.random() * 1.4; hiss(A.sfx, t, 2.6, 0.5, { type: 'lowpass', f: 220, f2: 60, q: 0.4, a: 0.05, send: 0.6 }); },
   turbo() { if (!A.ctx) return; const t = now(); tone(A.sfx, 'sawtooth', 220, t, 0.45, 0.2, { a: 0.01, r: 0.3, f2: 1320, lp: 2600, send: 0.5 }); hiss(A.sfx, t, 0.5, 0.3, { f: 900, f2: 5200, q: 0.6, a: 0.02 }); tone(A.sfx, 'sine', midi(81), t + 0.05, 0.4, 0.14, { r: 0.3, send: 0.7 }); },
+  // Mu's wings: three quick beats of air and a chirp
+  hop() { if (!A.ctx) return; const t = now(); for (let i = 0; i < 3; i++) hiss(A.sfx, t + i * 0.055, 0.05, 0.16, { type: 'bandpass', f: 900 + i * 260, q: 0.8 }); tone(A.sfx, 'sine', 1500, t + 0.02, 0.09, 0.09, { f2: 2300, r: 0.05 }); },
+  feather() { if (!A.ctx) return; const t = now(); hiss(A.sfx, t, 0.12, 0.1, { type: 'bandpass', f: 2600, f2: 1200, q: 0.8 }); tone(A.sfx, 'sine', midi(88), t, 0.16, 0.1, { r: 0.12, send: 0.4 }); tone(A.sfx, 'sine', midi(93), t + 0.07, 0.2, 0.09, { r: 0.15, send: 0.4 }); },
+  dew() { if (!A.ctx) return; const t = now(); tone(A.sfx, 'sine', 1400, t, 0.16, 0.16, { f2: 620, r: 0.1, send: 0.5 }); tone(A.sfx, 'sine', midi(81), t + 0.12, 0.5, 0.12, { a: 0.01, r: 0.4, send: 0.6 }); },
+  stamp() { if (!A.ctx) return; const t = now(); hiss(A.sfx, t, 0.09, 0.14, { type: 'bandpass', f: 1800, f2: 3400, q: 0.7 }); [74, 78, 81, 86, 90].forEach((n, i) => tone(A.sfx, 'triangle', midi(n), t + 0.05 + i * 0.07, 0.6, 0.13, { a: 0.005, r: 0.5, send: 0.6 })); },
   wake() { if (!A.ctx) return; const t = now(); [57, 64, 69, 76, 81].forEach((n, i) => tone(A.sfx, 'sine', midi(n), t + i * 0.13, 2.2, 0.13, { a: 0.02, r: 1.8, send: 0.9 })); },
   ui(up = false) { if (!A.ctx) return; tone(A.sfx, 'sine', up ? 880 : 660, now(), 0.07, 0.12, { r: 0.05 }); },
   page() { if (!A.ctx) return; hiss(A.sfx, now(), 0.16, 0.12, { f: 2600, f2: 900, q: 0.5 }); },

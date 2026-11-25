@@ -3,6 +3,7 @@
 // Layers, back to front: sky, far ridges, middle ridges, ground and what stands on it, the hero, near silhouettes, air and light.
 import { RNG } from '../core/rng.js';
 import { TAU, lerp, clamp, smooth, mix, rgba, lighten, darken, hash1, noise1, fbm, ridge, sprite, stamp, P } from './paint.js';
+import { stampSprite } from './stamps.js';
 import { drawTheta } from '../game/theta.js';
 import { Weather } from '../game/weather.js';
 
@@ -28,7 +29,7 @@ function tile(kind, seed) {
   else for (let i = 0; i < 380; i++) dab(r.chance(0.5) ? '#ffffff' : '#000000', r.range(0.04, 0.14), r.range(0.7, 1.8), r.range(0.7, 1.8), 0);   // sand: a fine speckle
   return c;
 }
-const TILE_OF = { stone: 'rock', ledge: 'rock', mossy: 'grass', forest: 'grass', wetstone: 'rock', dune: 'sand', soft: 'sand', pan: 'rock', gravel: 'rock', grassy: 'grass', lava: 'rock', beach: 'sand', scoria: 'sand', green: 'grass', carpet: 'grass', wetrock: 'rock', tuff: 'sand', rose: 'sand', honey: 'sand', dust: 'sand', vine: 'grass', cap: 'rock', drum: 'sand', meadow: 'grass', moss: 'grass', snow: 'snow', ice: 'ice', sand: 'sand', hot: 'sand', rock: 'rock', basalt: 'rock', wet: 'rock' };
+const TILE_OF = { granite: 'rock', moraine: 'rock', pampa: 'grass', lenga: 'grass', cedar: 'grass', root: 'rock', stream: 'rock', stone: 'rock', ledge: 'rock', mossy: 'grass', forest: 'grass', wetstone: 'rock', dune: 'sand', soft: 'sand', pan: 'rock', gravel: 'rock', grassy: 'grass', lava: 'rock', beach: 'sand', scoria: 'sand', green: 'grass', carpet: 'grass', wetrock: 'rock', tuff: 'sand', rose: 'sand', honey: 'sand', dust: 'sand', vine: 'grass', cap: 'rock', drum: 'sand', meadow: 'grass', moss: 'grass', snow: 'snow', ice: 'ice', sand: 'sand', hot: 'sand', rock: 'rock', basalt: 'rock', wet: 'rock' };
 
 export class Scene {
   constructor(theme, level, timeKey = 'day') {
@@ -263,7 +264,7 @@ export class Scene {
     // The skin of the ground: layers that follow the surface, each a little uneven below, in the colours of whatever lies there.
     // Where one kind of ground meets the next, the new one comes in as a wedge over the old.
     const zs = []; let i0 = 0; while (i0 < xs.length - 1) { const z = this.zoneAt(xs[i0] + dx / 2); let i1 = i0 + 1; while (i1 < xs.length - 1 && this.zoneAt(xs[i1] + dx / 2) === z) i1++; zs.push([z, i0, i1]); i0 = i1; }
-    for (let zi = 0; zi < zs.length; zi++) { const [z, a0, a1] = zs[zi], sk = G.skin[z] || G.skin.rock, xa = xs[a0], xb = xs[a1], e1 = Math.min(xs.length - 1, a1 + (zi < zs.length - 1 ? 6 : 0));
+    for (let zi = 0; zi < zs.length; zi++) { const [z, a0, a1] = zs[zi], sk = G.skin[z] || G.skin[this.theme.zone] || G.skin.rock || Object.values(G.skin)[0], xa = xs[a0], xb = xs[a1], e1 = Math.min(xs.length - 1, a1 + (zi < zs.length - 1 ? 6 : 0));
       // the true start of this stretch may lie off the left of the picture: then there is no wedge to draw
       const fresh = zi > 0;
       for (let bi = 0; bi < sk.bands.length; bi++) { const bd = sk.bands[bi];
@@ -316,6 +317,15 @@ export class Scene {
       if (this.spr.nest) stamp(ctx, this.spr.nest[0], g.x, -g.y + 0.1, 1); for (let i = 0; i < 6; i++) { const a = t * 0.8 + i * 1.047, rr = 1.2 + 0.3 * Math.sin(t * 1.5 + i); ctx.globalAlpha = 0.8; stamp(ctx, this.fx.warm, g.x + Math.cos(a) * rr, -g.y - 1.2 - Math.sin(a * 1.3) * 0.6 - i * 0.25, 0.35); } ctx.globalAlpha = 1; }
     // seeds to collect
     for (const s of this.level.seeds) { if (s.got || s.x < x0 || s.x > x1) continue; const bob = Math.sin(t * 3 + s.x) * 0.1; ctx.save(); ctx.globalCompositeOperation = 'lighter'; stamp(ctx, this.fx.warm, s.x, -s.y - bob, 1.25 + 0.15 * Math.sin(t * 5 + s.x)); ctx.restore(); ctx.save(); ctx.translate(s.x, -s.y - bob); ctx.rotate(Math.sin(t * 2 + s.x) * 0.25); ctx.beginPath(); ctx.moveTo(0, -0.2); ctx.bezierCurveTo(0.14, -0.08, 0.11, 0.12, 0, 0.12); ctx.bezierCurveTo(-0.11, 0.12, -0.14, -0.08, 0, -0.2); ctx.fillStyle = '#ffe58a'; ctx.fill(); ctx.strokeStyle = '#c98a1e'; ctx.lineWidth = 0.025; ctx.stroke(); ctx.fillStyle = '#fffbe0'; ctx.beginPath(); ctx.ellipse(-0.03, -0.05, 0.03, 0.05, 0, 0, TAU); ctx.fill(); ctx.restore(); }
+    // the other things to find: the level's stamp, turning on its thread of light; a dewdrop; one of Mu's feathers
+    for (const it of this.level.items || []) { if (it.got || it.x < x0 - 2 || it.x > x1 + 2) continue; const bob = Math.sin(t * 2.4 + it.x) * 0.12, y = -it.y - bob;
+      ctx.save(); ctx.globalCompositeOperation = 'lighter'; stamp(ctx, it.kind === 'dew' ? this.fx.glow : this.fx.warm, it.x, y, it.kind === 'stamp' ? 3.4 + 0.4 * Math.sin(t * 3) : 1.7 + 0.15 * Math.sin(t * 4 + it.x)); ctx.restore();
+      ctx.save(); ctx.translate(it.x, y);
+      if (it.kind === 'stamp') { if (!this.stampS) this.stampS = stampSprite(th, this.level.li, this.spr); ctx.rotate(Math.sin(t * 1.1) * 0.1); const tw = Math.cos(t * 1.5 + it.x); ctx.scale(0.3 + 0.7 * Math.abs(tw), 1); stamp(ctx, this.stampS, 0, 0, 0.95);
+        ctx.restore(); ctx.save(); ctx.globalCompositeOperation = 'lighter'; for (let i = 0; i < 4; i++) { const a = t * 1.3 + i * 1.571; stamp(ctx, this.fx.warm, it.x + Math.cos(a) * 0.95, y + Math.sin(a) * 0.95, 0.3 + 0.1 * Math.sin(t * 6 + i)); } }
+      else if (it.kind === 'dew') { const g = ctx.createRadialGradient(-0.06, 0.02, 0.02, 0, 0.04, 0.26); g.addColorStop(0, '#ffffff'); g.addColorStop(0.5, '#a8e4ff'); g.addColorStop(1, '#4fa8e8'); ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(0, -0.34); ctx.bezierCurveTo(0.08, -0.14, 0.24, -0.04, 0.22, 0.1); ctx.bezierCurveTo(0.2, 0.26, -0.2, 0.26, -0.22, 0.1); ctx.bezierCurveTo(-0.24, -0.04, -0.08, -0.14, 0, -0.34); ctx.fill(); ctx.fillStyle = 'rgba(255,255,255,0.9)'; ctx.beginPath(); ctx.ellipse(-0.08, 0.02, 0.04, 0.07, 0.5, 0, TAU); ctx.fill(); }
+      else { ctx.rotate(-0.6 + Math.sin(t * 1.7 + it.x) * 0.3); ctx.strokeStyle = '#fff3e4'; ctx.lineWidth = 0.035; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(-0.42, 0); ctx.lineTo(0.42, 0); ctx.stroke(); const g = ctx.createLinearGradient(-0.3, 0, 0.42, 0); g.addColorStop(0, '#f6a27e'); g.addColorStop(1, '#e8603c'); ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(-0.26, 0); ctx.quadraticCurveTo(0.05, -0.26, 0.44, -0.02); ctx.quadraticCurveTo(0.05, 0.24, -0.26, 0); ctx.fill(); ctx.strokeStyle = 'rgba(255,255,255,0.5)'; ctx.lineWidth = 0.015; for (let i = 0; i < 5; i++) { ctx.beginPath(); ctx.moveTo(-0.1 + i * 0.1, 0); ctx.lineTo(-0.02 + i * 0.1, -0.11 + i * 0.012); ctx.moveTo(-0.1 + i * 0.1, 0); ctx.lineTo(-0.02 + i * 0.1, 0.1 - i * 0.012); ctx.stroke(); } }
+      ctx.restore(); }
     for (const c of A.critters || []) { if (c.x < x0 - 2 || c.x > x1 + 2) continue; const list = this.spr[c.s]; if (list) stamp(ctx, list[Math.floor(c.frame || 0) % list.length], c.x, -c.y, c.size || 1, c.rot || 0, c.flip); }
   }
 

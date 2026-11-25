@@ -61,6 +61,7 @@ export const CARDS = {
     math: 'θ ← θ − η · m / (√v + ε)', key: 'm is a running average of the slope, and v a running average of its square: how steep each direction has lately been.' },
 };
 export const HINTS = {
+  lift: { key: 'Mu is with you now. Press Space again in the air and Mu lifts you once more.', touch: 'Mu is with you now. Press jump again in the air and Mu lifts you once more.', pad: 'Mu is with you now. Press A again in the air and Mu lifts you once more.' },
   move: { key: 'Press → or D to run.', touch: 'Slide your left thumb to run.', pad: 'Push the stick to run.' },
   jump: { key: 'Space jumps. Tap for a hop, hold for a leap.', touch: 'The upper button jumps. Tap for a hop, hold for a leap.', pad: 'A jumps. Tap for a hop, hold for a leap.' },
   slide: { key: 'On ice and snow, hold Shift to slide.', touch: 'On ice and snow, hold the lower button to slide.', pad: 'On ice and snow, hold B to slide.' },

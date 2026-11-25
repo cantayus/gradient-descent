@@ -17,6 +17,7 @@ const lamps = (time) => (time.stars || 0) > 0.3 || time.dark > 0.2;
 
 export const cappadocia = {
   id: 'cappadocia', name: 'Cappadocia', zone: 'tuff', times: TIMES,
+  stamps: [{ s: 'chimneyBig', name: 'Fairy chimney' }, { s: 'balloon', name: 'Hot-air balloon' }, { s: 'jars', name: 'Clay jars' }, { s: 'poplar', name: 'Poplar' }, { s: 'apricot', name: 'Apricot tree' }, { s: 'castle', name: 'Rock castle' }],
   note: 'Cappadocia’s soft rock is tuff: ash from old volcanoes, hardened into stone. Where a harder cap protects it, a pillar is left standing.',
 
   far(time) {

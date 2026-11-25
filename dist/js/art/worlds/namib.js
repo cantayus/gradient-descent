@@ -17,6 +17,7 @@ const TIMES = {
 
 export const namib = {
   id: 'namib', name: 'Namib', zone: 'dune', times: TIMES, dustCol: '#ffd9a8',
+  stamps: [{ s: 'oryx', name: 'Oryx' }, { s: 'acacia', name: 'Camel thorn' }, { s: 'welw', name: 'Welwitschia' }, { s: 'beetle', name: 'Fog-basking beetle' }, { s: 'deadtree', name: 'Dead camel thorn' }, { s: 'duneS', name: 'Star dune' }],
   note: 'The Namib is among the oldest deserts on Earth. Some of its dunes stand more than three hundred metres high.',
 
   far(time) {
@@ -89,6 +90,8 @@ export const namib = {
     S.deadtree = v(6, 'nam-dead', (r) => r.range(2.6, 3.8), (r) => r.range(2.8, 4.4), P.deadtree, dt(false)); S.deadtreeFar = v(5, 'nam-deadf', 1.1, (r) => r.range(1, 1.5), P.deadtree, dt(true), { ppu: 48 });
     const ac = (far) => (ctx, w, h, r) => { ctx.save(); ctx.translate(0, h * 0.3); P.deadtree(ctx, w, h * 0.7, r, { col: t('#4a3428'), lit: t('#7a5a44') }); ctx.restore(); for (let i = 0; i < 60; i++) { const x = r.range(0.04, 0.96) * w, y = h * (0.06 + 0.28 * r.u() * (1 - Math.abs(x / w - 0.5))); ctx.fillStyle = mix(t(far ? '#6a8a4a' : '#5f7f3f'), t('#b4c870'), r.u()); ctx.beginPath(); ctx.ellipse(x, y + h * 0.1, w * 0.06, h * 0.03, 0, 0, 7); ctx.fill(); } };
     S.acacia = v(4, 'nam-acacia', (r) => r.range(3.4, 4.6), (r) => r.range(2.6, 3.4), ac(false)); S.acaciaFar = v(3, 'nam-acaciaf', 1.4, 1, ac(true), {}, { ppu: 48 });
+    S.beetle = v(1, 'nam-beetle', 1, 0.9, P.beetle, () => ({}));
+    S.duneS = v(1, 'nam-dune', 2, 1.3, (ctx, w, h) => { const g = ctx.createLinearGradient(0, 0, w, 0); g.addColorStop(0, '#ffb060'); g.addColorStop(0.5, '#f48a3c'); g.addColorStop(0.5, '#a8481c'); g.addColorStop(1, '#7a3414'); ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(0, h); ctx.quadraticCurveTo(w * 0.3, h * 0.6, w * 0.5, h * 0.08); ctx.quadraticCurveTo(w * 0.72, h * 0.62, w, h); ctx.closePath(); ctx.fill(); ctx.strokeStyle = 'rgba(255,240,200,0.8)'; ctx.lineWidth = 0.02; ctx.beginPath(); ctx.moveTo(w * 0.5, h * 0.08); ctx.quadraticCurveTo(w * 0.46, h * 0.5, w * 0.56, h); ctx.stroke(); }, {});
     S.welw = v(3, 'nam-welw', (r) => r.range(1.2, 1.8), 0.4, P.mound, () => ({ col: t('#4f6a3a'), lit: t('#9ab060'), dots: t('#c8b070') }));
     const oryx = (tail) => () => ({ col: t('#c9a888'), dark: t('#2a2220'), mane: t('#2a2220'), neck: 0.6, head: 0.24, tail, graze: 0, horns: t('#2a2220'), belly: t('#f4ece0') });
     S.oryx = v(2, 'nam-oryx', 2, 1.7, P.quad, oryx(0.25)); S.oryxB = v(2, 'nam-oryx', 2, 1.7, P.quad, oryx(0.9)); S.oryxFar = v(2, 'nam-oryxf', 2, 1.7, P.quad, oryx(0.5), { ppu: 48 });

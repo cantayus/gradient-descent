@@ -30,7 +30,7 @@ const STROKES = {
   gap: (push, L, [dy = 0], y) => { push(L, () => NaN); return y + dy; },
 };
 
-export function build(spec) {
+export function build(spec, opt = {}) {
   const r = new RNG(spec.seed || spec.id || 'level');
   const ys = [], surfs = [], platforms = [], waters = [], jets = [], winds = [], pits = [], seeds = [], marks = [], zones = [], rides = [];
   let x = 0, y = spec.y0 ?? 0;
@@ -75,8 +75,26 @@ export function build(spec) {
     const prev = checks[checks.length - 1]; if (cx - prev.x < (spec.checkEvery || 34)) continue;
     if (Math.abs(T.dh(cx)) < 0.3 && !pits.some((p) => cx > p.x0 - 3 && cx < p.x1 + 3) && !T.waterAt(cx)) checks.push({ x: cx, y: gy(cx) });
   }
+  // Things to find, besides the seeds. One stamp is hidden in every level, each in a different sort of place. A dewdrop relights a light that has gone out.
+  // Where Mu flies, a feather hanging in the air gives her lift back, so a wide gap can be crossed in two beats, and a high stamp reached by a stair of them.
+  const items = [], idn = String(spec.id || ''), li = /-B$/.test(idn) ? 5 : Math.max(0, (parseInt(idn.split('-')[1], 10) || 1) - 1), r2 = new RNG('items:' + idn);
+  if (spec.id && spec.items !== false) {
+    const near = (list, px, m) => list.some((q) => px > (q.x0 ?? q.x) - m && px < (q.x1 ?? q.x) + m);
+    const clear = (px) => px > start.x + 8 && px < goal.x - 9 && Math.abs(T.dh(px)) < 0.4 && !near(pits, px, 3) && !near(waters, px, 3) && !near(winds, px, 2) && !near(jets, px, 4) && !near(platforms, px, 7) && !near(rides, px, 7) && !zones.some((z) => z.kind === 'drum' && px > z.x0 - 2 && px < z.x1 + 2);
+    const span = goal.x - start.x, pickX = (u0, u1, crest, avoid) => { let best = null, bs = -1e9; for (let px = start.x + span * u0; px < start.x + span * u1; px += 0.5) { if (!clear(px) || (avoid != null && Math.abs(px - avoid) < 5)) continue; const hh = T.h(px), sc = (crest ? Math.min(hh - T.h(px - 4), hh - T.h(px + 4), 1.5) : 0) + r2.u() * 0.4; if (sc > bs) { bs = sc; best = px; } } return best; };
+    const mid = (p) => (p.x0 + p.x1) / 2, lip = (p) => Math.max(T.h(p.x0 - 0.6), T.h(p.x1 + 0.6)), bare = (p) => !near(platforms, mid(p), (p.x1 - p.x0) / 2 + 2) && !near(winds, mid(p), 2) && !near(waters, mid(p), (p.x1 - p.x0) / 2 + 1);
+    const want = spec.stamp || ['low', 'high', 'back', opt.mu ? 'stair' : 'high', 'pit', 'high'][li]; let st = null, used = null;
+    if (want === 'pit') { const ok = pits.filter((p) => p.x1 - p.x0 >= 3 && p.x1 - p.x0 <= 8 && Math.abs(T.h(p.x0 - 0.6) - T.h(p.x1 + 0.6)) < 1 && p.x0 > start.x + 10 && bare(p)); if (ok.length) { used = ok[Math.floor(r2.u() * ok.length)]; st = { x: mid(used), y: lip(used) + 2.5, how: 'pit' }; } }
+    const back = () => ({ x: start.x - 7.5, y: gy(start.x - 7.5) + 1.5, how: 'back' });
+    if (!st && want === 'back') st = back();
+    if (!st) { const w = want === 'pit' ? 'high' : want, sp = { low: [0.4, 0.62], stair: [0.42, 0.75] }[w] || (li === 5 ? [0.62, 0.9] : li === 3 ? [0.28, 0.5] : [0.55, 0.82]), px = pickX(sp[0], sp[1], true) ?? pickX(0.12, 0.93, true);
+      if (px == null) st = back(); else { st = { x: px, y: gy(px) + (w === 'low' ? 2.5 : w === 'stair' ? 6.2 : opt.mu ? 4.3 : 3.25), how: w }; if (w === 'stair') items.push({ kind: 'feather', x: px, y: gy(px) + 4.6 }); } }
+    items.push({ kind: 'stamp', ...st });
+    for (const u of li === 5 ? [[0.3, 0.42], [0.62, 0.76]] : [[0.5, 0.68]]) { const px = pickX(u[0], u[1], false, st.x) ?? pickX(0.25, 0.85, false, st.x); if (px != null) items.push({ kind: 'dew', x: px, y: gy(px) + 1.25 }); }
+    if (opt.mu) for (const p of pits) if (p.x1 - p.x0 >= 5.75 && p !== used && bare(p)) items.push({ kind: 'feather', x: mid(p), y: lip(p) + 2 });
+  }
   return {
-    spec, T, start: { x: start.x, y: gy(start.x) }, goal, checks, pits, zones, marks, rides,
+    spec, T, start: { x: start.x, y: gy(start.x) }, goal, checks, pits, zones, marks, rides, li, items: items.map((it, i) => ({ id: i, got: false, ...it })),
     seeds: seeds.map((s, i) => ({ id: i, x: s.x, y: gy(s.x) + s.up, got: false })),
     lo, hi, length: goal.x - start.x, rng: r,
     fell: (b) => b.y < T.floor + 30 || pits.some((p) => b.x > p.x0 && b.x < p.x1 && b.y < p.y - 9),

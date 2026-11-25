@@ -9,7 +9,7 @@ import { Rides } from '../dist/js/game/ride.js';
 import { tides } from '../dist/js/game/tide.js';
 
 export function runBot(spec, can, { maxT = 240, trace = false } = {}) {
-  const L = build(spec), T = L.T, b = new Body(L.start.x, L.start.y + R); Object.assign(b.can, can); b.grounded = true;
+  const L = build(spec, { mu: !!can.mu }), T = L.T, b = new Body(L.start.x, L.start.y + R); Object.assign(b.can, can); b.grounded = true;
   const f0 = levelById(spec.id), wx = new Weather(spec.id + (spec.time || 'day'), f0 && f0.world.theme.weather ? f0.world.theme.weather(spec.time || 'day') : {}); T.air = (tt) => wx.windAt(tt);
   const boss = spec.boss === 'geyser' ? new Geyser(L, T) : null; let erupts = 0; const rides = new Rides(L, T); let retreat = 0, retreats = 0, leaping = false;
   const inp = { move: 1, jump: false, jumpNow: false, tuck: false }; let t = 0, falls = 0, check = L.checks[0], holdT = 0, lastX = b.x, lastMove = 0, seeds = 0, stuckAt = null, top = 0;

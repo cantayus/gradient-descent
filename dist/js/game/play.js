@@ -39,12 +39,15 @@ class Eta {
 
 // Mu, the bird: momentum. Mu rides the air behind Theta, close when the going is slow and strung far out behind, wings set, when it is fast.
 class Mu {
-  constructor(x, y) { this.x = x; this.y = y; this.vx = 0; this.vy = 0; this.glide = 0; this.dir = 1; }
-  update(b, dt, t, wind) { const sp = b.speed(), back = 1.1 + clamp(sp * 0.13, 0, 3.4), tx = b.x - b.face * back + Math.sin(t * 1.7) * 0.2, ty = b.y + 1.5 + clamp(sp * 0.04, 0, 0.8) + Math.sin(t * 2.6) * 0.18, k = 1 - Math.exp(-dt * 3.2);
+  constructor(x, y) { this.x = x; this.y = y; this.vx = 0; this.vy = 0; this.glide = 0; this.dir = 1; this.lift = 0; }
+  update(b, dt, t, wind) {
+    // the lift: Mu is on Theta's head, beating hard, for as long as it lasts
+    if (this.lift > 0) { this.lift -= dt; const k = 1 - Math.exp(-dt * 30); this.x += (b.x - this.x) * k; this.y += (b.y + 0.78 - this.y) * k; this.vx = b.vx; this.vy = b.vy; this.glide = 0; if (Math.abs(b.vx) > 0.5) this.dir = b.vx > 0 ? 1 : -1; return; }
+    const sp = b.speed(), back = 1.1 + clamp(sp * 0.13, 0, 3.4), tx = b.x - b.face * back + Math.sin(t * 1.7) * 0.2, ty = b.y + 1.5 + clamp(sp * 0.04, 0, 0.8) + Math.sin(t * 2.6) * 0.18, k = 1 - Math.exp(-dt * 3.2);
     // Mu has weight: it does not turn the moment Theta does, it swings wide and comes round
     this.vx += ((tx - this.x) * 9 - this.vx * 4.2) * dt; this.vy += ((ty - this.y) * 9 - this.vy * 4.2) * dt; this.x += (this.vx + wind * 0.2) * dt; this.y += this.vy * dt; this.x += (tx - this.x) * k * 0.15; this.y += (ty - this.y) * k * 0.15;
     this.glide += (clamp((sp - 8) / 8, 0, 1) - this.glide) * (1 - Math.exp(-dt * 4)); if (Math.abs(b.vx) > 0.5) this.dir = b.vx > 0 ? 1 : -1; }
-  draw(ctx, t) { const g = this.glide, f = Math.sin(t * 17) * (1 - g) * 0.9 - g * 0.25; ctx.scale(this.dir, 1); ctx.rotate(clamp(-this.vy * 0.05, -0.5, 0.5));
+  draw(ctx, t) { const g = this.glide, f = this.lift > 0 ? Math.sin(t * 46) * 1.15 : Math.sin(t * 17) * (1 - g) * 0.9 - g * 0.25; ctx.scale(this.dir, 1); ctx.rotate(clamp(-this.vy * 0.05, -0.5, 0.5));
     ctx.fillStyle = '#e8785a'; ctx.beginPath(); ctx.moveTo(-0.3, 0.02); ctx.lineTo(-0.52, -0.1); ctx.lineTo(-0.44, 0.03); ctx.lineTo(-0.52, 0.14); ctx.closePath(); ctx.fill();           // the forked tail
     for (const s of [0.55, 1]) { ctx.fillStyle = s < 1 ? '#c9583f' : '#f08c68'; ctx.beginPath(); ctx.moveTo(-0.08, 0); ctx.quadraticCurveTo(-0.12, -0.34 * f * s - 0.06, -0.3 - g * 0.12, -0.5 * f * s - 0.03); ctx.quadraticCurveTo(0.0, -0.2 * f * s, 0.14, 0); ctx.closePath(); ctx.fill(); }
     ctx.fillStyle = '#f6a27e'; ctx.beginPath(); ctx.ellipse(0, 0.02, 0.24, 0.13, -0.1, 0, 7); ctx.fill(); ctx.fillStyle = '#fff3e4'; ctx.beginPath(); ctx.ellipse(0.04, 0.07, 0.15, 0.07, -0.1, 0, 7); ctx.fill();
@@ -59,7 +62,7 @@ export class Play {
     this.lights = this.lightsAll = lights; this.limit = limit; this.failed = null;
     // Sparks: Eta's gift. One to begin with, another for every five seeds, three at most. A spark is a turbo when asked for, and a rescue when Theta falls with one in hand.
     this.sparks = 1; this.sparksAll = 3; this.turboT = 0; this.turboCd = 0;
-    this.cine = cine; this.intro = intro ? { t: 0, stage: 0 } : null; this.seedGlow = intro ? 0 : 1; this.etaIn = intro ? 0 : 1; this.star = null; this.spec = spec; this.theme = theme; this.level = build(spec); this.T = this.level.T; this.hooks = hooks;
+    this.cine = cine; this.intro = intro ? { t: 0, stage: 0 } : null; this.seedGlow = intro ? 0 : 1; this.etaIn = intro ? 0 : 1; this.star = null; this.spec = spec; this.theme = theme; this.level = build(spec, { mu: !!can.mu }); if (cine) this.level.items = []; this.stamp = false; this.T = this.level.T; this.hooks = hooks;
     this.scene = new Scene(theme, this.level, spec.time || 'day');
     this.b = new Body(this.level.start.x, this.level.start.y + R); Object.assign(this.b.can, { slide: true, roll: true, spread: true }, can); this.b.grounded = true;
     this.rig = new Rig(); this.cam = new Camera(this.b.x, this.b.y); this.eta = new Eta(this.b.x, this.b.y + 1);
@@ -138,19 +141,28 @@ export class Play {
     if (this.boss) { this.boss.step(b, STEP); for (const e of this.boss.events) { this.hooks.event?.(e, b, this.boss.p); if (e === 'erupt') { this.scene.shake = 0.6; this.rig.dizzy = 3.2; this.lights--; if (this.lights <= 0) this._fail('falls'); } else this.scene.emit('steam', b.x, b.y - 0.3, 3, { speed: 1.2, life: 1.2, size: 0.5, col: '#ffffff', g: -1.2, drag: 0.6 }); } }
     if (b.grounded && Math.abs(this.T.dh(b.x)) < 0.35) { const c = L.checkFor(b.x); if (c.x > this.check.x) this.check = c; }
     for (const s of L.seeds) if (!s.got && Math.abs(s.x - b.x) < (this.turboT > 0 ? 2.4 : 0.75) && Math.abs(s.y - b.y) < (this.turboT > 0 ? 2.4 : 0.85)) { s.got = true; this.seeds++; if (this.seeds % 5 === 0 && this.sparks < this.sparksAll) { this.sparks++; this.hooks.event?.('spark', b); } this.scene.emit('spark', s.x, s.y, 8, { speed: 3, spread: 6.3, life: 0.5, size: 0.12, g: 4 }); this.hooks.event?.('seed', b, this.seeds); }
+    for (const it of L.items) {
+      if (it.got) { if (it.kind === 'feather' && (it.back -= STEP) <= 0) it.got = false; continue; }
+      if (Math.abs(it.x - b.x) > 0.85 || Math.abs(it.y - b.y) > 0.9) continue;
+      if (it.kind === 'feather') { if (b.hops > 0 || b.grounded) continue; b.hops = 1; it.got = true; it.back = 2.5; }                                   // a feather is only taken by wings that need it
+      else if (it.kind === 'dew') { if (this.lights < this.lightsAll) this.lights++; else if (this.sparks < this.sparksAll) this.sparks++; else continue; it.got = true; }   // and a dewdrop only by a seed with a light out, or a spark short
+      else { it.got = true; this.stamp = true; this.rig.feel('glee', 2.4); this.rig.sq.kick(5); this.scene.flash = Math.max(this.scene.flash, 0.14); }
+      this.scene.emit('spark', it.x, it.y, it.kind === 'stamp' ? 26 : 10, { speed: it.kind === 'stamp' ? 5 : 3, spread: 6.3, life: 0.8, size: 0.12, g: 4 }); this.hooks.event?.(it.kind, b);
+    }
     if (L.fell(b)) { this.falls++; if (this.sparks > 0) { this.sparks--; this.dead = 0.4; this.hooks.event?.('saved', b); return; }      // a spark in hand: Eta catches the fall, and no light is lost
       this.lights--; this.hooks.event?.('fall', b); if (this.lights <= 0) { this.dead = 1e9; this._fail('falls'); } else this.dead = 0.55; return; }
     if (!this.done && !this.failed && Math.abs(b.x - L.goal.x) < 1.5 && b.y - L.goal.y < 2.2) { this.done = true; this.rig.feel('proud', 4); for (let i = 0; i < 4; i++) this.scene.emit('spark', L.goal.x, L.goal.y + 0.5, 12, { speed: 7, spread: 2.4, life: 1.2, size: 0.14, g: 5 }); this.hooks.event?.('goal', b); this.hooks.finish?.(this.result()); }
   }
   _fail(why) { if (this.failed || this.done) return; this.failed = why; this.rig.feel('sulk', 6); this.hooks.fail?.(why, this.result()); }
   _respawn() { const b = this.b, c = this.check; b.x = b.px = c.x; b.y = b.py = c.y + R + 0.05; b.vx = b.vy = b.w = 0; b.mode = 'run'; b.grounded = true; this.rig.feel('sulk', 0.9); this.rig.sq.kick(4); this.scene.emit('dust', c.x, c.y + 0.3, 14, { speed: 2.5, spread: 6.3, life: 0.5, size: 0.16, col: '#ffffff', g: -1 }); this.cam.update(b, 0.016, this.W / this.H, true); this.hooks.event?.('back', b); }
-  result() { return { id: this.spec.id, sparks: this.sparks, lights: this.lights, lightsAll: this.lightsAll, limit: this.limit, time: this.clock, seeds: this.seeds, seedsAll: this.level.seeds.length, falls: this.falls, curve: this.curve.slice(), rec: this.rec.slice(), top: this.level.start.y, bottom: this.level.goal.y, maxSpeed: this.maxSpeed }; }
+  result() { return { id: this.spec.id, sparks: this.sparks, lights: this.lights, lightsAll: this.lightsAll, limit: this.limit, time: this.clock, seeds: this.seeds, seedsAll: this.level.seeds.length, stamp: this.stamp, li: this.level.li, falls: this.falls, curve: this.curve.slice(), rec: this.rec.slice(), top: this.level.start.y, bottom: this.level.goal.y, maxSpeed: this.maxSpeed }; }
 
   // dust, spray and streaks: small things that say what the body is doing
   _effects(dt) {
     const b = this.b, sc = this.scene, T = this.T, sp = b.speed(), gy = b.y - b.r, z = sc.zoneAt(b.x);
-    const soil = { stone: '#dccfae', ledge: '#f0e4c4', mossy: '#a8d868', forest: '#8ab858', wetstone: '#a0b8c0', dune: '#f8ac64', soft: '#ffe4b4', pan: '#fffaf0', gravel: '#c8b8a4', grassy: '#f6e490', lava: '#6a6a78', beach: '#fff4dc', scoria: '#dc8458', green: '#aadc62', carpet: '#f48c5c', wetrock: '#8ab0c8', tuff: '#f2e2c4', rose: '#f0c0b4', honey: '#f0d898', dust: '#e0cca8', vine: '#b4d07a', cap: '#a89888', snow: '#ffffff', ice: '#dff6ff', sand: '#5a5d6a', moss: '#a9c94f', meadow: '#9cc267', hot: '#e0b070', rock: '#8a90a0', basalt: '#8a90a0', wet: '#bfd9ea' }[z] || '#bbbbbb';
+    const soil = { stone: '#dccfae', ledge: '#f0e4c4', mossy: '#a8d868', forest: '#8ab858', wetstone: '#a0b8c0', dune: '#f8ac64', soft: '#ffe4b4', pan: '#fffaf0', gravel: '#c8b8a4', grassy: '#f6e490', lava: '#6a6a78', beach: '#fff4dc', scoria: '#dc8458', green: '#aadc62', carpet: '#f48c5c', wetrock: '#8ab0c8', tuff: '#f2e2c4', rose: '#f0c0b4', honey: '#f0d898', dust: '#e0cca8', vine: '#b4d07a', cap: '#a89888', granite: '#d4ccd0', moraine: '#b4acb0', pampa: '#f4e08c', lenga: '#f89a50', cedar: '#8ab858', root: '#a88a68', stream: '#bfe0e8', snow: '#ffffff', ice: '#dff6ff', sand: '#5a5d6a', moss: '#a9c94f', meadow: '#9cc267', hot: '#e0b070', rock: '#8a90a0', basalt: '#8a90a0', wet: '#bfd9ea' }[z] || '#bbbbbb';
     for (const e of b.events) {
+      if (e === 'hop') { if (this.mu) this.mu.lift = 0.3; this.rig.sq.kick(3.5); sc.emit('dust', b.x, b.y + 0.6, 7, { speed: 2.4, spread: 6.3, life: 0.6, size: 0.1, col: '#f6a27e', g: 5 }); sc.emit('spark', b.x, b.y + 0.5, 5, { speed: 2, spread: 6.3, life: 0.4, size: 0.09, g: 2 }); }
       if (e === 'jump') sc.emit('dust', b.x, gy, 6, { speed: 2.2, spread: 2.6, life: 0.4, size: 0.11, col: soil, g: 3 });
       if (e === 'land') { const n = Math.round(clamp(b.impact * 0.9, 3, 16)); sc.emit('dust', b.x, gy, n, { speed: clamp(b.impact * 0.3, 1.5, 5), spread: 3.1, dir: Math.PI / 2, life: 0.5, size: 0.13, col: soil, g: 2 }); if (b.impact > 13) sc.shake = Math.min(0.5, b.impact * 0.02); }
       if (e === 'splash') sc.emit('drop', b.x, gy + 0.3, 16, { speed: 6, spread: 1.6, life: 0.7, size: 0.09, col: '#eaf7ff', g: 22 });

@@ -28,6 +28,7 @@ export const SURF = {
 
 // What the legs can do.
 export const RUN_V = 9.5, RUN_A = 46, BRAKE = 60, AIR_A = 16;
+export const HOP_V = 8.4, HOP_J = 14;   // Mu's lift in the air: the speed it leaves a still body with, and the most it can change a moving one by
 export const JUMP_V = 6.2, PUSH_A = 62, PUSH_T = 0.125;   // a jump is a small kick and then a push for as long as the button is held: a tap is a hop, a hold is a leap
 const COYOTE = 0.1, BUFFER = 0.12;
 // Drag through the air, per unit of mass: tucked is small, spread wide is large.
@@ -84,7 +85,7 @@ export class Body {
     this.x = x; this.y = y; this.vx = 0; this.vy = 0; this.w = 0;        // w: spin, positive when rolling toward +x
     this.r = R; this.mode = 'run';                                      // run | slide | ball
     this.spread = false; this.grounded = false; this.nx = 0; this.ny = 1; this.surf = 'rock';
-    this.coyote = 0; this.buffer = 0; this.pushT = 0; this.pnx = 0; this.pny = 1; this.noSnap = 0;
+    this.hops = 0; this.coyote = 0; this.buffer = 0; this.pushT = 0; this.pnx = 0; this.pny = 1; this.noSnap = 0;
     this.airT = 0; this.groundT = 0; this.impact = 0; this.inWater = 0; this.inJet = 0; this.t = 0; this.face = 1;
     this.can = { slide: true, roll: true, spread: true };               // what the hero has learned so far
     this.events = [];                                                   // what happened this step, for sound and animation
@@ -114,6 +115,7 @@ export function step(b, T, inp, dt = STEP) {
   }
 
   // --- jump ---
+  if (b.grounded || b.inWater > FLOATS) b.hops = b.can.mu ? 1 : 0;      // Mu's wings are fresh again on any footing
   b.buffer = inp.jumpNow ? BUFFER : Math.max(0, b.buffer - dt);
   b.coyote = b.grounded && b.noSnap <= 0 ? COYOTE : Math.max(0, b.coyote - dt);
   if (b.buffer > 0 && b.coyote > 0 && b.pushT <= 0 && b.noSnap <= 0) {
@@ -122,6 +124,11 @@ export function step(b, T, inp, dt = STEP) {
     const vn = b.vx * jx + b.vy * jy, e0 = b.energy(); if (vn < 0) { b.vx -= vn * jx; b.vy -= vn * jy; }
     b.vx += jx * JUMP_V; b.vy += jy * JUMP_V; b.work += b.energy() - e0;
     b.pushT = PUSH_T; b.pnx = jx; b.pny = jy; b.buffer = 0; b.coyote = 0; b.grounded = false; b.noSnap = 0.12; b.events.push('jump');
+  }
+  // Mu's lift, once between one footing and the next: the bird takes hold and beats upward. It is a push of a fixed size at most, so it turns a slow fall
+  // into a rise and only checks a fast one. The work is the bird's, and it goes in the accounts like any other.
+  if (!b.grounded && b.inWater <= FLOATS && inp.jumpNow && b.hops > 0 && b.coyote <= 0 && b.pushT <= 0 && (b.vy > 0 || b.y - b.r - T.h(b.x) > 0.6)) {
+    const e0 = b.energy(); b.vy = Math.min(b.vy + HOP_J, Math.max(b.vy, 0) * 0.5 + HOP_V); b.work += Math.max(0, b.energy() - e0); b.hops--; b.buffer = 0; b.events.push('hop');
   }
   b.spread = b.can.spread && !b.grounded && inp.jump && b.pushT <= 0 && b.vy < -1.5 && b.mode !== 'ball';
 

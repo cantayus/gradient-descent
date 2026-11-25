@@ -12,6 +12,7 @@ export function record(id, res, medalTimes, assisted) {
   const out = { first: L.runs === 0, bestBefore: L.best, newBest: false, medal, medalBefore: L.medal }; L.runs++;
   if (!assisted && (L.best == null || res.time < L.best)) { L.best = +res.time.toFixed(3); L.ghost = thin(res.rec); L.curve = res.curve; out.newBest = true; }
   if (assisted && L.bestAssist == null || assisted && res.time < L.bestAssist) L.bestAssist = +res.time.toFixed(3);
+  out.newStamp = !!res.stamp && !L.stamp; if (res.stamp) L.stamp = true; if (res.seedsAll && res.seeds === res.seedsAll) L.allSeeds = true;
   L.medal = Math.max(L.medal, medal); L.seeds = Math.max(L.seeds, res.seeds); L.done = true; store(); return out;
 }
 // The ghost is kept at fifteen samples a second, which is plenty to draw from and a quarter of the size.

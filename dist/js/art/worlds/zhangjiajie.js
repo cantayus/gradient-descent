@@ -14,6 +14,7 @@ const TIMES = {
 
 export const zhangjiajie = {
   id: 'zhangjiajie', name: 'Zhangjiajie', zone: 'stone', times: TIMES,
+  stamps: [{ s: 'pillar', name: 'Sandstone pillar' }, { s: 'pine', name: 'Pine' }, { s: 'macaque', name: 'Rhesus macaque' }, { s: 'azalea', name: 'Azalea' }, { s: 'bamboo', name: 'Bamboo' }, { s: 'pavilion', name: 'Pavilion' }],
   note: 'Zhangjiajie’s pillars are sandstone. Water and frost split the rock along its cracks and carried the pieces away, and more than three thousand pillars were left standing.',
 
   far(time) {

@@ -16,6 +16,7 @@ const TIMES = {
 
 export const galapagos = {
   id: 'galapagos', name: 'Galápagos', zone: 'lava', times: TIMES,
+  stamps: [{ s: 'tortoise', name: 'Giant tortoise' }, { s: 'iguana', name: 'Marine iguana' }, { s: 'booby', name: 'Blue-footed booby' }, { s: 'sealion', name: 'Sea lion' }, { s: 'crab', name: 'Sally Lightfoot crab' }, { s: 'cactus', name: 'Prickly pear' }],
   note: 'The Galápagos Islands are the tops of volcanoes that rose from the sea floor. The youngest, in the west, still erupt.',
 
   far(time) {
