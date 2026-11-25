@@ -54,3 +54,8 @@ The design is original and must stay clear of any known character.
 - **The Geyser** only costs time. Pressure rises on landings harder than 8 units a second on `drum` ground, leaks at 0.1 a second, and after an eruption
   the crust is spent for 7 seconds. The eruption is an ordinary jet with `grip` (sideways drag) so the hero is held in the column.
 - **Panels** are dark glass over the live, blurred scene; thin tracked capitals for headings; gold only for the thing to press.
+
+- **Far things** are entries in a ridge's `stamps` (see `Scene._stamp` for the kinds: fall, steam, geyser, smoke, graze, flock, beam, erupt) and in a
+  lake's `things`. A stamp with `drop: [a, b]` stands on the face of the hill, that fraction of the ridge's height below its skyline. Sprites face right.
+- **Page veils.** The three `<i>` in `#grade` blend with the canvas (soft-light tint, overlay grain, vignette). Their holder is `display: contents` on
+  purpose: a positioned holder would be a layer of its own and the blends would have nothing under them.

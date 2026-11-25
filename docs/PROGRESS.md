@@ -34,6 +34,14 @@ After the last world a sandbox opens: pick a landscape, set learning rate, momen
 - Hero Theta (`js/game/theta.js`): drawn in code, rig with springs, expressions, ears and tail that answer the wind, wet look in rain.
 - Renderer (`js/art/scene.js`, `paint.js`), world theme `js/art/worlds/iceland.js` at six hours (dawn, day, mist, golden, dusk, night with aurora).
   Far ridges with gullies, crest light and valley mist; a lake with sun glitter; birds; light shafts behind the ground; sun bloom; foreground silhouettes.
+- Backgrounds (owner: "more colorful, with more dynamic elements and a lot greater amount of details"). The standard every world must now meet, as Iceland does:
+  a painted sky (colour washes per hour, cirrus above heaped cloud, a moon with seas and a halo, the band of the galaxy, falling stars), a cloud bank on
+  the horizon, six or more far layers each with its own colour bands, things standing on the faces of hills as well as on skylines (`drop`), and many
+  that move: waterfalls, far geysers, chimney smoke, grazing animals, flocks, a lighthouse beam, a far eruption that glows after dark, a fjord with ice
+  adrift, a boat and a whale (`things` on a lake), light dancing on rivers (`glint`). Beside the path: cairns, a turf house with lamp and smoke, horses,
+  puffins that blink, steam vents (`behind` props with `frames`, `roam`, `glow`, `emit`).
+- Cost of a frame: the far country is painted at 0.5 to 0.75 of the screen's resolution into `scene.farC` and laid in as one picture; tint, grain and
+  vignette are page veils (`#grade` in index.html, css) and not canvas fills; the canvas is capped at 1440p on Full. `python3 scripts/perf.py` times a frame.
 - Weather (`js/game/weather.js`): one seeded state per level and hour, a pure function of time: wind and gusts, cloud cover, rain or snow (snow on
   snow and ice ground and at cold hours), fog, wet ground, cloud shadows, a rainbow only at hours when the sun is behind the viewer. A level opens fair
   and turns as the run goes on (except places marked `early`). Rain and wind are heard. The title and all menus sit over the same live scene.
@@ -53,7 +61,7 @@ After the last world a sandbox opens: pick a landscape, set learning rate, momen
 - Worlds 2 to 7 (themes, music, mechanics, bosses, notebook pages). Next: Cappadocia, with rolling, Mu the bird, balloons in the sky and the balloon ride.
 - The wordless story scenes, Sort! bonus stages, the daily valley, endless mode, the lab with sliders, the teacher page, the share card.
 - Key rebinding screen (the hooks exist in `input.js`), high-contrast palette (the setting exists, the palette does not), a larger landing margin for assist.
-- A second look at Iceland: animals near the path (puffins, an arctic fox), a visible great geyser behind the boss level, richer ground detail.
+- Iceland still wants: a visible great geyser behind the boss level, an arctic fox, richer detail in the cut earth.
 
 ## Checks to run
 
