@@ -37,7 +37,7 @@ export class Scene {
     this.zoneAt = (x) => { let z = level.spec.zone || theme.zone || 'rock'; for (const r of level.zones) if (x >= r.x0 && x < r.x1) z = r.kind; return z; };
     this.amb = theme.ambient ? theme.ambient(this.time) : []; this.ambParts = [];
     this.slabs = new Map(); this.tiles = {}; this.grain = null;
-    this.wx = new Weather(level.spec.id + timeKey, theme.weather ? theme.weather(timeKey) : {}); this.cloudX = 0; this.coldNow = this.wx.c.cold; this.own = true;   // Play hands in the weather it shares with the physics; a scene on its own keeps its own
+    this.wx = new Weather(level.spec.id + timeKey, theme.weather ? theme.weather(timeKey) : {}); this.cloudX = 0; this.windX = 0; this.coldNow = this.wx.c.cold; this.own = true;   // Play hands in the weather it shares with the physics; a scene on its own keeps its own
   }
   _pat(ctx, kind) { let p = this.tiles[kind]; if (!p) { p = ctx.createPattern(tile(kind, 1), 'repeat'); p.setTransform(new DOMMatrix().scale(1 / 64)); this.tiles[kind] = p; } return p; }
   resize(W, H) { this.W = W; this.H = H; this.sky = null; }
@@ -52,7 +52,7 @@ export class Scene {
   }
   update(dt, cam) {
     this.t += dt; this.shake = Math.max(0, this.shake - dt * 3); this.flash = Math.max(0, this.flash - dt * 2.2);
-    const wx = this.wx; if (this.own) wx.set(this.t, dt); this.cloudX += (0.0035 + wx.wind * 0.004) * dt; if (wx.flash > 0.9) this.flash = Math.max(this.flash, 0.7);
+    const wx = this.wx; if (this.own) wx.set(this.t, dt); this.cloudX += (0.0035 + wx.wind * 0.004) * dt; this.windX += wx.wind * dt; if (wx.flash > 0.9) this.flash = Math.max(this.flash, 0.7);
     if (cam) { // it snows on the snow and the ice, where the ground is cold enough to keep it, and rains lower down
       const z = this.zoneAt(cam.x), cold = wx.cold >= 0.5 || z === 'snow' || z === 'ice' ? 1 : 0; this.coldNow += (cold - this.coldNow) * Math.min(1, dt * 0.8);
       const wet = wx.rain * (1 - this.coldNow); if (wet > 0.04 && this.q) { let n = wet * 70 * dt; n = Math.floor(n) + (Math.random() < n % 1 ? 1 : 0); for (let i = 0; i < n; i++) { const x = cam.x + (Math.random() - 0.5) * cam.vw, w = this.T.waterAt(x), gy = this.T.h(x), y = w && w.y > gy ? w.y : gy; if (y < cam.y - cam.vh) continue; this.emit('drop', x, y + 0.04, 2, { speed: 1.7, spread: 1.5, life: 0.2, size: 0.032, col: '#eef6ff', g: 16, jx: 0.05 }); } }
@@ -71,7 +71,7 @@ export class Scene {
     this._sky(ctx);
     const fall = (this.y0 - cam.y);                 // how far the camera has come down since the start
     for (const L of this.far) L.kind === 'lake' ? this._lake(ctx, L) : this._ridge(ctx, L, cam, S, fall);
-    { const wx = this.wx, mist = Math.min(0.9, (time.mist || 0) + wx.fog * 0.42 + wx.rain * 0.1); if (mist > 0.02) { const g = ctx.createLinearGradient(0, H * 0.3, 0, H * 0.85); g.addColorStop(0, rgba(this.hz, 0)); g.addColorStop(1, rgba(this.hz, mist)); ctx.fillStyle = g; ctx.fillRect(0, H * 0.3, W, H * 0.7); } }      // valley mist over the far country; the ground is drawn after it and stays clear
+    { const wx = this.wx, mist = Math.min(0.9, (time.mist || 0) + wx.fog * 0.42 + wx.rain * 0.1); if (mist > 0.02) { const g = ctx.createLinearGradient(0, H * 0.3, 0, H * 0.85); g.addColorStop(0, rgba(this.hz, 0)); g.addColorStop(1, rgba(this.hz, mist)); ctx.fillStyle = g; ctx.fillRect(0, H * 0.3, W, H * 0.7);  const m = this.spr.mist, t = this.t; if (m && this.q) { for (let i = 0; i < 6; i++) { const u = ((hash1(i, 61) + this.windX * 0.0009 * (1 + i * 0.3) + t * 0.004 - cam.x * 0.0016 * (1 + i * 0.3)) % 1.4 + 1.4) % 1.4 - 0.2; ctx.globalAlpha = mist * (0.5 + 0.5 * hash1(i, 63)); stamp(ctx, m[i % m.length], u * W, (0.4 + hash1(i, 64) * 0.3) * H, (H / 7) * (0.6 + hash1(i, 65) * 0.6)); } ctx.globalAlpha = 1; } } }      // valley mist over the far country; the ground is drawn after it and stays clear
     { const wx = this.wx, t = this.t;
     if (time.shafts && this.q && time.sun) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; const s = time.sun || { x: 0.8, y: 0.1 }; for (let i = 0; i < 6; i++) { const a = 0.9 + i * 0.16 + Math.sin(t * 0.13 + i) * 0.03, len = H * 1.5, wdt = H * (0.03 + 0.03 * hash1(i, 71)), al = time.shafts * (1 - wx.cover) * (0.5 + 0.5 * Math.sin(t * 0.35 + i * 1.7)); const g = ctx.createLinearGradient(s.x * W, s.y * H, s.x * W - Math.cos(a) * len, s.y * H + Math.sin(a) * len); g.addColorStop(0, rgba(time.sun?.glow || '#ffffff', al)); g.addColorStop(1, rgba(time.sun?.glow || '#ffffff', 0)); ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(s.x * W, s.y * H); ctx.lineTo(s.x * W - Math.cos(a - 0.03) * len - wdt, s.y * H + Math.sin(a - 0.03) * len); ctx.lineTo(s.x * W - Math.cos(a + 0.03) * len + wdt, s.y * H + Math.sin(a + 0.03) * len); ctx.closePath(); ctx.fill(); } ctx.restore(); } }      // shafts of light fall through the air behind the ground, never through the earth
     // world space from here: one unit is S pixels, and y is flipped by hand (draw at -y)
@@ -84,6 +84,7 @@ export class Scene {
     if (this.overlay) this.overlay(ctx, x0, x1);
     this._things(ctx, x0, x1, actors);
     this._water(ctx, x0, x1, true);
+    this._lives(ctx, x0, x1);
     this._actors(ctx, actors, S);
     this._parts(ctx, x0, x1);
     this._fore(ctx, cam, S, ox, oy);
@@ -146,7 +147,7 @@ export class Scene {
       const d = (time.sun && time.sun.x < 0.5 ? 1 : -1) * H * 0.012 * (L.facet ?? 1); ctx.save(); ctx.clip(); ctx.beginPath(); ctx.moveTo(-2, H + 2); for (let x = -2; x <= W + step; x += step) ctx.lineTo(x, yAt(x + d) + H * 0.004); ctx.lineTo(W + 2, H + 2); ctx.closePath(); ctx.fillStyle = rgba(time.shade, 0.2); ctx.fill(); ctx.restore();
       ctx.beginPath(); ctx.moveTo(-2, H + 2); for (let x = -2; x <= W + step; x += step) ctx.lineTo(x, yAt(x)); ctx.lineTo(W + 2, H + 2); ctx.closePath(); }
     if (this.q && L.ribs) { // gullies running down from the crest, which is what makes a far mountain look like rock and not like paper
-      ctx.save(); ctx.clip(); const gap = H * 0.011 * (L.ribGap ?? 1), lean = (time.sun && time.sun.x < 0.5 ? 1 : -1) * 0.35; ctx.lineCap = 'round';
+      ctx.save(); ctx.clip(); const gap = H * 0.011 * (L.ribGap ?? 1), lean = (time.sun && time.sun.x < 0.5 ? 1 : -1) * 0.16; ctx.lineCap = 'round';
       for (let pass = 0; pass < 2; pass++) { ctx.strokeStyle = pass ? rgba(lighten(col, 0.25), L.ribs * 0.5) : rgba(time.shade, L.ribs); ctx.lineWidth = H * (pass ? 0.0012 : 0.0022); ctx.beginPath();
         for (let k = Math.floor((-W / 2 / px + camU) * px / gap) - 1, k1 = Math.ceil((W / 2 / px + camU) * px / gap) + 1; k <= k1; k++) { if (hash1(k, L.seed + 60 + pass) > 0.62) continue; const sxp = (k * gap / px - camU) * px + W / 2 + (pass ? gap * 0.4 : 0), y = yAt(sxp), len = amp * (0.12 + 0.5 * hash1(k, L.seed + 61)), wob = (hash1(k, L.seed + 62) - 0.5) * gap * 2; ctx.moveTo(sxp, y + H * 0.004); ctx.quadraticCurveTo(sxp + len * lean * 0.3 + wob, y + len * 0.5, sxp + len * lean + wob * 1.6, y + len); }
         ctx.stroke(); }
@@ -262,6 +263,16 @@ export class Scene {
     for (const f of A.flyers || []) { ctx.save(); ctx.translate(f.x, -f.y); f.draw(ctx, t); ctx.restore(); }
   }
 
+  _lives(ctx, x0, x1) {
+    const L = this.theme.lives, T = this.T, t = this.t, time = this.time; if (!L || !this.q || this.wx.rain > 0.35) return; const cw = L.every || 7, night = (time.stars || 0) > 0.3 || time.dark > 0.3;
+    for (let k = Math.floor(x0 / cw); k <= Math.ceil(x1 / cw); k++) { if (hash1(k, 131) > (L.p ?? 0.6)) continue; const z = this.zoneAt((k + 0.5) * cw); if (L.zones && !L.zones.includes(z)) continue;
+      const n = 1 + Math.floor(hash1(k, 132) * 3); for (let i = 0; i < n; i++) { const ph = hash1(k * 5 + i, 133) * 20, bx = (k + hash1(k * 5 + i, 134)) * cw + Math.sin(t * 0.37 + ph) * 1.6 + Math.sin(t * 1.3 + ph * 2) * 0.35 + this.wx.wind * 0.12, by = T.h(bx) + 0.7 + hash1(k * 5 + i, 135) * 1.4 + Math.sin(t * 0.9 + ph) * 0.4 + Math.sin(t * 2.9 + ph) * 0.12;
+        if (night) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = 0.35 + 0.65 * Math.max(0, Math.sin(t * 1.6 + ph * 3)); stamp(ctx, this.fx.warm, bx, -by, 0.34); ctx.restore(); }
+        else { const col = L.cols[Math.floor(hash1(k * 5 + i, 136) * L.cols.length)], f = Math.abs(Math.sin(t * 13 + ph)), dir = Math.cos(t * 0.37 + ph) > 0 ? 1 : -1, s = 0.085 + hash1(k * 5 + i, 137) * 0.04; ctx.save(); ctx.translate(bx, -by); ctx.rotate(dir * 0.3); ctx.fillStyle = col;
+          for (const sd of [-1, 1]) { ctx.beginPath(); ctx.moveTo(0, 0); ctx.quadraticCurveTo(sd * s * 1.5 * (0.25 + 0.75 * f), -s * 1.7, sd * s * 1.25 * (0.25 + 0.75 * f), -s * 0.2); ctx.quadraticCurveTo(sd * s * 1.1 * (0.25 + 0.75 * f), s * 0.9, 0, s * 0.35); ctx.fill(); }
+          ctx.fillStyle = 'rgba(30,30,40,0.8)'; ctx.fillRect(-s * 0.09, -s * 0.5, s * 0.18, s); ctx.restore(); } } }
+  }
+
   _parts(ctx, x0, x1) {
     for (const p of this.parts) { if (p.x < x0 || p.x > x1) continue; const u = p.life / p.max, a = (1 - u) * (p.kind === 'steam' ? 0.35 * Math.sin(u * Math.PI) / (1 - u + 0.01) * (1 - u) : 1);
       if (p.kind === 'steam') { ctx.globalAlpha = clamp(0.4 * Math.sin(u * Math.PI), 0, 1); stamp(ctx, this.fx.glow, p.x, -p.y, p.size * (1 + u * 2.2)); }
@@ -291,10 +302,10 @@ export class Scene {
     const { W, H, t } = this, wx = this.wx, rain = wx.rain * (1 - this.coldNow), snow = wx.rain * this.coldNow, k = H / 900; if (wx.rain < 0.02) return;
     if (rain > 0.02) { const n = Math.round(rain * (this.q === 2 ? 340 : this.q ? 200 : 90)), vf = 22; ctx.lineCap = 'round';
       for (let pass = 0; pass < 2; pass++) { const near = pass === 1; ctx.strokeStyle = near ? 'rgba(232,242,255,0.42)' : 'rgba(215,230,250,0.24)'; ctx.lineWidth = (near ? 1.5 : 0.9) * k; ctx.beginPath();
-        for (let i = pass; i < n; i += 2) { const d = (near ? 0.75 : 0.4) + hash1(i, 91) * 0.3, len = vf * S * 0.022 * d, sl = wx.wind / vf, px = (((hash1(i, 92) * W + t * wx.wind * S * d - cam.x * S * d * 0.6) % W) + W) % W, py = (((hash1(i, 93) * H + t * vf * S * d * 0.55 + cam.y * S * d * 0.6) % H) + H) % H; ctx.moveTo(px, py); ctx.lineTo(px - sl * len, py - len); }
+        for (let i = pass; i < n; i += 2) { const d = (near ? 0.75 : 0.4) + hash1(i, 91) * 0.3, len = vf * S * 0.022 * d, sl = wx.wind / vf, px = (((hash1(i, 92) * W + this.windX * S * d - cam.x * S * d * 0.6) % W) + W) % W, py = (((hash1(i, 93) * H + t * vf * S * d * 0.55 + cam.y * S * d * 0.6) % H) + H) % H; ctx.moveTo(px, py); ctx.lineTo(px - sl * len, py - len); }
         ctx.stroke(); } }
     if (snow > 0.02) { const n = Math.round(snow * (this.q === 2 ? 260 : this.q ? 150 : 70)), vf = 2.4; ctx.fillStyle = '#ffffff';
-      for (let i = 0; i < n; i++) { const d = 0.35 + hash1(i, 95) * 0.75, px = (((hash1(i, 96) * W + t * wx.wind * S * d * 0.8 + Math.sin(t * (0.7 + hash1(i, 97)) + i) * 9 * k - cam.x * S * d * 0.6) % W) + W) % W, py = (((hash1(i, 98) * H + t * vf * S * d + cam.y * S * d * 0.6) % H) + H) % H; ctx.globalAlpha = 0.45 + 0.5 * d; ctx.beginPath(); ctx.arc(px, py, (0.9 + 1.9 * d) * k, 0, TAU); ctx.fill(); } ctx.globalAlpha = 1; }
+      for (let i = 0; i < n; i++) { const d = 0.35 + hash1(i, 95) * 0.75, px = (((hash1(i, 96) * W + this.windX * S * d * 0.8 + Math.sin(t * (0.7 + hash1(i, 97)) + i) * 9 * k - cam.x * S * d * 0.6) % W) + W) % W, py = (((hash1(i, 98) * H + t * vf * S * d + cam.y * S * d * 0.6) % H) + H) % H; ctx.globalAlpha = 0.45 + 0.5 * d; ctx.beginPath(); ctx.arc(px, py, (0.9 + 1.9 * d) * k, 0, TAU); ctx.fill(); } ctx.globalAlpha = 1; }
   }
 
   // haze, shafts of light, the tint of the hour, and a darkening toward the corners
@@ -303,11 +314,9 @@ export class Scene {
     this._shadows(ctx, cam);
     // the sun's light spilling over whatever stands in front of it
     if (time.sun && this.q && !time.stars) { const s = time.sun, a = (time.bloom ?? 0.3) * (1 - wx.cover * 0.85); if (a > 0.01) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; const g = ctx.createRadialGradient(s.x * W, s.y * H, 0, s.x * W, s.y * H, H * 0.75); g.addColorStop(0, rgba(s.glow, a)); g.addColorStop(0.25, rgba(s.glow, a * 0.42)); g.addColorStop(1, rgba(s.glow, 0)); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H); ctx.restore(); } }
-    if (mist > 0.02) {
-      const m = this.spr.mist; if (m && this.q) for (let i = 0; i < 5; i++) { const u = ((hash1(i, 61) + t * (0.006 + hash1(i, 62) * 0.01) - cam.x * 0.0016 * (1 + i * 0.3)) % 1.4 + 1.4) % 1.4 - 0.2; ctx.globalAlpha = mist * (0.5 + 0.5 * hash1(i, 63)); stamp(ctx, m[i % m.length], u * W, (0.55 + hash1(i, 64) * 0.4) * H, (H / 7) * (0.6 + hash1(i, 65) * 0.6)); } ctx.globalAlpha = 1; }
     this._precip(ctx, cam, S);
     // the air itself: pollen, ash, spray
-    for (const A of this.amb) { const n = this.q ? A.n : Math.floor(A.n / 3); ctx.fillStyle = A.col; for (let i = 0; i < n; i++) { const sp = A.speed * (0.5 + hash1(i, 81)), dr = A.drift * (0.5 + hash1(i, 82)), px = ((hash1(i, 83) * W + t * dr * H - cam.x * S * A.par * (0.5 + hash1(i, 86))) % W + W) % W, py = ((hash1(i, 84) * H + t * sp * H + cam.y * S * A.par) % H + H) % H, sz = A.size * (0.5 + hash1(i, 85)) * H / 900; ctx.globalAlpha = A.a * (0.4 + 0.6 * hash1(i, 87)) * (A.twinkle ? 0.5 + 0.5 * Math.sin(t * 3 + i) : 1); { ctx.beginPath(); ctx.arc(px + Math.sin(t * 1.7 + i) * A.sway, py, sz, 0, TAU); ctx.fill(); } } ctx.globalAlpha = 1; }
+    for (const A of this.amb) { const n = this.q ? A.n : Math.floor(A.n / 3); ctx.fillStyle = A.col; for (let i = 0; i < n; i++) { const sp = A.speed * (0.5 + hash1(i, 81)), dr = A.drift * (0.5 + hash1(i, 82)), px = ((hash1(i, 83) * W + t * dr * H + this.windX * S * 0.5 * (0.5 + hash1(i, 82)) - cam.x * S * A.par * (0.5 + hash1(i, 86))) % W + W) % W, py = ((hash1(i, 84) * H + t * sp * H + cam.y * S * A.par) % H + H) % H, sz = A.size * (0.5 + hash1(i, 85)) * H / 900; ctx.globalAlpha = A.a * (0.4 + 0.6 * hash1(i, 87)) * (A.twinkle ? 0.5 + 0.5 * Math.sin(t * 3 + i) : 1); { ctx.beginPath(); ctx.arc(px + Math.sin(t * 1.7 + i) * A.sway, py, sz, 0, TAU); ctx.fill(); } } ctx.globalAlpha = 1; }
     if (time.tint) { ctx.save(); ctx.globalCompositeOperation = 'soft-light'; ctx.fillStyle = time.tint; ctx.fillRect(0, 0, W, H); ctx.restore(); }
     if (this.q) { if (!this.grain) { const c = document.createElement('canvas'); c.width = c.height = 256; const x = c.getContext('2d'), im = x.createImageData(256, 256), r = new RNG('grain'); for (let i = 0; i < im.data.length; i += 4) { const v = r.u() * 255; im.data[i] = im.data[i + 1] = im.data[i + 2] = v; im.data[i + 3] = 255; } x.putImageData(im, 0, 0); this.grain = ctx.createPattern(c, 'repeat'); }
       ctx.save(); ctx.globalCompositeOperation = 'overlay'; ctx.globalAlpha = 0.07; ctx.fillStyle = this.grain; ctx.fillRect(0, 0, W, H); ctx.restore(); }

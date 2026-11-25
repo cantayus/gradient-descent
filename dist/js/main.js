@@ -26,7 +26,7 @@ function applyText() { document.documentElement.style.setProperty('--fs', save.s
 
 export function startLevel(id, opt = {}) {
   const f = levelById(id); if (!f) return null;
-  G.play = new Play({ spec: f.spec, theme: f.world.theme, can: { ...f.world.can, ...(f.spec.can || {}) }, ghost: opt.ghost || null, hooks: G.hooks });
+  G.play = new Play({ spec: f.spec, theme: f.world.theme, can: { ...f.world.can, ...(f.spec.can || {}) }, ghost: opt.ghost || null, hooks: G.hooks, intro: !!opt.intro });
   G.play.scene.q = G.gfx; G.play.resize(G.W, G.H); G.levelId = id; G.mode = 'level'; S.reset(); return G.play;
 }
 // The country behind the title and the menus: the hero on a ledge, looking out, at whatever hour it is where the player is.
@@ -55,6 +55,7 @@ G.hooks = {
     else if (name === 'back') { sfx.back(); setTimeout(() => voice.grumble(), 250); }
     else if (name === 'goal') { sfx.goal(); setTimeout(() => voice.trill(), 300); }
     else if (name === 'thump') sfx.drum(extra);
+    else if (name === 'intro') { if (extra === 'fall') sfx.wake(); else if (extra === 'land') sfx.seed(); else if (extra === 'wake') voice.hm(); else if (extra === 'take') { sfx.goal(); setTimeout(() => voice.trill(), 250); } else if (extra === 'end') UI.introDone(); }
     else if (name === 'erupt') { sfx.geyser(); sfx.drum(1); say(() => voice.eep(), 0); setTimeout(() => voice.whee(1), 600); }
   },
   finish(res) { UI.showFinish(res); },
@@ -89,7 +90,7 @@ function frame(now) {
 
 loadSave(); applyText(); applyGfx(); setVolumes({ music: save.settings.music, sfx: save.settings.sfx, voice: save.settings.voice });
 initInput(); initTouch(document.getElementById('touch'));
-UI.initUI({ G, startLevel, attract, greet, applyGfx, applyText, unlockAll: q.has('unlock') || q.has('class') });
+UI.initUI({ G, startLevel, attract, greet, applyGfx, applyText, unlockAll: q.has('unlock') || q.has('class'), forceIntro: q.has('intro') });
 // For looking at one level directly: ?level=1-1, with &x= to stand somewhere along it, &time= to change the hour, &run to hold right and &wx=0..1 to fix the weather.
 if (q.has('level')) {
   const f = levelById(q.get('level')); if (f && q.has('time')) f.spec.time = q.get('time');

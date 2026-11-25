@@ -4,7 +4,7 @@ import { RNG } from '../../core/rng.js';
 import { P, variants, sprite, mix, rgba, lighten, darken, TAU } from '../paint.js';
 
 const TIMES = {
-  dawn:   { sky: ['#2a3566', '#6a66a6', '#e9987e', '#ffdca6'], skyAt: [0, 0.42, 0.78, 1], sun: { x: 0.74, y: 0.4, r: 0.034, col: '#fff3d6', glow: '#ffb070' }, haze: '#f1c3a4', shade: '#3a2f5a', dark: 0.13, mist: 0.34, shafts: 0.06, tint: 'rgba(255,160,110,0.16)', rim: '#ffd6ad', snow: '#ffe9dc', water: '#6c8fb8', hot: '#7fd3d6' },
+  dawn:   { sky: ['#2a3566', '#6a66a6', '#e9987e', '#ffdca6'], skyAt: [0, 0.42, 0.78, 1], sun: { x: 0.735, y: 0.218, r: 0.036, col: '#fff3d6', glow: '#ffb070' }, bloom: 0.38, haze: '#f1c3a4', shade: '#3a2f5a', dark: 0.13, mist: 0.34, shafts: 0.06, tint: 'rgba(255,160,110,0.16)', rim: '#ffd6ad', snow: '#ffe9dc', water: '#6c8fb8', hot: '#7fd3d6' },
   day:    { sky: ['#2c72bf', '#69aee6', '#bfe1f6', '#eef7f8'], skyAt: [0, 0.4, 0.8, 1], sun: { x: 0.83, y: 0.13, r: 0.03, col: '#fffbe8', glow: '#fff0b8' }, haze: '#d4e5f0', shade: '#1c2a44', dark: 0, mist: 0.16, shafts: 0.045, tint: 'rgba(255,236,190,0.1)', rim: '#ffffff', snow: '#ffffff', water: '#3f8ac4', hot: '#62cfd4' },
   mist:   { sky: ['#8496ad', '#aebcc9', '#dbe2e6'], bow: true, haze: '#cbd5db', shade: '#35414f', dark: 0.12, mist: 0.6, cloud: 0.5, tint: 'rgba(200,220,235,0.12)', rim: '#f2f6f8', snow: '#f4f8fb', water: '#6f93ad', hot: '#84d2d2' },
   golden: { sky: ['#375f97', '#8fa5c6', '#f6c486', '#ffe8ba'], skyAt: [0, 0.45, 0.82, 1], sun: { x: 0.22, y: 0.38, r: 0.038, col: '#fff0c4', glow: '#ffbd66' }, haze: '#ffd49c', shade: '#4a3040', dark: 0.07, mist: 0.28, shafts: 0.08, tint: 'rgba(255,180,90,0.2)', rim: '#ffe2ae', snow: '#fff0d8', water: '#7d95b5', hot: '#8fd6cf' },
@@ -68,6 +68,8 @@ export const iceland = {
       },
     };
   },
+  // butterflies over the flowers by day, and small lights after dark (Iceland has no fireflies; these are the seeds' kin, the same warm light the hero carries)
+  lives: { every: 6, p: 0.6, zones: ['meadow', 'moss'], cols: ['#ffffff', '#ffe37a', '#9fc4ff', '#ffb3c8'] },
   fore: [
     { s: 'foreRock', par: 1.5, every: 19, p: 0.45, size: 1, seed: 301, sink: 0.45, a: 1 },
     { s: 'foreGrass', par: 1.7, every: 3.6, p: 0.7, size: 1, seed: 305, sink: 0.2, a: 0.95 },

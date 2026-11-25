@@ -54,10 +54,14 @@ export function showLevels() {
 let run = null, hintT = 0;
 export function play(id) {
   clear(); hud.hidden = false; const f = levelById(id); run = { id, f, shown: null };
-  const p = api.startLevel(id, { ghost: ghostFor(id) }); if (!p) return showTitle();
-  playMusic(f.spec.music || f.world.music); hud.querySelector('.h-name small').textContent = f.world.name; hud.querySelector('.h-name b').textContent = f.spec.name; hud.classList.remove('fresh'); void hud.offsetWidth; hud.classList.add('fresh'); clearTimeout(run.cardT); run.cardT = setTimeout(() => hud.classList.remove('fresh'), 4200);
+  const intro = !!f.spec.intro && (!save.seen.intro || api.forceIntro);
+  const p = api.startLevel(id, { ghost: ghostFor(id), intro }); if (!p) return showTitle();
+  ui.append(el('div.veil' + (intro ? '.slow' : '.quick')));      // every level comes up out of black
+  playMusic(f.spec.music || f.world.music); hud.querySelector('.h-name small').textContent = f.world.name; hud.querySelector('.h-name b').textContent = f.spec.name; hud.classList.remove('fresh'); hud.classList.toggle('intro', intro); if (!intro) card();
   document.getElementById('touch').hidden = !('ontouchstart' in window); api.G.paused = false;
 }
+function card() { void hud.offsetWidth; hud.classList.add('fresh'); clearTimeout(run.cardT); run.cardT = setTimeout(() => hud.classList.remove('fresh'), 4200); }
+export function introDone() { if (!run) return; save.seen.intro = true; store(); hud.classList.remove('intro'); card(); }
 export function frameUI(p) {
   if (!p || hud.hidden || !run) return;
   if (p.started && hud.classList.contains('fresh') && p.clock > 0.6) hud.classList.remove('fresh');

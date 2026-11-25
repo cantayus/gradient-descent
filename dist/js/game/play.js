@@ -7,10 +7,11 @@ import { clamp, lerp, smooth } from '../art/paint.js';
 import { Geyser } from './boss.js';
 
 export class Camera {
-  constructor(x, y) { this.x = x; this.y = y; this.vh = 12.5; this.vw = 22; this.lx = 3; this.ly = 0.9; }
+  constructor(x, y) { this.x = x; this.y = y; this.vh = 11.6; this.vw = 22; this.lx = 3; this.ly = 0.9; }
   update(b, dt, aspect, snap = false, wide = false) {
     const ease = (k) => 1 - Math.exp(-k * dt);
-    const sp = b.speed(), vh = (wide ? 20 : lerp(12.5, 19, smooth(clamp((sp - 9) / 22, 0, 1)))) * (aspect < 1 ? 1.3 : 1);     // wide: the long look at a level before the first step
+    // wide: true for the long look at a level before the first step, 'close' for the opening scene, otherwise the picture opens out as the hero speeds up
+    const sp = b.speed(), vh = (wide === 'close' ? 8.6 : wide ? 20 : lerp(11.6, 19, smooth(clamp((sp - 9) / 22, 0, 1)))) * (aspect < 1 ? 1.3 : 1);
     if (snap && wide) this.vh = vh;
     this.vh += (vh - this.vh) * ease(1.4); this.vw = this.vh * aspect;
     // look where the hero is going, and a little below, since the way is down
@@ -35,8 +36,8 @@ class Eta {
 }
 
 export class Play {
-  constructor({ spec, theme, can = {}, ghost = null, hooks = {}, cine = false }) {
-    this.cine = cine; this.spec = spec; this.theme = theme; this.level = build(spec); this.T = this.level.T; this.hooks = hooks;
+  constructor({ spec, theme, can = {}, ghost = null, hooks = {}, cine = false, intro = false }) {
+    this.cine = cine; this.intro = intro ? { t: 0, stage: 0 } : null; this.seedGlow = intro ? 0 : 1; this.etaIn = intro ? 0 : 1; this.star = null; this.spec = spec; this.theme = theme; this.level = build(spec); this.T = this.level.T; this.hooks = hooks;
     this.scene = new Scene(theme, this.level, spec.time || 'day');
     this.b = new Body(this.level.start.x, this.level.start.y + R); Object.assign(this.b.can, { slide: true, roll: true, spread: true }, can); this.b.grounded = true;
     this.rig = new Rig(); this.cam = new Camera(this.b.x, this.b.y); this.eta = new Eta(this.b.x, this.b.y + 1);
@@ -44,11 +45,28 @@ export class Play {
     this.curve = []; this.rec = []; this.recT = 0; this.curT = 0; this.ghostData = ghost; this.ghost = ghost ? { b: { x: 0, y: 0, r: R }, pose: POSE() } : null;
     this.check = this.level.checks[0]; this.trailT = 0; this.maxSpeed = 0;
     this.view = { x: this.b.x, y: this.b.y, r: R, vx: 0, vy: 0, face: 1, speed: () => this.b.speed() };      // the body as drawn: between the last two physics steps
-    this.flyers = [{ x: 0, y: 0, draw: (ctx, t) => this.eta.draw(ctx, t, this.scene.fx.warm) }];
+    this.flyers = [{ x: 0, y: 0, draw: (ctx, t) => { if (this.etaIn > 0.02) { ctx.scale(this.etaIn, this.etaIn); this.eta.draw(ctx, t, this.scene.fx.warm); } } },
+      { x: 0, y: 0, draw: (ctx, t) => { if (!this.star) return; const fx = this.scene.fx.warm, s = 2.2 + Math.sin(t * 7) * 0.25; ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.drawImage(fx.c, -s / 2, -s / 2, s, s); ctx.restore(); ctx.rotate(Math.sin(t * 2) * 0.2); ctx.fillStyle = '#fff3b8'; ctx.strokeStyle = '#c9861a'; ctx.lineWidth = 0.03; ctx.beginPath(); ctx.moveTo(0, -0.2); ctx.bezierCurveTo(0.16, -0.06, 0.13, 0.15, 0, 0.17); ctx.bezierCurveTo(-0.13, 0.15, -0.16, -0.06, 0, -0.2); ctx.fill(); ctx.stroke(); } }];
     // one weather for the picture and the physics
     this.weather = this.scene.wx; this.scene.own = false; this.T.air = (t) => this.weather.windAt(t);
     if (spec.boss === 'geyser') { this.boss = new Geyser(this.level, this.T); this.scene.overlay = (ctx, x0, x1) => this.boss.draw(ctx, x0, x1, this.t, this.scene.time.hot); }
-    if (cine) { this.rig.awake = true; this._cine(0); const tm = this.scene.time; { if (tm.sun && !tm.stars) { tm.sun = { ...tm.sun, x: 0.705, y: 0.235 }; tm.bloom = 0.4; tm.shafts = (tm.shafts || 0.05) * 0.7; } this.scene.drop = 0.075; } }      // on the title the sun stands over the valley the hero is looking into else this.cam.update(this.b, 0.016, 16 / 9, true, true);
+    if (cine) { this.rig.awake = true; this._cine(0); const tm = this.scene.time; { if (tm.sun && !tm.stars) { tm.sun = { ...tm.sun, x: 0.705, y: 0.235 }; tm.bloom = 0.4; tm.shafts = (tm.shafts || 0.05) * 0.7; } this.scene.drop = 0.075; } }      // on the title the sun stands over the valley the hero is looking into else this.cam.update(this.b, 0.016, 16 / 9, true, intro ? 'close' : true);      // the opening scene is watched from close by; the long look comes when it ends
+  }
+  // The opening, shown once: Theta asleep on the ledge, a seed of light falling out of the dawn, the waking, the finding, and Eta rising out of the glow.
+  // Nothing is said. Any key skips it. It returns the input the hero is given while it runs.
+  _intro(dt, inp) {
+    const I = this.intro, b = this.b, T = this.T, sc = this.scene, out = { move: 0, jump: false, jumpNow: false, tuck: false }; I.t += dt; const t = I.t, say = (what) => this.hooks.event?.('intro', b, what);
+    if (!I.sx) { I.sx = b.x + 2.8; I.sy = T.h(I.sx) + 0.3; }
+    if (t > 0.8 && (inp.move || inp.jump || inp.tuck || inp.jumpNow)) I.skip = true;
+    if (I.skip) { this.seedGlow = 1; this.etaIn = 1; this.star = null; this.intro = null; this.rig.p.lid = 0; this.rig.idle = 0; say('end'); return out; }
+    if (t < 3.4) { this.rig.idle = 20; this.rig.p.lid = 1; }
+    if (t > 1.1 && I.stage === 0) { I.stage = 1; this.star = { x: I.sx + 9, y: I.sy + 11, land: false }; say('fall'); }
+    if (this.star && !this.star.land) { const u = clamp((t - 1.1) / 1.8, 0, 1); this.star.x = I.sx + 9 * (1 - u); this.star.y = I.sy + 11 * (1 - u) * (1 - u * 0.35) / 1; if (Math.random() < 0.8) sc.emit('spark', this.star.x, this.star.y, 1, { speed: 0.6, spread: 6.3, life: 0.7, size: 0.09, g: 1.5 });
+      if (u >= 1) { this.star.land = true; this.star.x = I.sx; this.star.y = I.sy; sc.emit('spark', I.sx, I.sy, 22, { speed: 4, spread: 3, life: 0.9, size: 0.12, g: 6 }); sc.flash = 0.22; say('land'); } }
+    if (t > 3.4 && I.stage === 1) { I.stage = 2; this.rig.idle = 0; this.rig.p.lid = 0; this.rig.feel('wow', 1.1); this.rig.sq.kick(6); say('wake'); }
+    if (t > 4.6 && I.stage === 2) { if (b.x < I.sx - 0.7) out.move = 1; else { I.stage = 3; I.t3 = t; this.star = null; sc.emit('spark', b.x + 0.4, b.y, 30, { speed: 5, spread: 6.3, life: 1, size: 0.13, g: 4 }); this.rig.feel('glee', 2); this.rig.sq.kick(5.5); this.eta.x = b.x; this.eta.y = b.y; say('take'); } }
+    if (I.stage === 3) { this.seedGlow = clamp((t - I.t3) / 0.8, 0, 1); this.etaIn = smooth(clamp((t - I.t3 - 0.6) / 0.8, 0, 1)); if (t - I.t3 > 2.6) { this.intro = null; say('end'); } }
+    return out;
   }
   // the title's camera: a wide, slow look across the country, the hero small in one corner of it
   _cine(dt) { const c = this.cam, b = this.view || this.b, a = (this.W || 16) / (this.H || 9), t = this.t; c.vh = (16.5 + Math.sin(t * 0.05) * 0.6) * (a < 1 ? 1.35 : 1); c.vw = c.vh * a; c.x = b.x + c.vw * 0.21 + Math.sin(t * 0.06) * 1.8; c.y = b.y + c.vh * 0.25 + Math.sin(t * 0.045) * 0.3; }
@@ -56,7 +74,8 @@ export class Play {
 
   update(dt, inp) {
     const b = this.b, sc = this.scene; this.t += dt;
-    if (!this.started && !this.cine && (inp.move || inp.jump || inp.tuck)) { this.started = true; this.hooks.start?.(); }
+    if (this.intro) inp = this._intro(dt, inp);
+    if (!this.started && !this.cine && !this.intro && (inp.move || inp.jump || inp.tuck)) { this.started = true; this.hooks.start?.(); }
     this.weather.set(b.t + (this.cine ? this.t : 0), dt); this.rig.wind = this.weather.wind; this.rig.rain = this.weather.rain * (1 - this.scene.coldNow);
     if (this.dead > 0) { this.dead -= dt; if (this.dead <= 0) this._respawn(); }
     else if (!this.done) {
@@ -67,9 +86,9 @@ export class Play {
     }
     const v = this.view, m = this.dead > 0 || b.px == null ? 1 : b.mix ?? 1; v.x = b.px == null ? b.x : b.px + (b.x - b.px) * m; v.y = b.py == null ? b.y : b.py + (b.y - b.py) * m; v.vx = b.vx; v.vy = b.vy; v.face = b.face; v.fast = clamp((b.speed() - 13) / 14, 0, 1);
     const pose = this.rig.update(b, dt, inp);
-    pose.seed = 0.7 + 0.3 * clamp((this.level.hi - b.y) / Math.max(1, this.level.hi - this.level.lo), 0, 1);   // the seed glows warmer the lower Theta gets
-    this.eta.update(v, dt, this.t); this.flyers[0].x = this.eta.x; this.flyers[0].y = this.eta.y;
-    if (this.cine) this._cine(dt); else this.cam.update(v, dt, this.W / this.H, false, !this.started); sc.update(dt, this.cam);
+    pose.seed = (0.7 + 0.3 * clamp((this.level.hi - b.y) / Math.max(1, this.level.hi - this.level.lo), 0, 1)) * this.seedGlow;   // the seed glows warmer the lower Theta gets
+    this.eta.update(v, dt, this.t); this.flyers[0].x = this.eta.x; this.flyers[0].y = this.eta.y; if (this.star) { this.flyers[1].x = this.star.x; this.flyers[1].y = this.star.y; }
+    if (this.cine) this._cine(dt); else this.cam.update(v, dt, this.W / this.H, false, this.intro ? 'close' : !this.started); sc.update(dt, this.cam);
     this._effects(dt);
     // the record of the run: where the hero was (for the ghost) and how high (for the loss curve)
     if (this.started && !this.done) {
