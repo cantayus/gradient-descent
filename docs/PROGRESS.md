@@ -140,6 +140,13 @@ After the last world a sandbox opens: pick a landscape, set learning rate, momen
   (`Q` in `paint.js`); the far country is painted at full size on Full and Ultra; far peaks and dunes have shaded faces and lit spurs (`SPUR` in `scene.js`)
   and every far ridge has brush texture. Auto picks Ultra on a 4K screen and steps down if frames drop.
 
+## Where it lives
+
+- Repository: https://github.com/cantayus/gradient-descent (public). The game is played at https://cantayus.github.io/gradient-descent/.
+- `.github/workflows/deploy-pages.yml` publishes `dist/` to GitHub Pages on every push to `main` that touches `dist/`. Pages is set to Source: GitHub Actions.
+- First measured on a real machine through the live page (Ultra setting, canvas 1682x1424): 53 to 60 frames a second on the title, in Yakushima and in Patagonia.
+  The page was in a background pane when measured, so treat the figure as a first reading.
+
 ## Not built yet
 
 - Hats that react to weather, and other small surprises from the build prompt's list. (The hidden valley is built: `HIDDEN` in `worlds.js`, id `H`, opened by a full page of stamps.)
