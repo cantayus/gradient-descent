@@ -1,9 +1,10 @@
 // Start-up and the frame loop. The screens (title, levels, card, notebook, settings) are in js/ui/; this file runs a level, or the scene behind the title,
 // and turns what happens in it into sound.
 import { input, initInput, initTouch, readInput } from './core/input.js';
+import { daySprites } from './art/stamps.js';
 import { Q } from './art/paint.js';
 import { Play } from './game/play.js';
-import { WORLDS, levelById, TITLE, ALL, ENDING } from './data/worlds.js';
+import { WORLDS, levelById, TITLE, ALL, ENDING, todayId } from './data/worlds.js';
 import { save, loadSave } from './core/save.js';
 import { setVolumes, setIntensity, ambient, quiet, sfx, voice } from './core/audio.js';
 import * as UI from './ui/ui.js';
@@ -22,27 +23,34 @@ function resize() {
   if (G.play) G.play.resize(G.W, G.H);
 }
 addEventListener('resize', resize);
-function applyGfx() { const s = save.settings.gfx; G.gfx = q.has('gfx') ? +q.get('gfx') : s < 0 ? G.auto : s; Q.k = [1, 1.25, 1.75, 2.5][G.gfx] || 1; Q.far = [1, 1.15, 1.5, 2][G.gfx] || 1; resize(); if (G.play) G.play.scene.q = G.gfx; document.body.dataset.gfx = G.gfx; document.body.classList.toggle('safe', !!save.settings.safe); }
+function applyGfx() { const s = save.settings.gfx; G.gfx = q.has('gfx') ? +q.get('gfx') : s < 0 ? G.auto : s; Q.k = [1, 1.25, 1.75, 2.5][G.gfx] || 1; Q.far = [1, 1.15, 1.5, 2][G.gfx] || 1; resize(); if (G.play) { G.play.scene.q = G.gfx; G.play.scene.safe = !!save.settings.safe; } document.body.dataset.gfx = G.gfx; document.body.classList.toggle('safe', !!save.settings.safe); }
 function applyText() { document.documentElement.style.setProperty('--fs', save.settings.text || 1); }
 
 // Three lights and a time limit; with assist, five lights and all the time in the world. The limit is generous: a little over twice a good first run.
-export const rules = (spec) => (spec.tutorial ? { lights: 3, limit: Infinity } : save.settings.assist ? { lights: 5, limit: Infinity } : { lights: 3, limit: Math.round(spec.par * (spec.boss ? 2.5 : 2.3)) });
+export const rules = (spec) => (spec.tutorial || spec.endless ? { lights: 3, limit: Infinity } : save.settings.assist ? { lights: 5, limit: Infinity } : { lights: 3, limit: Math.round(spec.par * (spec.boss ? 2.5 : 2.3)) });
 export function startLevel(id, opt = {}) {
   const f = levelById(id); if (!f) return null;
-  G.play = new Play({ spec: f.spec, theme: f.world.theme, can: { ...f.world.can, ...(f.spec.can || {}) }, ghost: opt.ghost || null, hooks: G.hooks, intro: !!opt.intro, ...rules(f.spec) });
-  G.play.scene.q = G.gfx; G.play.resize(G.W, G.H); G.levelId = id; G.mode = 'level'; S.reset(); return G.play;
+  G.play = new Play({ spec: f.spec, theme: f.world.theme, can: { ...f.world.can, ...(f.spec.can || {}) }, ghost: opt.ghost || null, hooks: G.hooks, intro: !!opt.intro, meet: !!opt.meet, ...rules(f.spec) });
+  G.play.scene.q = G.gfx; G.play.scene.safe = !!save.settings.safe; G.play.resize(G.W, G.H); G.levelId = id; G.mode = 'level'; S.reset(); return G.play;
 }
 // The country behind the title and the menus: the hero on a ledge, looking out, at whatever hour it is where the player is.
 function attract() {
-  if (G.mode === 'title' && G.play && !G.play.end) return G.play;
+  if (G.mode === 'title' && G.play && !G.play.end && !G.play.arrive) return G.play;
   const h = new Date().getHours(), time = q.get('time') || (h < 5 ? 'night' : h < 8 ? 'dawn' : h < 16 ? 'day' : h < 19 ? 'golden' : h < 22 ? 'dusk' : 'night');
   const reached = WORLDS.findLast((w) => w.levels.some((l) => save.levels[l.id]?.done)) || WORLDS[0];
   const world = WORLDS.find((w) => w.id === q.get('world')) || reached;
   G.play = new Play({ spec: { ...TITLE(...world.title), time: world.theme.times[time] ? time : 'day' }, theme: world.theme, can: world.can, cine: true, hooks: {} });
   G.play.scene.q = G.gfx; G.play.resize(G.W, G.H); G.mode = 'title'; G.paused = false; S.reset(); return G.play;
 }
+// The way to a country: its own title scene, with Theta arriving in it.
+function travel(id, kind) { const world = WORLDS.find((w) => w.id === id) || WORLDS[0], h = new Date().getHours(), time = h < 5 ? 'night' : h < 8 ? 'dawn' : h < 16 ? 'day' : h < 19 ? 'golden' : h < 22 ? 'dusk' : 'night';
+  G.play = new Play({ spec: { ...TITLE(...world.title), time: world.theme.times[time] ? time : 'day' }, theme: world.theme, can: {}, cine: true, travel: { kind, dark: id === 'patagonia' || id === 'yakushima' }, hooks: {} }); G.play.end = G.play.end || null; G.play.arrive = true; G.play.scene.q = G.gfx; G.play.resize(G.W, G.H); G.mode = 'title'; G.paused = false; S.reset(); return G.play; }
 // The last scene: the hollow in the old forest.
-function ending() { const world = WORLDS.find((w) => w.id === 'yakushima'); G.play = new Play({ spec: ENDING, theme: world.theme, can: world.can, cine: true, ending: true, hooks: {} }); G.play.scene.q = G.gfx; G.play.resize(G.W, G.H); G.mode = 'title'; G.paused = false; S.reset(); return G.play; }
+function ending() { const world = WORLDS.find((w) => w.id === 'yakushima'), from = (id, name, dx, t, o = {}) => { const w = WORLDS.find((k) => k.id === id), list = w && daySprites(w.theme)[name]; return list ? { sp: list[0], dx, t, ...o } : null; };
+  // one or two from each country, in the order the countries were crossed. The old macaque came with Theta, so he is there first.
+  const guests = [{ s: 'elder', dx: 2.1, t: 6 }, from('iceland', 'puffin', -3, 11), from('iceland', 'horse', -10.6, 12), from('cappadocia', 'balloon', -7.5, 13.5, { up: 7.6, size: 0.42 }), from('galapagos', 'tortoise', 4.4, 15), from('galapagos', 'booby', 6.2, 16),
+    from('namib', 'oryx', -7.4, 18), from('zhangjiajie', 'macaque', -4.6, 20), from('patagonia', 'guanaco', 8.4, 22), { s: 'deer', dx: 11.4, t: 24 }, from('cappadocia', 'balloon', 10.5, 26, { up: 9.4, size: 0.3 })].filter(Boolean);
+  G.play = new Play({ spec: ENDING, theme: world.theme, can: world.can, cine: true, ending: { guests }, hooks: {} }); G.play.scene.q = G.gfx; G.play.resize(G.W, G.H); G.mode = 'title'; G.paused = false; S.reset(); return G.play; }
 function greet() { const p = G.play; if (!p || G.mode !== 'title') return; p.rig.feel('joy', 1.8); p.rig.sq.kick(5); setTimeout(() => voice.trill(), 350); }
 
 // ---- what the hero's doings sound like ----
@@ -65,6 +73,7 @@ G.hooks = {
     else if (name === 'stamp') { sfx.stamp(); setTimeout(() => voice.trill(), 200); }
     else if (name === 'dew') sfx.dew();
     else if (name === 'feather') sfx.feather();
+    else if (name === 'meet') { if (extra === 'see') voice.hm(); else { sfx.hop(); setTimeout(() => voice.trill(), 200); UI.muMet(); } }
     else if (name === 'turbo') { sfx.turbo(); say(() => voice.whee(0.6), 0); }
     else if (name === 'spark') sfx.medal(0);
     else if (name === 'saved') { sfx.back(); say(() => voice.eep(), 0); }
@@ -107,11 +116,16 @@ function frame(now) {
 
 // film grain, made once and handed to the page to lay over the picture
 { const c = document.createElement('canvas'); c.width = c.height = 180; const x = c.getContext('2d'), im = x.createImageData(180, 180); for (let i = 0; i < im.data.length; i += 4) { const v = Math.random() * 255; im.data[i] = im.data[i + 1] = im.data[i + 2] = v; im.data[i + 3] = 30; } x.putImageData(im, 0, 0); const g = document.querySelector('#grade .grain'); if (g) g.style.backgroundImage = `url(${c.toDataURL()})`; }
-loadSave(); applyText(); applyGfx(); setVolumes({ music: save.settings.music, sfx: save.settings.sfx, voice: save.settings.voice });
+loadSave(); if (save.settings.keys) Object.assign(input.keys, save.settings.keys); UI.applyWear(); applyText(); applyGfx(); setVolumes({ music: save.settings.music, sfx: save.settings.sfx, voice: save.settings.voice });
 initInput(); initTouch(document.getElementById('touch'));
-UI.initUI({ G, startLevel, attract, ending, greet, applyGfx, applyText, unlockAll: q.has('unlock') || q.has('class'), forceIntro: q.has('intro') });
+UI.initUI({ G, startLevel, attract, ending, travel, greet, applyGfx, applyText, unlockAll: q.has('unlock') || q.has('class'), forceIntro: q.has('intro') });
 // For looking at one level directly: ?level=1-1, with &x= to stand somewhere along it, &time= to change the hour, &run to hold right and &wx=0..1 to fix the weather.
 if (q.has('ending')) UI.showEnding();
+else if (q.has('teachers')) UI.showTeachers();
+else if (q.has('lab')) UI.showLab();
+else if (q.has('sort')) UI.showSort(+q.get('sort') || 1);
+else if (q.has('more')) UI.showMore();
+else if (q.has('daily')) UI.play(todayId());
 else if (q.has('level')) {
   const f = levelById(q.get('level')); if (f && q.has('time')) f.spec.time = q.get('time');
   UI.play(q.get('level'), !q.has('story')); const p = G.play;

@@ -14,6 +14,20 @@ export const COL = {
   cheek: '#ff9f8a', mouth: '#7a3a45', tongue: '#ff9aa2',
   foot: '#34808a', earIn: '#ffc9b8', pouch: '#f5ddb8', seed: '#ffd75e', seedHot: '#fff6c8', flap: '#ffdcc6',
 };
+// What Theta is wearing, chosen in the wardrobe. It changes nothing but the picture.
+export const WEAR = { hat: null, trail: null };
+function hat(ctx, kind, x, a) {
+  ctx.save(); ctx.translate(x, -0.47); ctx.globalAlpha *= a; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+  if (kind === 'leaf') { ctx.rotate(-0.5); ctx.strokeStyle = '#3f7230'; ctx.lineWidth = 0.025; ctx.beginPath(); ctx.moveTo(0, 0.04); ctx.lineTo(0.02, -0.3); ctx.stroke(); ctx.fillStyle = '#7fc850'; ctx.beginPath(); ctx.moveTo(0, -0.04); ctx.quadraticCurveTo(0.2, -0.16, 0.03, -0.36); ctx.quadraticCurveTo(-0.16, -0.18, 0, -0.04); ctx.fill(); ctx.stroke(); }
+  else if (kind === 'cap') { ctx.fillStyle = '#c8483a'; ctx.beginPath(); ctx.moveTo(-0.3, 0.1); ctx.quadraticCurveTo(-0.3, -0.26, 0, -0.27); ctx.quadraticCurveTo(0.3, -0.26, 0.3, 0.1); ctx.closePath(); ctx.fill(); ctx.strokeStyle = '#f4f0e8'; ctx.lineWidth = 0.03; ctx.beginPath(); for (let i = -4; i <= 4; i++) { ctx.moveTo(i * 0.06 - 0.02, -0.04); ctx.lineTo(i * 0.06, -0.1); ctx.lineTo(i * 0.06 + 0.02, -0.04); } ctx.stroke();
+    ctx.fillStyle = '#f4f0e8'; ctx.beginPath(); ctx.roundRect(-0.33, 0.04, 0.66, 0.1, 0.05); ctx.fill(); ctx.beginPath(); ctx.arc(0, -0.31, 0.075, 0, TAU); ctx.fill(); }
+  else if (kind === 'poppy') { ctx.translate(0.2, 0.02); ctx.fillStyle = '#e8503c'; for (let i = 0; i < 5; i++) { ctx.beginPath(); ctx.ellipse(Math.cos(i * 1.257) * 0.07, Math.sin(i * 1.257) * 0.07, 0.075, 0.06, i * 1.257, 0, TAU); ctx.fill(); } ctx.fillStyle = '#2a2224'; ctx.beginPath(); ctx.arc(0, 0, 0.035, 0, TAU); ctx.fill(); }
+  else if (kind === 'straw') { ctx.fillStyle = '#e8c878'; ctx.beginPath(); ctx.ellipse(0, 0.05, 0.46, 0.085, 0, 0, TAU); ctx.fill(); ctx.fillStyle = '#f4dc98'; ctx.beginPath(); ctx.moveTo(-0.24, 0.03); ctx.quadraticCurveTo(-0.22, -0.26, 0, -0.26); ctx.quadraticCurveTo(0.22, -0.26, 0.24, 0.03); ctx.closePath(); ctx.fill(); ctx.fillStyle = '#c8483a'; ctx.fillRect(-0.24, -0.03, 0.48, 0.055); ctx.strokeStyle = 'rgba(150,110,50,0.5)'; ctx.lineWidth = 0.012; for (let i = -3; i <= 3; i++) { ctx.beginPath(); ctx.moveTo(i * 0.06, -0.24); ctx.lineTo(i * 0.07, -0.05); ctx.stroke(); } }
+  else if (kind === 'fern') { for (let i = -3; i <= 3; i++) { ctx.save(); ctx.translate(i * 0.085, 0.07 - Math.abs(i) * 0.01); ctx.rotate(i * 0.2); ctx.fillStyle = i % 2 ? '#5fa848' : '#8fd060'; ctx.beginPath(); ctx.moveTo(0, 0); ctx.quadraticCurveTo(0.07, -0.1, 0, -0.22); ctx.quadraticCurveTo(-0.07, -0.1, 0, 0); ctx.fill(); ctx.restore(); } }
+  else if (kind === 'acorn') { ctx.fillStyle = '#8a5a3c'; ctx.beginPath(); ctx.moveTo(-0.3, 0.1); ctx.quadraticCurveTo(-0.28, -0.2, 0, -0.21); ctx.quadraticCurveTo(0.28, -0.2, 0.3, 0.1); ctx.closePath(); ctx.fill(); ctx.strokeStyle = 'rgba(60,36,24,0.5)'; ctx.lineWidth = 0.014; for (let j = 0; j < 3; j++) { ctx.beginPath(); for (let i = -4; i <= 4; i++) ctx.arc(i * 0.06 + (j % 2) * 0.03, 0.04 - j * 0.07, 0.03, Math.PI, 0); ctx.stroke(); } ctx.strokeStyle = '#6a4028'; ctx.lineWidth = 0.035; ctx.beginPath(); ctx.moveTo(0, -0.2); ctx.quadraticCurveTo(0.02, -0.28, 0.07, -0.3); ctx.stroke(); }
+  else if (kind === 'sprout') { ctx.strokeStyle = '#5fa848'; ctx.lineWidth = 0.03; ctx.beginPath(); ctx.moveTo(0, 0.05); ctx.lineTo(0, -0.2); ctx.stroke(); for (const sd of [-1, 1]) { ctx.fillStyle = sd < 0 ? '#7fc850' : '#b8f060'; ctx.beginPath(); ctx.moveTo(0, -0.18); ctx.quadraticCurveTo(sd * 0.2, -0.3, sd * 0.2, -0.12); ctx.quadraticCurveTo(sd * 0.08, -0.1, 0, -0.18); ctx.fill(); } ctx.fillStyle = '#fff3b8'; ctx.beginPath(); ctx.arc(0, -0.24, 0.035, 0, TAU); ctx.fill(); }
+  ctx.restore();
+}
 const TAU = Math.PI * 2, lerp = (a, b, t) => a + (b - a) * t, clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
 
 // The neutral pose. Every number can be changed; drawTheta reads them all.
@@ -181,6 +195,7 @@ export function drawTheta(ctx, p) {
   }
   if (up > 0.05) { ctx.save(); ctx.globalAlpha *= clamp(up * 1.6, 0, 1); limb(fA, 0.14, 0.08, COL.foot); limb(fB, 0.15, 0.085, COL.foot); limb(hB, 0.062, 0.098, COL.body); ctx.restore(); }
   ear(ctx, eB.x, eB.y, eB.a, earLen, earWid, p, false);
+  if (WEAR.hat && !ghost && up > 0.3) hat(ctx, WEAR.hat, shift * 0.6, clamp((up - 0.3) * 2.5, 0, 1));
   ctx.restore();
 }
 

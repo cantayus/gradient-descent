@@ -2,8 +2,10 @@
 const KEY = 'gradient-descent-v1';
 const blank = () => ({ v: 1, levels: {}, cards: [], seen: {}, settings: { music: 0.7, sfx: 0.8, voice: 0.8, gfx: -1, motion: true, text: 1, assist: false, keys: null, safe: false } });
 export const save = blank();
-export function loadSave() { try { const raw = localStorage.getItem(KEY); if (raw) { const d = JSON.parse(raw), b = blank(); Object.assign(save, b, d, { settings: { ...b.settings, ...(d.settings || {}) } }); } } catch (e) { /* a private window, or a full disk: play on without it */ } return save; }
-export function store() { try { localStorage.setItem(KEY, JSON.stringify(save)); } catch (e) { /* as above */ } }
+// The classroom link (?class) opens everything and keeps nothing: a teacher's slide must not write over a player's progress.
+const CLASS = typeof location !== 'undefined' && /[?&]class\b/.test(location.search);
+export function loadSave() { if (CLASS) return save; try { const raw = localStorage.getItem(KEY); if (raw) { const d = JSON.parse(raw), b = blank(); Object.assign(save, b, d, { settings: { ...b.settings, ...(d.settings || {}) } }); } } catch (e) { /* a private window, or a full disk: play on without it */ } return save; }
+export function store() { if (CLASS) return; try { localStorage.setItem(KEY, JSON.stringify(save)); } catch (e) { /* as above */ } }
 export function resetSave() { const b = blank(); b.settings = save.settings; for (const k of Object.keys(save)) delete save[k]; Object.assign(save, b); store(); }
 // Record a finished run. Returns what was new about it.
 export function record(id, res, medalTimes, assisted) {

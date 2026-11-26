@@ -92,6 +92,7 @@ export class Scene {
     { const wx = this.wx, t = this.t;
     if (time.shafts && this.q && time.sun) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; const s = time.sun || { x: 0.8, y: 0.1 }; for (let i = 0; i < 6; i++) { const a = 0.9 + i * 0.16 + Math.sin(t * 0.13 + i) * 0.03, len = H * 1.5, wdt = H * (0.03 + 0.03 * hash1(i, 71)), al = time.shafts * (1 - wx.cover) * (0.5 + 0.5 * Math.sin(t * 0.35 + i * 1.7)); const g = ctx.createLinearGradient(s.x * W, s.y * H, s.x * W - Math.cos(a) * len, s.y * H + Math.sin(a) * len); g.addColorStop(0, rgba(time.sun?.glow || '#ffffff', al)); g.addColorStop(1, rgba(time.sun?.glow || '#ffffff', 0)); ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(s.x * W, s.y * H); ctx.lineTo(s.x * W - Math.cos(a - 0.03) * len - wdt, s.y * H + Math.sin(a - 0.03) * len); ctx.lineTo(s.x * W - Math.cos(a + 0.03) * len + wdt, s.y * H + Math.sin(a + 0.03) * len); ctx.closePath(); ctx.fill(); } ctx.restore(); } }      // shafts of light fall through the air behind the ground, never through the earth
     ctx = main; ctx.setTransform(1, 0, 0, 1, sx, sy); ctx.drawImage(this.farC, 0, 0, W, H);
+    if (this.safe) { ctx.fillStyle = rgba(time.dark > 0.3 ? time.shade : '#ffffff', 0.42); ctx.fillRect(0, 0, W, H); }      // high contrast: the far country is pushed back, so that nothing in it can be taken for the ground
     // world space from here: one unit is S pixels, and y is flipped by hand (draw at -y)
     const ox = W / 2 - cam.x * S + sx, oy = H / 2 + cam.y * S + sy;
     ctx.setTransform(S, 0, 0, S, ox, oy);
@@ -99,6 +100,9 @@ export class Scene {
     this._behind(ctx, x0, x1, cam);
     this._water(ctx, x0, x1, false);
     this._ground(ctx, x0, x1, cam);
+    if (this.safe) { // high contrast: a bright line along everything that can be stood on
+      const T = this.T, tt = this.pt ?? this.t; ctx.lineJoin = 'round'; ctx.lineCap = 'round'; for (const [col, lw] of [['rgba(10,16,28,0.9)', 0.2], ['#ffffff', 0.09]]) { ctx.strokeStyle = col; ctx.lineWidth = lw; ctx.beginPath(); let pen = false; for (let x = x0; x <= x1; x += 0.25) { if (this.level.pits.some((p) => x > p.x0 && x < p.x1)) { pen = false; continue; } const y = -T.h(x); pen ? ctx.lineTo(x, y) : ctx.moveTo(x, y); pen = true; }
+        for (const p of T.platforms) { const st = p.move ? p.move(tt) : p, a = st.x0 ?? p.x0, b = st.x1 ?? p.x1; if (b < x0 || a > x1) continue; ctx.moveTo(a, -(st.y0 ?? p.y0)); ctx.lineTo(b, -(st.y1 ?? p.y1)); } ctx.stroke(); } }
     if (this.overlay) this.overlay(ctx, x0, x1);
     this._things(ctx, x0, x1, actors);
     this._water(ctx, x0, x1, true);
@@ -350,7 +354,10 @@ export class Scene {
       else if (it.kind === 'dew') { const g = ctx.createRadialGradient(-0.06, 0.02, 0.02, 0, 0.04, 0.26); g.addColorStop(0, '#ffffff'); g.addColorStop(0.5, '#a8e4ff'); g.addColorStop(1, '#4fa8e8'); ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(0, -0.34); ctx.bezierCurveTo(0.08, -0.14, 0.24, -0.04, 0.22, 0.1); ctx.bezierCurveTo(0.2, 0.26, -0.2, 0.26, -0.22, 0.1); ctx.bezierCurveTo(-0.24, -0.04, -0.08, -0.14, 0, -0.34); ctx.fill(); ctx.fillStyle = 'rgba(255,255,255,0.9)'; ctx.beginPath(); ctx.ellipse(-0.08, 0.02, 0.04, 0.07, 0.5, 0, TAU); ctx.fill(); }
       else { ctx.rotate(-0.6 + Math.sin(t * 1.7 + it.x) * 0.3); ctx.strokeStyle = '#fff3e4'; ctx.lineWidth = 0.035; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(-0.42, 0); ctx.lineTo(0.42, 0); ctx.stroke(); const g = ctx.createLinearGradient(-0.3, 0, 0.42, 0); g.addColorStop(0, '#f6a27e'); g.addColorStop(1, '#e8603c'); ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(-0.26, 0); ctx.quadraticCurveTo(0.05, -0.26, 0.44, -0.02); ctx.quadraticCurveTo(0.05, 0.24, -0.26, 0); ctx.fill(); ctx.strokeStyle = 'rgba(255,255,255,0.5)'; ctx.lineWidth = 0.015; for (let i = 0; i < 5; i++) { ctx.beginPath(); ctx.moveTo(-0.1 + i * 0.1, 0); ctx.lineTo(-0.02 + i * 0.1, -0.11 + i * 0.012); ctx.moveTo(-0.1 + i * 0.1, 0); ctx.lineTo(-0.02 + i * 0.1, 0.1 - i * 0.012); ctx.stroke(); } }
       ctx.restore(); }
-    for (const c of A.critters || []) { if (c.x < x0 - 2 || c.x > x1 + 2) continue; const list = this.spr[c.s]; if (list) stamp(ctx, list[Math.floor(c.frame || 0) % list.length], c.x, -c.y, c.size || 1, c.rot || 0, c.flip); }
+    for (const c of A.critters || []) { if (c.hide || c.x < x0 - 4 || c.x > x1 + 4) continue; const list = c.sp ? [c.sp] : this.spr[c.s]; if (!list) continue; if (c.a != null) { if (c.a <= 0) continue; ctx.globalAlpha = c.a; }
+      stamp(ctx, list[Math.floor(c.frame || 0) % list.length], c.x, -c.y, c.size || 1, c.rot || 0, c.flip); ctx.globalAlpha = 1;
+      if (c.q) { const bx = c.x + 0.5, by = -c.y - 2.05 - Math.sin(t * 3) * 0.05; ctx.fillStyle = 'rgba(255,255,255,0.94)'; ctx.beginPath(); ctx.ellipse(bx, by, 0.36, 0.4, 0, 0, TAU); ctx.fill(); ctx.beginPath(); ctx.moveTo(bx - 0.2, by + 0.3); ctx.lineTo(bx - 0.36, by + 0.62); ctx.lineTo(bx, by + 0.38); ctx.closePath(); ctx.fill();
+        ctx.strokeStyle = '#23434d'; ctx.lineWidth = 0.075; ctx.lineCap = 'round'; ctx.beginPath(); ctx.arc(bx, by - 0.1, 0.13, Math.PI * 1.05, Math.PI * 2.45); ctx.lineTo(bx, by + 0.1); ctx.stroke(); ctx.fillStyle = '#23434d'; ctx.beginPath(); ctx.arc(bx, by + 0.24, 0.045, 0, TAU); ctx.fill(); } }
   }
 
   _actors(ctx, A, S) {

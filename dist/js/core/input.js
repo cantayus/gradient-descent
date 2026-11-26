@@ -2,6 +2,7 @@
 const KEYS = {
   left: ['ArrowLeft', 'KeyA'], right: ['ArrowRight', 'KeyD'], jump: ['Space', 'KeyZ', 'KeyW', 'ArrowUp', 'KeyK'], tuck: ['ShiftLeft', 'ShiftRight', 'KeyX', 'ArrowDown', 'KeyS', 'KeyJ'], turbo: ['KeyE', 'KeyC', 'KeyL', 'ControlLeft', 'ControlRight'],
 };
+export const DEFAULT_KEYS = KEYS;
 export const input = { move: 0, jump: false, jumpNow: false, turboNow: false, tuck: false, any: false, keys: structuredClone(KEYS), down: new Set(), touch: { move: 0, jump: false, tuck: false }, pad: { move: 0, jump: false, tuck: false }, on: {} };
 const has = (name) => input.keys[name].some((k) => input.down.has(k));
 

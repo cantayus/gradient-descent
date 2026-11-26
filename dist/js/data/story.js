@@ -21,7 +21,7 @@ export const STORY = {
     'An old tortoise had watched water all its life. Water always knows the way down.',
     'So they found a river, and followed it to the place where it stops.'] },
   '5-1': { title: 'The ravines', at: 4, lines: [
-    'The river stopped in a white pan between the dunes, flat as a table. Trees had been planted there once. They were still standing, dead for centuries.',
+    'The river stopped in a white pan between the dunes, flat as a table. Trees had grown there once. They were still standing, dead for centuries.',
     'Wherever the seed belonged, it was somewhere with water.',
     'The oryx looked east, toward mountains that live in cloud.'] },
   '6-1': { title: 'The far end of the world', at: 5, lines: [
@@ -31,9 +31,9 @@ export const STORY = {
   '7-1': { title: 'The old forest', at: 6, lines: [
     'Ice had cut those valleys wide and deep. The wind in them could knock a traveller flat, and nothing small stayed where it was put.',
     'A condor knew of an island where it rains nearly every day, and cedars a thousand years old stand in the moss.',
-    'If anything planted long ago is still growing, it is growing there.'] },
+    'If anything that took root long ago is still growing, it is growing there.'] },
   end: { title: 'The lowest valley', at: 6, lines: [
-    'In a valley on Yakushima, among trees that were old before the stories were told, Theta set the seed down.',
-    'It was not the deepest place they had found. It was the first place where things planted long ago were still growing.',
-    'The seed took root.'] },
+    'On Yakushima the streams run down through the oldest forest there is, and Theta followed them, one step at a time.',
+    'They came to rest in a hollow among cedars a thousand years old. Below it there were only cracks in the rock, where nothing grows. No lower ground was left that could hold a root.',
+    'Theta set the seed down, and it took root.'] },
 };

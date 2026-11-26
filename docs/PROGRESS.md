@@ -118,13 +118,35 @@ After the last world a sandbox opens: pick a landscape, set learning rate, momen
 - The ending (`Play._ending`, `ENDING` in `worlds.js`, `showEnding` in `ui.js`; `?ending` to see it): Theta sets the seed down in a mossy hollow, it takes root
   and grows, the picture draws back, and the last chapter is told beneath it. It follows level 7-B, and leads to the credits.
 
+- The extras (owner: "Build all extras you can"), all reached from "More" on the title menu unless said otherwise:
+  - Today's valley (`todayId`, `made` and `generated` in `worlds.js`): one generated valley a day, the same for everyone (the day is counted in universal time), in a
+    country that changes daily, with a line of text to copy and send. Three weeks of them are run by the scripted player in the checks.
+  - The long descent: one long generated hill (3,400 units) that grows harder; three lights, no time limit, dewdrops now and then; the score is the distance.
+    Opens when the journey is finished (or with `?unlock` / `?class`).
+  - Sort! (`showSort`): seeds to the left, stones to the right, under a minute, then a scorecard with precision and recall. One is offered after each country's
+    last level, once; from the second on, colour sometimes lies and shape tells.
+  - The lab (`showLab`, `js/data/lab.js`): seven hills in one dimension, sliders for the learning rate, momentum, noise and a limit on the slope, and Theta
+    descending by the real rule while the loss curve draws itself. Six ready-made settings repeat what went wrong at the end of a country and say the one thing
+    to change. `tests/lab.test.mjs` proves the rule and every caption. Opens after the ending.
+  - For teachers (`showTeachers`, `?teachers`): every level, its idea, and a question for the class (`ASK`, `BOSS` in `notebook.js`), with links that open any
+    level with everything unlocked and nothing saved (`?class`; `save.js` neither reads nor writes with it).
+  - Wardrobe (`showWardrobe`): six colours, seven hats and three trails, earned with seeds and stamps. `COL` and `WEAR` in `theta.js`.
+  - Keys (Settings, "Choose keys") and a real high-contrast mode (Settings, "Colours"): no tint, mist pushed back, a bright line on everything that can be stood on.
+- Story scenes: the meeting with Mu at the start of 2-1 (`Play.meet`, once), an arrival scene behind each country's chapter (`Play.trav`: balloon, bird or a
+  current of air, landing in that country's title scene), the old macaque following Theta to the end of 7-B, and the ending grown into a tree with one or two
+  animals from each country gathered round it, the credits rolling over the scene, and the lab offered afterwards.
+- The story is kept true to the lesson (build prompt: "The lowest valley is the best place, and the way to it is found one step at a time"): Yakushima's light
+  is in the lowest hollow that can hold a root, and what lies past it is a crack in the rock, not a valley.
+- Picture quality (owner: "very high quality - 4K if possible"): an Ultra setting paints up to 3840x2160; sprites are painted more finely as the setting rises
+  (`Q` in `paint.js`); the far country is painted at full size on Full and Ultra; far peaks and dunes have shaded faces and lit spurs (`SPUR` in `scene.js`)
+  and every far ridge has brush texture. Auto picks Ultra on a 4K screen and steps down if frames drop.
+
 ## Not built yet
 
-- All seven worlds are built. What is left is polish and the extras below.
-- Cappadocia still wants: a scene in which Mu joins (like the opening scene), a boss with something of its own (now it is a hard run of hollows), a play-through by hand for feel, better poplars.
-- The wordless story scenes, Sort! bonus stages, the daily valley, endless mode, the lab with sliders, the teacher page, the share card.
-- Key rebinding screen (the hooks exist in `input.js`), high-contrast palette (the setting exists, the palette does not), a larger landing margin for assist.
-- Iceland still wants: a visible great geyser behind the boss level, an arctic fox, richer detail in the cut earth.
+- A hidden level, hats that react to weather, and other small surprises from the build prompt's list.
+- A play-through by hand for feel, and a frame-rate check on real hardware: every number here comes from a scripted player and a software renderer.
+- Cappadocia's last level still has no mechanic of its own. Poplars and oryx could be drawn better. Iceland wants a great geyser behind its boss level.
+- The in-level hints name the usual keys even after the keys have been changed.
 
 ## Checks to run
 

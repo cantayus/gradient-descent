@@ -1,3 +1,4 @@
+import { RNG } from '../core/rng.js';
 // The worlds and their levels. A level is a list of strokes (see js/game/level.js); lengths and heights are in units, one unit about the hero's height.
 // `can` says what the hero has learned by then. `time` is the hour the level is painted in. `card` is the notebook page it opens.
 // `par` is the time a good first run takes; the medal times are set from it (see medals()).
@@ -245,8 +246,9 @@ const flood = (L, depth = 1.7, at = [0.28, 0.5, 0.72], o = {}) => brook(L, depth
 const gully = (L, depth, log = true, o = {}) => ['valley', L, depth, 0, { zone: RT, seeds: [{ at: 0.5, up: 0.9 - depth }, { at: 0.5, up: 1.3 }], ...(log ? { plat: [{ at: 0.5, up: 0.3, w: L * 0.86, kind: 'log', type: 'wood' }] } : {}), ...o }];
 // One verse of the path: roots, a brook, a drop, a log, a crack, a mossy slope. Three times over and it is known by heart.
 // The fourth time something has changed, and the seeds still lie where they lay before.
-const verse = (o = {}) => [roots(18, 3, -1), brook(16, 1.5, o.stones || [0.3, 0.52, 0.74], { seeds: [0.3, 0.52, 0.74].map((a) => ({ at: a, up: 0.9 })) }), fall(22, -8), gully(14, 3.4, o.log !== false), duff(10, 1, o.memo ? { mark: 'memo' } : {}), ['gap', o.gap || 3], duff(10, 1), mossy(20, -7)];
-// The shelf where the light is, and the deeper ground beyond it where nothing is: the place to stop is not the lowest place.
+const verse = (o = {}) => [roots(18, 3, -1), brook(16, 1.5, o.stones || [0.3, 0.52, 0.74], { seeds: [0.3, 0.52, 0.74].map((a) => ({ at: a, up: 0.9 })) }), fall(22, -8), gully(14, 3.4, o.log !== false), duff(10, 1, o.memo ? { mark: 'memo', text: o.stones || o.gap || o.log === false ? 'q' : '' } : {}), ['gap', o.gap || 3], duff(10, 1), mossy(20, -7)];
+// The last hollow, where the light is, and past it a crack in the rock where nothing is. The crack is deeper, but it is not a valley:
+// the lowest ground that can hold anything is the place to stop, and going on past it is going too far.
 const shelf = (depth = 2.4) => [['bowl', 18, depth, depth - 0.4, { zone: MS, surf: 'moss' }], ['slope', 14, -11, { zone: RT }], ['gap', 16, -8], ['flat', 12, { zone: RT }]];
 const YAK = [
   { id: '7-1', name: 'The Old Forest', time: 'dawn', card: 'general', par: 41, zone: RT,
@@ -293,8 +295,41 @@ export const WORLDS = [
   { id: 'patagonia', n: 6, name: 'Patagonia', theme: patagonia, music: 'patagonia', can: { slide: true, roll: true, spread: true, mu: true }, title: ['pampa', 'lenga'], levels: PAT },
   { id: 'yakushima', n: 7, name: 'Yakushima', theme: yakushima, music: 'yakushima', can: { slide: true, roll: true, spread: true, mu: true }, title: ['moss', 'cedar'], cautious: true, levels: YAK },
 ];
-export const levelById = (id) => { if (id === 'T') return { world: WORLDS[0], spec: TUTORIAL }; for (const w of WORLDS) for (const l of w.levels) if (l.id === id) return { world: w, spec: l }; return null; };
+export const levelById = (id) => { if (id === 'T') return { world: WORLDS[0], spec: TUTORIAL }; if (/^[DE]-/.test(id)) return made(id); for (const w of WORLDS) for (const l of w.levels) if (l.id === id) return { world: w, spec: l }; return null; };
 export const ALL = WORLDS.flatMap((w) => w.levels.map((l) => l.id));
 export const nextLevel = (id) => { const i = ALL.indexOf(id); return i >= 0 && i < ALL.length - 1 ? ALL[i + 1] : null; };
 // Gold is a clean, quick run. Silver and bronze give more room.
 export const medals = (spec) => [spec.par * 0.78, spec.par, spec.par * 1.35];
+
+// ---- generated ground: the daily valley and the long descent ----
+// Built from the same pieces as the made levels by a seeded hand, under rules that keep it fair: a level stretch before every gap and after it,
+// no gap wider than a held jump can cross unless a ramp and a drop come with it, and a hollow only where the hero can roll.
+const c01 = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
+export function generated(seed, world, { length = 500, hard = (u) => 0.3 + 0.5 * u, own = false } = {}) {
+  const r = new RNG(seed), [z1, z2] = world.title, roll = !!world.can.roll, S = [['flat', 10, { zone: z1 }]]; let L = 10, last = 'flat', dewAt = 300;
+  const Z = () => (r.chance(0.5) ? z1 : z2), flat = (len, seeds = 1, o = {}) => { S.push(['flat', len, { zone: Z(), seeds, ...o }]); L += len; last = 'flat'; };
+  let gapEnd = -99;      // a jump taken at speed carries a long way: no second gap until there has been room to come down and look
+  while (L < length) { const h = c01(hard(L / length)), p0 = r.u(), p = p0 >= 0.7 && L - gapEnd < 30 ? p0 * 0.55 : p0;
+    if (own && L > dewAt) { flat(12, 0, { items: [{ kind: 'dew', at: 0.5, up: 1.25 }] }); dewAt += 380 + 160 * h; continue; }
+    if (last !== 'flat' && p < 0.16) { flat(r.int(8, 14), r.int(1, 2)); continue; }
+    if (p < 0.4 && L > length - 75) { flat(r.int(10, 14), 2); continue; }      // the last stretch is level or rolling: nothing arrives at the valley too fast to stop in it
+    if (p < 0.4) { const len = r.int(22, 34); S.push(['slope', len, -Math.round(len * r.range(0.28, 0.42)), { zone: Z(), seeds: 3 }]); L += len; last = 'slope'; }
+    else if (p < 0.52) { const len = r.int(14, 20); S.push(['hill', len, +r.range(1.4, 2 + 1.4 * h).toFixed(1), -1, { zone: Z(), seeds: 2 }]); L += len; last = 'hill'; }
+    else if (p < 0.62) { const len = r.int(14, 18); S.push(['valley', len, +r.range(1.2, 1.6 + h).toFixed(1), 0, { zone: Z(), seeds: 1 }]); L += len; last = 'valley'; }
+    else if (p < 0.7) { S.push(['waves', 16, 0.7, 3, -1, { zone: Z(), seeds: 2 }]); L += 16; last = 'waves'; }
+    else if (p < 0.86 || !roll) { if (last !== 'flat') flat(10, 1); const w = +(2.5 + r.u() * (0.8 + (own ? 2.8 : 2.2) * h)).toFixed(1); S.push(['gap', w]); L += w; flat(r.int(10, 14), 1); gapEnd = L; }
+    else if (p < 0.93 && h > 0.25) { if (last === 'flat') { S.push(['slope', 22, -8, { zone: Z(), seeds: 2 }]); L += 22; } S.push(...hollow(r.int(24, 28), r.int(9, 11), 3.2, +(3 + r.u() * 0.9 * h).toFixed(1), { zone: Z() }), land(Z(), 16)); L += 48; last = 'flat'; }
+    else { if (last !== 'flat') flat(8, 0); S.push(['slope', 26, -10, { zone: Z(), seeds: 3 }], ['kicker', 6, 2.2, { zone: Z() }], ['gap', +(7 + 2.5 * h).toFixed(1), -5], ['flat', 20, { zone: Z(), seeds: 2 }]); L += 60; last = 'flat'; gapEnd = L; } }
+  if (last !== 'flat') flat(10, 1); S.push(['flat', 12, { zone: z1 }], ['bowl', 22, 4, 4, { zone: z2 }]); return S;
+}
+const madeBy = new Map();
+function made(id) {
+  if (madeBy.has(id)) return madeBy.get(id); const key = id.slice(2), n = Math.abs(parseInt(key, 10) || 0), r = new RNG('made' + id); let out;
+  if (id[0] === 'D') { const day = Math.floor(Date.UTC(+key.slice(0, 4), +key.slice(4, 6) - 1, +key.slice(6, 8)) / 864e5), w = WORLDS[((day % WORLDS.length) + WORLDS.length) % WORLDS.length], times = Object.keys(w.theme.times), length = 470 + (day % 5) * 20;
+    out = { world: w, spec: { id, name: 'The Daily Valley', daily: key, li: day % 6, time: times[r.int(0, times.length - 1)], par: Math.round(length / 9.6), zone: w.title[0], strokes: generated('daily' + key, w, { length }) } }; }
+  else { const w = WORLDS[n % WORLDS.length], times = Object.keys(w.theme.times);
+    out = { world: w, spec: { id, name: 'The Long Descent', endless: true, items: 'own', time: times[r.int(0, times.length - 1)], par: 9999, zone: w.title[0], checkEvery: 30, strokes: generated('long' + key, w, { length: 3400, hard: (u) => 0.1 + 1.15 * u, own: true }) } }; }
+  madeBy.set(id, out); return out;
+}
+// the valley of the day is the same for everyone: the day is counted in universal time
+export const todayId = (t = new Date()) => 'D-' + t.getUTCFullYear() + String(t.getUTCMonth() + 1).padStart(2, '0') + String(t.getUTCDate()).padStart(2, '0');

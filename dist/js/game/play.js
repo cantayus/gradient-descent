@@ -1,9 +1,11 @@
 // One run of one level: the body, the rig, the camera, the clock, the ghost, and everything that happens along the way.
 import { Body, advance, step, turbo, R, STEP } from './physics.js';
 import { build } from './level.js';
-import { Rig, POSE } from './theta.js';
+import { Rig, POSE, WEAR } from './theta.js';
 import { Scene } from '../art/scene.js';
-import { clamp, lerp, smooth } from '../art/paint.js';
+import { clamp, lerp, smooth, sprite, P } from '../art/paint.js';
+import { RNG } from '../core/rng.js';
+import { drawTheta } from './theta.js';
 import { Geyser } from './boss.js';
 import { Rides } from './ride.js';
 import { tides } from './tide.js';
@@ -58,7 +60,7 @@ class Mu {
 export class Play {
   // The rules. A level is won by bringing the seed to the lowest valley. It is lost if the seed's lights all go out (each fall puts one out, and so does
   // being thrown by the Geyser), or if its light fades before the valley is reached (the time limit). A lost level starts again from the top.
-  constructor({ spec, theme, can = {}, ghost = null, hooks = {}, cine = false, intro = false, ending = false, lights = 3, limit = Infinity }) {
+  constructor({ spec, theme, can = {}, ghost = null, hooks = {}, cine = false, intro = false, ending = false, meet = false, travel = null, lights = 3, limit = Infinity }) {
     this.lights = this.lightsAll = lights; this.limit = limit; this.failed = null;
     // Sparks: Eta's gift. One to begin with, another for every five seeds, three at most. A spark is a turbo when asked for, and a rescue when Theta falls with one in hand.
     this.sparks = 1; this.sparksAll = 3; this.turboT = 0; this.turboCd = 0;
@@ -74,14 +76,45 @@ export class Play {
       { x: 0, y: 0, draw: (ctx, t) => { if (!this.star) return; const fx = this.scene.fx.warm, s = 2.2 + Math.sin(t * 7) * 0.25; ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.drawImage(fx.c, -s / 2, -s / 2, s, s); ctx.restore(); ctx.rotate(Math.sin(t * 2) * 0.2); ctx.fillStyle = '#fff3b8'; ctx.strokeStyle = '#c9861a'; ctx.lineWidth = 0.03; ctx.beginPath(); ctx.moveTo(0, -0.2); ctx.bezierCurveTo(0.16, -0.06, 0.13, 0.15, 0, 0.17); ctx.bezierCurveTo(-0.13, 0.15, -0.16, -0.06, 0, -0.2); ctx.fill(); ctx.stroke(); } }];
     if (can.mu) { this.mu = new Mu(this.b.x - 1.5, this.b.y + 1.5); this.muF = { x: this.b.x - 1.5, y: this.b.y + 1.5, draw: (ctx, t) => this.mu.draw(ctx, t) }; this.flyers.push(this.muF); }
     // the old macaque who knows the path by heart: he is waiting at the same place in every verse of it
-    this.critters = this.level.marks.filter((k) => k.kind === 'memo').map((k) => ({ x: k.x, y: this.T.h(k.x), s: 'elder', size: 1 }));
+    this.critters = this.level.marks.filter((k) => k.kind === 'memo').map((k) => ({ x: k.x, y: this.T.h(k.x), s: 'elder', size: 1, memo: true, ask: k.text === 'q' }));
+    // when the path he knew has gone and Theta has got through anyway, he is not beaten. He is curious, and he comes along to see.
+    if (this.critters.length) { const last = this.critters[this.critters.length - 1]; this.follower = { x: last.x, y: last.y, s: 'elder', size: 1, from: last.x, hide: true }; this.critters.push(this.follower); }
     // the end of the story: the seed set down in the moss, and what comes of it
-    if (ending) { const b = this.b; b.x = b.px = 14 + 14 + 11.5; b.y = b.py = this.T.h(b.x) + R; this.end = { t: 0, x: b.x + 1.7 }; this.end.y = this.T.h(this.end.x);
-      this.flyers.push({ x: this.end.x, y: this.end.y, draw: (ctx, t) => { const g = smooth(clamp((this.end.t - 3) / 16, 0, 1)), fx = this.scene.fx.warm, top = -1.9 * g - 0.12;
-        ctx.save(); ctx.globalCompositeOperation = 'lighter'; const s = 1.6 + 6.5 * g + 0.25 * Math.sin(t * 2); ctx.globalAlpha = clamp(this.end.t / 3, 0, 1); ctx.drawImage(fx.c, -s / 2, top - s / 2, s, s); ctx.restore();
-        ctx.strokeStyle = '#7fc850'; ctx.lineWidth = 0.05 + 0.04 * g; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(0, 0.1); ctx.quadraticCurveTo(0.14 * Math.sin(t * 0.7) * g, top * 0.5, 0, top + 0.1); ctx.stroke();
-        for (let i = 0; i < 5; i++) { const u = clamp((g - 0.1 - i * 0.16) / 0.2, 0, 1); if (u <= 0) continue; const y = top * (0.22 + i * 0.17); for (const sd of [-1, 1]) { ctx.save(); ctx.translate(0, y); ctx.rotate(sd * (1 - 0.14 * Math.sin(t * 1.3 + i + sd))); ctx.scale(u * (1 - i * 0.1), u * (1 - i * 0.1)); ctx.fillStyle = (i + (sd > 0 ? 1 : 0)) % 2 ? '#b8f060' : '#7fc850'; ctx.beginPath(); ctx.moveTo(0, 0); ctx.quadraticCurveTo(0.17, -0.22, 0, -0.56); ctx.quadraticCurveTo(-0.17, -0.22, 0, 0); ctx.fill(); ctx.restore(); } }
-        ctx.translate(0, top); ctx.rotate(Math.sin(t * 1.4) * 0.15); ctx.fillStyle = '#fff3b8'; ctx.strokeStyle = '#c9861a'; ctx.lineWidth = 0.03; ctx.beginPath(); ctx.moveTo(0, -0.2); ctx.bezierCurveTo(0.16, -0.06, 0.13, 0.15, 0, 0.17); ctx.bezierCurveTo(-0.13, 0.15, -0.16, -0.06, 0, -0.2); ctx.fill(); ctx.stroke(); } }); }
+    if (ending) { const b = this.b; b.x = b.px = 14 + 14 + 11.5; b.y = b.py = this.T.h(b.x) + R; this.end = { t: 0, x: b.x + 1.9 }; this.end.y = this.T.h(this.end.x);
+      const E = this.end, rr = (n) => { const v = Math.sin(n * 91.7) * 43758.5; return v - Math.floor(v); }, leafs = Array.from({ length: 34 }, (_, i) => { const a = rr(i) * 6.283, d = Math.sqrt(rr(i + 50)); return [Math.cos(a) * d * 2.3, -Math.abs(Math.sin(a)) * d * 1.7 - 0.2 + rr(i + 9) * 0.5, 0.6 + rr(i + 20) * 0.5, rr(i + 30)]; }).sort((p, q) => q[1] - p[1]);
+      const lights = Array.from({ length: 9 }, (_, i) => [(rr(i + 70) - 0.5) * 3.6, -rr(i + 80) * 1.4 + 0.5, rr(i + 90) * 6]);
+      // the seed, the sapling, and then the tree: every stage is the same plant, grown
+      this.flyers.push({ x: E.x, y: E.y, draw: (ctx, t) => { const g = smooth(clamp((E.t - 3) / 13, 0, 1)), g2 = smooth(clamp((E.t - 15) / 22, 0, 1)), fx = this.scene.fx.warm, hgt = 1.9 * g + 3.1 * g2, top = -hgt - 0.12;
+        ctx.save(); ctx.globalCompositeOperation = 'lighter'; const s = 1.6 + 6.5 * g + 7 * g2 + 0.3 * Math.sin(t * 2); ctx.globalAlpha = clamp(E.t / 3, 0, 1); ctx.drawImage(fx.c, -s / 2, top * (1 - 0.25 * g2) - s / 2, s, s); ctx.restore();
+        // the stem thickens into a trunk
+        const tw = 0.03 + 0.03 * g + 0.2 * g2; ctx.fillStyle = g2 > 0.05 ? '#8a6a4a' : '#7fc850'; ctx.beginPath(); ctx.moveTo(-tw * 1.9, 0.12); ctx.quadraticCurveTo(-tw, top * 0.4, -tw * 0.45 + 0.1 * Math.sin(t * 0.7) * g * (1 - g2), top + 0.1); ctx.lineTo(tw * 0.45 + 0.1 * Math.sin(t * 0.7) * g * (1 - g2), top + 0.1); ctx.quadraticCurveTo(tw, top * 0.4, tw * 1.9, 0.12); ctx.closePath(); ctx.fill();
+        if (g2 > 0.05) { ctx.strokeStyle = 'rgba(60,40,30,0.35)'; ctx.lineWidth = 0.02; for (let i = -1; i <= 1; i++) { ctx.beginPath(); ctx.moveTo(i * tw * 0.8, 0.05); ctx.quadraticCurveTo(i * tw * 0.5, top * 0.5, i * tw * 0.25, top * 0.9); ctx.stroke(); } }
+        // the first leaves, in pairs up the stem, while it is a sapling
+        if (g2 < 1) for (let i = 0; i < 5; i++) { const u = clamp((g - 0.1 - i * 0.16) / 0.2, 0, 1) * (1 - g2); if (u <= 0) continue; const y = top * (0.22 + i * 0.17); for (const sd of [-1, 1]) { ctx.save(); ctx.translate(0, y); ctx.rotate(sd * (1 - 0.14 * Math.sin(t * 1.3 + i + sd))); ctx.scale(u * (1 - i * 0.1), u * (1 - i * 0.1)); ctx.fillStyle = (i + (sd > 0 ? 1 : 0)) % 2 ? '#b8f060' : '#7fc850'; ctx.beginPath(); ctx.moveTo(0, 0); ctx.quadraticCurveTo(0.17, -0.22, 0, -0.56); ctx.quadraticCurveTo(-0.17, -0.22, 0, 0); ctx.fill(); ctx.restore(); } }
+        // the crown: it fills from the trunk outward, and every part of it moves a little in the air
+        if (g2 > 0) { ctx.save(); ctx.translate(0, top + 0.5); leafs.forEach(([lx, ly, ls, lr], i) => { const u = clamp(g2 * 1.5 - Math.hypot(lx, ly) * 0.22 - lr * 0.2, 0, 1); if (u <= 0) return; const sw = Math.sin(t * 0.9 + i) * 0.05; ctx.fillStyle = ['#3f8a3c', '#5fa848', '#7fc850', '#a8e060'][(i + (ly < -0.9 ? 2 : 0)) % 4]; ctx.beginPath(); ctx.ellipse(lx * g2 + sw, ly * g2, 0.75 * ls * u, 0.5 * ls * u, lx * 0.1, 0, 7); ctx.fill(); });
+          ctx.globalCompositeOperation = 'lighter'; for (const [lx, ly, ph] of lights) { const u = clamp((g2 - 0.55) / 0.3, 0, 1); if (u <= 0) continue; const ss = (0.9 + 0.25 * Math.sin(t * 2.2 + ph)) * u; ctx.drawImage(fx.c, lx - ss / 2, ly - ss / 2, ss, ss); ctx.fillStyle = 'rgba(255,243,184,0.95)'; ctx.beginPath(); ctx.ellipse(lx, ly, 0.07 * u, 0.1 * u, 0, 0, 7); ctx.fill(); } ctx.restore(); }
+        // the seed of light itself, at the growing tip until the crown closes over it
+        if (g2 < 0.5) { ctx.translate(0, top); ctx.rotate(Math.sin(t * 1.4) * 0.15); ctx.globalAlpha = 1 - g2 * 2; ctx.fillStyle = '#fff3b8'; ctx.strokeStyle = '#c9861a'; ctx.lineWidth = 0.03; ctx.beginPath(); ctx.moveTo(0, -0.2); ctx.bezierCurveTo(0.16, -0.06, 0.13, 0.15, 0, 0.17); ctx.bezierCurveTo(-0.13, 0.15, -0.16, -0.06, 0, -0.2); ctx.fill(); ctx.stroke(); ctx.globalAlpha = 1; } } });
+      // the animals of the seven countries come to see: each one steps out of the trees in its turn
+      for (const gst of ending.guests || []) { const gx = E.x + gst.dx; this.critters.push({ sp: gst.sp, s: gst.s, x: gx, x1: gx, x0: gx + Math.sign(gst.dx) * 3, y: this.T.h(gx) + (gst.up || 0), up: gst.up || 0, size: gst.size || 1, flip: gst.dx > 0, a: 0, at: gst.t, guest: true }); } }
+    // the meeting with Mu, once, at the start of Cappadocia: she comes down out of the sky in a long spiral and takes her place
+    if (meet && this.mu) { this.meet = { t: 0 }; this.mu.x = this.b.x + 12; this.mu.y = this.b.y + 9; }
+    // the way from one country to the next: by balloon, on a current of air, or on the back of a bird
+    if (travel) { const V = this.trav = { t: 0, kind: travel.kind, dark: !!travel.dark }, rider = (ctx, t, o = {}) => { ctx.save(); ctx.translate(0, -0.46 * 0.85); ctx.scale(0.85, 0.85); drawTheta(ctx, { ...POSE(), turn: 0.7, expr: 'joy', seed: 0.8, t, ...o }); ctx.restore(); };
+      if (V.kind === 'balloon') V.spr = sprite(3.4, 4.2, (ctx) => P.balloon(ctx, 3.4, 4.2, new RNG('travel'), { cols: ['#e8503a', '#f6e7c4'], n: 1 }), { ax: 0.5, ay: 1 });
+      this.travF = { x: this.b.x - 15, y: this.b.y + 8, draw: (ctx, t) => { const on = !V.done;
+        if (V.kind === 'balloon') { ctx.rotate(Math.sin(t * 0.9) * 0.04); ctx.drawImage(V.spr.c, -V.spr.ox, -V.spr.oy - 1.5, V.spr.w, V.spr.h); ctx.strokeStyle = 'rgba(70,50,36,0.9)'; ctx.lineWidth = 0.035; ctx.beginPath(); for (const sx of [-0.5, -0.17, 0.17, 0.5]) { ctx.moveTo(sx, -0.75); ctx.lineTo(sx * 0.7, -1.75); } ctx.stroke();
+          if (on) rider(ctx, t); const g = ctx.createLinearGradient(0, -0.8, 0, 0.1); g.addColorStop(0, '#9a7448'); g.addColorStop(1, '#6a4a30'); ctx.fillStyle = g; ctx.beginPath(); ctx.roundRect(-0.62, -0.62, 1.24, 0.72, 0.1); ctx.fill(); ctx.fillStyle = '#b8905c'; ctx.fillRect(-0.67, -0.68, 1.34, 0.1); }
+        else if (V.kind === 'bird') { const f = Math.sin(t * 4.2), body = V.dark ? '#24242c' : '#f4f2ec', wing = V.dark ? '#16161c' : '#8a94a4'; ctx.rotate(-0.06 + Math.sin(t * 1.1) * 0.03);
+          ctx.fillStyle = wing; ctx.beginPath(); ctx.moveTo(-0.3, -0.2); ctx.quadraticCurveTo(-1.2, -1.2 * f - 0.5, -2.9, -1.5 * f - 0.2); ctx.quadraticCurveTo(-1.3, -0.5 * f + 0.1, 0.5, -0.1); ctx.closePath(); ctx.fill();
+          ctx.fillStyle = body; ctx.beginPath(); ctx.ellipse(0, 0, 1.25, 0.42, -0.05, 0, 7); ctx.fill(); ctx.beginPath(); ctx.moveTo(-1.1, -0.05); ctx.lineTo(-1.9, 0.14); ctx.lineTo(-1.1, 0.24); ctx.closePath(); ctx.fill();
+          ctx.beginPath(); ctx.ellipse(1.28, -0.2, 0.32, 0.25, 0, 0, 7); ctx.fill(); if (V.dark) { ctx.fillStyle = '#f4f0e8'; ctx.beginPath(); ctx.ellipse(1.02, -0.08, 0.14, 0.26, 0.3, 0, 7); ctx.fill(); }
+          ctx.fillStyle = V.dark ? '#c8b8a0' : '#f0b83c'; ctx.beginPath(); ctx.moveTo(1.52, -0.26); ctx.lineTo(1.98, -0.1); ctx.lineTo(1.52, -0.06); ctx.closePath(); ctx.fill(); ctx.fillStyle = '#14313a'; ctx.beginPath(); ctx.arc(1.38, -0.26, 0.045, 0, 7); ctx.fill();
+          if (on) { ctx.save(); ctx.translate(-0.1, -0.36); rider(ctx, t); ctx.restore(); }
+          ctx.fillStyle = V.dark ? '#2c2c36' : '#b4bcc8'; ctx.beginPath(); ctx.moveTo(-0.4, 0); ctx.quadraticCurveTo(0.3, 1.3 * f + 0.5, 2.3, 1.6 * f + 0.4); ctx.quadraticCurveTo(0.8, 0.5 * f, 0.6, 0); ctx.closePath(); ctx.fill(); }
+        else { ctx.strokeStyle = 'rgba(255,255,255,0.55)'; ctx.lineCap = 'round'; for (let i = 0; i < 4; i++) { const yy = -0.5 + i * 0.42, ph = t * 2.4 + i * 1.7; ctx.lineWidth = 0.05; ctx.beginPath(); ctx.moveTo(-4.4 - (ph % 1.5), yy + Math.sin(ph) * 0.2); ctx.bezierCurveTo(-3, yy - 0.5, -1.8, yy + 0.5, -0.5 - (ph % 1.5) * 0.3, yy + Math.sin(ph + 1) * 0.15); ctx.stroke(); }
+          if (on) { ctx.rotate(0.2 + Math.sin(t * 1.6) * 0.08); rider(ctx, t, { spread: 1, air: -0.4, turn: 0.9 }); } } } }; this.flyers.push(this.travF); }
     this.rides = new Rides(this.level, this.T); if (this.rides.list.length) this.scene.rides = this.rides.list;
     // one weather for the picture and the physics
     this.weather = this.scene.wx; this.scene.own = false; this.T.air = (t) => this.weather.windAt(t);
@@ -107,15 +140,21 @@ export class Play {
   // the title's camera: a wide, slow look across the country, the hero small in one corner of it
   _ending(dt) { const e = this.end, sc = this.scene, c = this.cam, a = (this.W || 16) / (this.H || 9); e.t += dt; this.seedGlow = clamp(1 - e.t / 2.5, 0, 1); this.b.face = 1;
     if (e.t > 3 && Math.random() < dt * (3 + 9 * clamp((e.t - 3) / 16, 0, 1))) sc.emit('spark', e.x + (Math.random() - 0.5) * 1.6, e.y + 0.3 + Math.random() * 1.6, 1, { speed: 0.7, dir: Math.PI / 2, spread: 0.8, life: 2.2, size: 0.09, g: -0.5 });
-    if (!e.a && e.t > 2.6) { e.a = 1; this.rig.feel('wow', 2.4); this.rig.sq.kick(4); } if (e.a === 1 && e.t > 8) { e.a = 2; this.rig.feel('proud', 6); } if (e.a === 2 && e.t > 16) { e.a = 3; this.rig.feel('joy', 30); this.rig.sq.kick(5); }
+    if (!e.a && e.t > 2.6) { e.a = 1; this.rig.feel('wow', 2.4); this.rig.sq.kick(4); } if (e.a === 1 && e.t > 8) { e.a = 2; this.rig.feel('proud', 6); } if (e.a === 2 && e.t > 16) { e.a = 3; this.rig.feel('joy', 300); this.rig.sq.kick(5); }
     // the picture begins close on the two of them and draws slowly back until the trees are in it
-    const k = smooth(clamp(e.t / 26, 0, 1)); c.vh = (8.2 + 7 * k) * (a < 1 ? 1.35 : 1); c.vw = c.vh * a; c.x = this.b.x + 0.9 + c.vw * 0.05 * k; c.y = this.b.y - c.vh * (0.12 - 0.03 * k); }
+    const k = smooth(clamp(e.t / 34, 0, 1)); c.vh = (8.2 + 9.3 * k) * (a < 1 ? 1.35 : 1); c.vw = c.vh * a; c.x = this.b.x + 0.9 + c.vw * 0.05 * k; c.y = this.b.y - c.vh * (0.12 - 0.2 * k); }
   _cine(dt) { const c = this.cam, b = this.view || this.b, a = (this.W || 16) / (this.H || 9), t = this.t; c.vh = (16.5 + Math.sin(t * 0.05) * 0.6) * (a < 1 ? 1.35 : 1); c.vw = c.vh * a; c.x = b.x + c.vw * 0.21 + Math.sin(t * 0.06) * 1.8; c.y = b.y + c.vh * 0.25 + Math.sin(t * 0.045) * 0.3; }
   resize(W, H) { this.W = W; this.H = H; this.scene.resize(W, H); }
 
   update(dt, inp) {
     const b = this.b, sc = this.scene; this.t += dt;
     if (this.intro) inp = this._intro(dt, inp);
+    if (this.meet) { const M = this.meet; M.t += dt; const u = clamp(M.t / 3.4, 0, 1), e = smooth(u), ang = (1 - e) * 8, rad = (1 - e) * 9; M.x = b.x - e * 1.1 + Math.cos(ang) * rad; M.y = b.y + 1.5 + Math.sin(ang) * rad * 0.4 + (1 - e) * 5;
+      if (!M.a && M.t > 0.8) { M.a = 1; this.rig.feel('wow', 1.8); this.hooks.event?.('meet', b, 'see'); }
+      if (M.t > 3.4 || (M.t > 1 && (inp.move || inp.jumpNow || inp.tuck))) { this.meet = null; this.rig.feel('joy', 1.8); this.rig.sq.kick(4.5); this.mu.lift = 0.5; this.hooks.event?.('meet', b, 'end'); } else inp = { move: 0, jump: false, jumpNow: false, tuck: false, turboNow: false }; }
+    if (this.trav) { const V = this.trav, F = this.travF; V.t += dt; const u = clamp(V.t / 11, 0, 1), e = smooth(u);
+      if (!V.done) { F.x = b.x - 16 * (1 - e) - (V.kind === 'balloon' ? 0 : 0.2); F.y = b.y - R + (V.kind === 'balloon' ? 0.15 : 0.5) + 9 * Math.pow(1 - e, 1.4) + Math.sin(this.t * 1.3) * 0.25 * (1 - e); if (u >= 1) { V.done = true; V.t1 = V.t; this.rig.feel('joy', 2.2); this.rig.sq.kick(5); sc.emit('dust', b.x, b.y - R, 10, { speed: 2.2, spread: 3.1, dir: Math.PI / 2, life: 0.5, size: 0.13, col: '#ffffff', g: 2 }); this.hooks.event?.('land', b); } }
+      else { const k = V.t - V.t1; F.x += dt * (1.2 + k * 1.5); F.y += dt * (0.6 + k * 1.2); } }
     this.turboT = Math.max(0, this.turboT - dt); this.turboCd = Math.max(0, this.turboCd - dt);
     if (inp.turboNow && !this.cine && !this.intro && !this.done && !this.failed && this.dead <= 0 && !this.rides.on && this.sparks > 0 && this.turboCd <= 0 && turbo(b)) {
       this.sparks--; this.turboT = 0.8; this.turboCd = 0.45; if (!this.started) { this.started = true; this.hooks.start?.(); } this.rig.feel('glee', 0.9); this.rig.sq.kick(4); this.eta.glow = 1.8; this.scene.flash = Math.max(this.scene.flash, 0.16);
@@ -136,9 +175,12 @@ export class Play {
     this.scene.pt = b.t - (1 - m) * STEP;      // the physics clock, for everything in the picture that the physics also moves
     const pose = this.rig.update(b, dt, inp);
     pose.seed = (0.7 + 0.3 * clamp((this.level.hi - b.y) / Math.max(1, this.level.hi - this.level.lo), 0, 1)) * this.seedGlow;   // the seed glows warmer the lower Theta gets
-    if (this.mu) { this.mu.update(v, dt, this.t, this.weather.wind); const f = this.muF; f.x = this.mu.x; f.y = this.mu.y; }
+    if (this.mu) { this.mu.update(v, dt, this.t, this.weather.wind); if (this.meet && this.meet.x != null) { this.mu.x = this.meet.x; this.mu.y = this.meet.y; this.mu.vx = this.mu.vy = 0; this.mu.glide = 0.5; } const f = this.muF; f.x = this.mu.x; f.y = this.mu.y; }
     this.eta.update(v, dt, this.t); this.flyers[0].x = this.eta.x; this.flyers[0].y = this.eta.y; if (this.star) { this.flyers[1].x = this.star.x; this.flyers[1].y = this.star.y; }
-    for (const m of this.critters) { const near = Math.abs(m.x - this.b.x) < 7; m.s = near && Math.sin(this.t * 5) > -0.3 ? 'elderB' : 'elder'; m.flip = this.b.x < m.x - 0.5; }
+    for (const m of this.critters) { if (m.guest) { const u = smooth(clamp((this.end.t - m.at) / 1.6, 0, 1)); m.a = u; m.x = m.x0 + (m.x1 - m.x0) * u; m.y = this.T.h(m.x) + m.up + (m.up ? Math.sin(this.t * 0.5 + m.x) * 0.3 : Math.abs(Math.sin(u * 9.42)) * 0.25 * (1 - u)); continue; }
+      if (!m.memo) continue; const near = Math.abs(m.x - this.b.x) < 7; m.s = near && Math.sin(this.t * 5) > -0.3 ? 'elderB' : 'elder'; m.flip = this.b.x < m.x - 0.5; m.q = m.ask && this.b.x > m.x + 2.5 && this.b.x < m.x + 26; }
+    if (this.follower) { const f = this.follower, L = this.level; if (f.hide && this.b.x > f.from + 5) { f.hide = false; const last = this.critters[this.critters.length - 2]; last.hide = true; }
+      if (!f.hide) { const want = Math.min(this.b.x - 2.8, L.goal.x - 2.6), dx = clamp(want - f.x, 0, 9.5 * dt); f.x += dx; const pit = L.pits.find((p) => f.x > p.x0 && f.x < p.x1); f.y = pit ? pit.y + Math.sin(((f.x - pit.x0) / (pit.x1 - pit.x0)) * Math.PI) * 1.2 : this.T.h(f.x) + (dx > 0.01 ? Math.abs(Math.sin(this.t * 11)) * 0.12 : 0); f.s = dx > 0.01 || Math.sin(this.t * 4) > 0.2 ? 'elder' : 'elderB'; f.flip = false; } }
     if (this.end) this._ending(dt); else if (this.cine) this._cine(dt); else this.cam.update(v, dt, this.W / this.H, false, this.intro ? 'close' : !this.started || !!this.rides.on); sc.update(dt, this.cam);
     this._effects(dt);
     // the record of the run: where the hero was (for the ghost) and how high (for the loss curve)
@@ -155,6 +197,7 @@ export class Play {
     for (const e of b.events) this.hooks.event?.(e, b);
     if (this.boss) { this.boss.step(b, STEP); for (const e of this.boss.events) { this.hooks.event?.(e, b, this.boss.p); if (e === 'erupt') { this.scene.shake = 0.6; this.rig.dizzy = 3.2; this.lights--; if (this.lights <= 0) this._fail('falls'); } else this.scene.emit('steam', b.x, b.y - 0.3, 3, { speed: 1.2, life: 1.2, size: 0.5, col: '#ffffff', g: -1.2, drag: 0.6 }); } }
     if (b.grounded && Math.abs(this.T.dh(b.x)) < 0.35) { const c = L.checkFor(b.x); if (c.x > this.check.x) this.check = c; }
+    if (b.x > (this.farX || 0)) this.farX = b.x;
     for (const s of L.seeds) if (!s.got && Math.abs(s.x - b.x) < (this.turboT > 0 ? 2.4 : 0.75) && Math.abs(s.y - b.y) < (this.turboT > 0 ? 2.4 : 0.85)) { s.got = true; this.seeds++; if (this.seeds % 5 === 0 && this.sparks < this.sparksAll) { this.sparks++; this.hooks.event?.('spark', b); } this.scene.emit('spark', s.x, s.y, 8, { speed: 3, spread: 6.3, life: 0.5, size: 0.12, g: 4 }); this.hooks.event?.('seed', b, this.seeds); }
     for (const it of L.items) {
       if (it.got) { if (it.kind === 'feather' && (it.back -= STEP) <= 0) it.got = false; continue; }
@@ -171,7 +214,7 @@ export class Play {
   }
   _fail(why) { if (this.failed || this.done) return; this.failed = why; this.rig.feel('sulk', 6); this.hooks.fail?.(why, this.result()); }
   _respawn() { const b = this.b, c = this.check; if (this.spec.tutorial && this.sparks < 1) this.sparks = 1; b.x = b.px = c.x; b.y = b.py = c.y + R + 0.05; b.vx = b.vy = b.w = 0; b.mode = 'run'; b.grounded = true; this.rig.feel('sulk', 0.9); this.rig.sq.kick(4); this.scene.emit('dust', c.x, c.y + 0.3, 14, { speed: 2.5, spread: 6.3, life: 0.5, size: 0.16, col: '#ffffff', g: -1 }); this.cam.update(b, 0.016, this.W / this.H, true); this.hooks.event?.('back', b); }
-  result() { return { id: this.spec.id, sparks: this.sparks, lights: this.lights, lightsAll: this.lightsAll, limit: this.limit, time: this.clock, seeds: this.seeds, seedsAll: this.level.seeds.length, stamp: this.stamp, li: this.level.li, falls: this.falls, curve: this.curve.slice(), rec: this.rec.slice(), top: this.level.start.y, bottom: this.level.goal.y, maxSpeed: this.maxSpeed }; }
+  result() { return { id: this.spec.id, sparks: this.sparks, lights: this.lights, lightsAll: this.lightsAll, limit: this.limit, time: this.clock, seeds: this.seeds, seedsAll: this.level.seeds.length, stamp: this.stamp, li: this.level.li, dist: Math.max(0, (this.farX || this.b.x) - this.level.start.x), falls: this.falls, curve: this.curve.slice(), rec: this.rec.slice(), top: this.level.start.y, bottom: this.level.goal.y, maxSpeed: this.maxSpeed }; }
 
   // dust, spray and streaks: small things that say what the body is doing
   _effects(dt) {
@@ -190,9 +233,10 @@ export class Play {
       else if (b.mode === 'ball' && sp > 8) sc.emit('dust', b.x - b.face * 0.2, gy, 1, { speed: 1.5, dir: b.face > 0 ? 2.6 : 0.5, spread: 0.8, life: 0.4, size: 0.1, col: soil, g: 2 });
       else if (b.mode === 'run' && sp > 6 && Math.random() < 0.5) sc.emit('dust', b.x - b.face * 0.2, gy, 1, { speed: 1.2, dir: b.face > 0 ? 2.5 : 0.6, spread: 0.6, life: 0.32, size: 0.08, col: soil, g: 2 });
     }
+    if (WEAR.trail && sp > 5 && !this.cine && Math.random() < dt * 22) { const tx = b.x - b.face * 0.35, ty = b.y + (Math.random() - 0.5) * 0.5; if (WEAR.trail === 'sparks') sc.emit('spark', tx, ty, 1, { speed: 1.2, spread: 6.3, life: 0.6, size: 0.1, g: 2 }); else if (WEAR.trail === 'petals') sc.emit('dust', tx, ty, 1, { speed: 1, spread: 6.3, life: 1.1, size: 0.11, col: Math.random() < 0.5 ? '#ffb4c8' : '#ffe0ea', g: 1.5 }); else sc.emit('spark', tx, ty + 0.3, 1, { speed: 0.5, spread: 6.3, life: 1.8, size: 0.08, g: -0.4 }); }
     if (sp > 17 && Math.random() < dt * 40) sc.emit('line', b.x + (Math.random() - 0.5) * 2, b.y + (Math.random() - 0.5) * 1.6, 1, { speed: 0, life: 0.22, size: 0.08, col: '#ffffff', g: 0, vx: -b.vx * 0.5, vy: -b.vy * 0.5, drag: 0 });
     if (b.inJet > 0.2 && Math.random() < 0.6) sc.emit('drop', b.x, b.y - 0.3, 2, { speed: 4, spread: 2.6, life: 0.5, size: 0.08, col: '#eaf7ff', g: 20 });
   }
 
-  draw(ctx) { this.scene.draw(ctx, this.cam, { hero: this.dead > 0 ? null : { b: this.view, pose: this.rig.p }, ghost: this.ghost && this.ghost.show ? this.ghost : null, flyers: this.flyers, critters: this.critters }); }
+  draw(ctx) { this.scene.draw(ctx, this.cam, { hero: this.dead > 0 || (this.trav && !this.trav.done) ? null : { b: this.view, pose: this.rig.p }, ghost: this.ghost && this.ghost.show ? this.ghost : null, flyers: this.flyers, critters: this.critters }); }
 }

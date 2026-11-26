@@ -20,6 +20,8 @@ const field = (theme) => { const d = theme.times.day || Object.values(theme.time
 export function stampSprite(theme, li, spr, ppu = 128) { const d = theme.stamps?.[li], pic = d && spr[d.s] ? spr[d.s][d.v || 0] : null; return sprite(STAMP_W, STAMP_H, (ctx) => paintStamp(ctx, STAMP_W, STAMP_H, pic, field(theme)), { ax: 0.5, ay: 0.5, ppu }); }
 // for the pages: a canvas element. The country's sprites are made once, at midday, the first time one of its stamps is wanted.
 const made = new Map();
+// a country's sprites as they are at midday, for pictures shown away from that country: the album, and the gathering at the end
+export function daySprites(theme) { let spr = made.get(theme.id); if (!spr) { spr = theme.sprites(theme.times.day || Object.values(theme.times)[0]); made.set(theme.id, spr); } return spr; }
 export function stampCanvas(theme, li, px = 120) {
   let spr = made.get(theme.id); if (!spr) { spr = theme.sprites(theme.times.day || Object.values(theme.times)[0]); made.set(theme.id, spr); }
   const src = stampSprite(theme, li, spr, px).c, c = document.createElement('canvas'); c.width = src.width; c.height = src.height; c.getContext('2d').drawImage(src, 0, 0); c.className = 'stamp'; return c;
