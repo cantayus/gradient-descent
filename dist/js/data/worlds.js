@@ -272,6 +272,14 @@ const YAK = [
 // where the story ends: a hollow in the moss, among the old trees
 export const ENDING = { id: 'ending', name: '', time: 'dawn', items: false, zone: MS, strokes: [['slope', 14, -2.5, { zone: MS, surf: 'moss' }], ['valley', 26, 1.6, 0, { zone: MS, surf: 'moss' }], ['slope', 16, 2, { zone: CE }], ['bowl', 20, 3, 3, { zone: MS, surf: 'moss' }]] };
 
+// ---- a hidden valley: Iceland again, by night, with everything learned since. No gaps, nothing to lose: a long way down, to be flown. ----
+export const HIDDEN = { id: 'H', name: 'The Hidden Valley', time: 'night', hidden: true, par: 35, zone: 'moss', can: { roll: true, mu: true }, li: 4,
+  strokes: [['flat', 10, { zone: 'moss', surf: g }], ['slope', 40, -16, { zone: m, surf: g, seeds: 5 }], ['waves', 30, 1.2, 3, -4, { zone: 'moss', surf: g, seeds: 4 }], ['slope', 34, -14, { zone: 'snow', surf: 'snow', seeds: 4 }],
+    ['kicker', 7, 2.4, { zone: 'ice', surf: 'ice' }], ['flat', 30, { zone: 'snow', surf: 'snow', seeds: [{ at: 0.15, up: 4.2 }, { at: 0.3, up: 5 }, { at: 0.45, up: 4.6 }, { at: 0.62, up: 3.2 }] }], ['slope', 44, -19, { zone: 'ice', surf: 'ice', seeds: 6 }],
+    ['valley', 26, 3, -2, { zone: 'moss', surf: g, seeds: 3 }], ['hill', 20, 2.6, -2, { zone: m, surf: g, seeds: 3 }], ['slope', 38, -15, { zone: 'sand', seeds: 5 }], ...hollow(28, 11, 3.4, 3.4, { zone: 'moss' }, 4), land('moss', 18, 3),
+    ['slope', 40, -17, { zone: 'snow', surf: 'snow', seeds: 5 }], ['kicker', 8, 2.8, { zone: 'ice', surf: 'ice' }], ['flat', 34, { zone: 'snow', surf: 'powder', seeds: [{ at: 0.12, up: 4.6 }, { at: 0.26, up: 5.6 }, { at: 0.4, up: 5 }, { at: 0.56, up: 3.4 }] }],
+    ['waves', 30, 1, 3, -5, { zone: m, surf: g, seeds: 4 }], ['slope', 30, -11, { zone: 'moss', surf: g, seeds: 4 }], ['flat', 16, { zone: 'snow', surf: 'powder' }], ['flat', 10, { zone: m, surf: g }], ['bowl', 24, 4.4, 4.4, { zone: m, surf: g }]] };
+
 // ---- the practice slope: a short lesson, one thing at a time, on which nothing can be lost ----
 export const TUTORIAL = { id: 'T', name: 'The Practice Slope', time: 'day', tutorial: true, par: 60, li: 6, items: 'own', zone: 'moss', checkEvery: 14,
   strokes: [['flat', 14, { zone: 'moss', surf: g, mark: 'tutor', text: 'run', at: 0 }], ['slope', 16, -4, { zone: m, surf: g, seeds: 2 }],
@@ -295,7 +303,7 @@ export const WORLDS = [
   { id: 'patagonia', n: 6, name: 'Patagonia', theme: patagonia, music: 'patagonia', can: { slide: true, roll: true, spread: true, mu: true }, title: ['pampa', 'lenga'], levels: PAT },
   { id: 'yakushima', n: 7, name: 'Yakushima', theme: yakushima, music: 'yakushima', can: { slide: true, roll: true, spread: true, mu: true }, title: ['moss', 'cedar'], cautious: true, levels: YAK },
 ];
-export const levelById = (id) => { if (id === 'T') return { world: WORLDS[0], spec: TUTORIAL }; if (/^[DE]-/.test(id)) return made(id); for (const w of WORLDS) for (const l of w.levels) if (l.id === id) return { world: w, spec: l }; return null; };
+export const levelById = (id) => { if (id === 'T') return { world: WORLDS[0], spec: TUTORIAL }; if (id === 'H') return { world: WORLDS[0], spec: HIDDEN }; if (/^[DE]-/.test(id)) return made(id); for (const w of WORLDS) for (const l of w.levels) if (l.id === id) return { world: w, spec: l }; return null; };
 export const ALL = WORLDS.flatMap((w) => w.levels.map((l) => l.id));
 export const nextLevel = (id) => { const i = ALL.indexOf(id); return i >= 0 && i < ALL.length - 1 ? ALL[i + 1] : null; };
 // Gold is a clean, quick run. Silver and bronze give more room.

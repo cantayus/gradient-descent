@@ -91,10 +91,10 @@ export function frameUI(p) {
   const bar = hud.querySelector('.h-bar'), left = p.limit - p.clock; bar.hidden = !Number.isFinite(p.limit); if (!bar.hidden) { bar.firstChild.style.width = Math.max(0, Math.min(100, (left / p.limit) * 100)) + '%'; bar.classList.toggle('low', left < 15); }
   const tu = hud.querySelector('.h-tutor'); tu.hidden = !p.spec.tutorial || p.done;
   if (p.spec.tutorial) { const ms = p.level.marks.filter((k) => k.kind === 'tutor'); let i = 0; for (let k = 0; k < ms.length; k++) if (p.b.x >= ms[k].x - 1.5) i = k; const dev = how();
-    if (run.step !== i || run.dev !== dev) { if (run.step != null && i > run.step) sfx.ui(true); run.step = i; run.dev = dev; const L = TUTOR[ms[i].text]; tu.replaceChildren(el('small', { text: `Lesson ${i + 1} of ${ms.length}` }), el('b', { text: L.name }), el('span', { text: L[dev] })); tu.classList.remove('in'); void tu.offsetWidth; tu.classList.add('in'); } }
+    if (run.step !== i || run.dev !== dev) { if (run.step != null && i > run.step) sfx.ui(true); run.step = i; run.dev = dev; const L = TUTOR[ms[i].text]; tu.replaceChildren(el('small', { text: `Lesson ${i + 1} of ${ms.length}` }), el('b', { text: L.name }), el('span', { text: keyed(L[dev]) })); tu.classList.remove('in'); void tu.offsetWidth; tu.classList.add('in'); } }
   const hst = hud.querySelector('.h-stamp'); hst.hidden = !p.level.items.some((i) => i.kind === 'stamp'); hst.classList.toggle('got', !!p.stamp);
   hud.querySelector('.h-seeds').textContent = p.level.seeds.length ? `${p.seeds} / ${p.level.seeds.length}` : '';
-  const m = p.level.marks.find((k) => k.kind === 'hint' && p.b.x > k.x - 7 && p.b.x < k.x + 16), text = m && !p.done ? HINTS[m.text]?.[how()] : null, h = hud.querySelector('.h-hint');
+  const m = p.level.marks.find((k) => k.kind === 'hint' && p.b.x > k.x - 7 && p.b.x < k.x + 16), text = m && !p.done ? keyed(HINTS[m.text]?.[how()]) : null, h = hud.querySelector('.h-hint');
   if (text !== run.shown) { run.shown = text; h.textContent = text || ''; h.classList.toggle('on', !!text); }
 }
 export function pause() {
@@ -259,6 +259,7 @@ export function showMore() {
     tile('Sort!', 'Seeds from stones, as fast as they come. Under a minute.', () => showSort(Math.max(1, Math.min(6, bosses || 1)), showMore), api.unlockAll || bosses > 0, 'Opens when the first country is finished.'),
     tile('The long descent', 'One long hill that grows harder as it goes. How far can the light be carried?' + (long.best ? ` Your best: ${long.best} m.` : ''), () => playEndless(), finished(), 'Opens when the journey is finished.'),
     tile('The lab', 'Any hill, any length of step, any momentum, and Theta walking down it alone, by the rule.', showLab, finished(), 'Opens when the journey is finished.'),
+    tile('The hidden valley', 'Iceland again, by night, with everything learned since. Nothing to lose in it: a long way down, to be flown.', () => play('H'), api.unlockAll || WORLDS.some((w) => w.levels.every((l) => save.levels[l.id]?.stamp)), 'Opens when one country’s page of stamps is full.'),
     tile('Wardrobe', 'Hats, colours and trails, earned with seeds and stamps. None of them does anything.', showWardrobe, any, 'Opens when the first level is finished.'),
     tile('For teachers', 'Every level, the idea it shows, and a question for the class afterwards.', showTeachers))));
 }
@@ -388,6 +389,8 @@ export function showWardrobe() {
   requestAnimationFrame(draw);
 }
 // ---- the keys ----
+// The hints were written with the usual keys in them. If the player has chosen others, the names are put right as the hint is shown.
+const keyed = (t) => { if (!t || !save.settings.keys || how() !== 'key') return t; const n = (a) => (input.keys[a][0] ? KEYNAME(input.keys[a][0]) : '?'); return t.replace(/← → or A D/g, `${n('left')} ${n('right')}`).replace(/→ or D/g, n('right')).replace(/\bSpace\b/g, n('jump')).replace(/\bShift\b/g, n('tuck')).replace(/\bE\b/g, n('turbo')); };
 const KEYNAME = (c) => ({ ArrowLeft: '←', ArrowRight: '→', ArrowUp: '↑', ArrowDown: '↓', Space: 'Space', ShiftLeft: 'Left Shift', ShiftRight: 'Right Shift', ControlLeft: 'Left Ctrl', ControlRight: 'Right Ctrl' }[c] || c.replace(/^Key|^Digit/, ''));
 export function showKeys(back = showTitle) {
   clear(); document.body.classList.add('dim'); const names = { left: 'Run left', right: 'Run right', jump: 'Jump, and Mu’s lift', tuck: 'Slide and roll', turbo: 'Turbo' }; let waiting = null;
@@ -395,7 +398,7 @@ export function showKeys(back = showTitle) {
   ui.append(sheet('Keys', () => { removeEventListener('keydown', listen, true); showSettings(back); }, el('p.lead', { text: 'Choose a key for each thing Theta does. Press Change, then the key you want.' }),
     el('dl.keys.binds', {}, Object.entries(names).flatMap(([k, label]) => { const b = btn('Change', () => { waiting = k; b.textContent = 'Press a key…'; addEventListener('keydown', listen, true); }); return [el('dt', { text: label }), el('dd', {}, el('span', { text: input.keys[k].map(KEYNAME).join('  ·  ') || 'no key' }), b)]; })),
     el('div.row', {}, btn('The usual keys', () => { input.keys = structuredClone(DEFAULT_KEYS); save.settings.keys = null; store(); showKeys(back); })),
-    el('p.note', { text: 'Pause is Esc or P, start again is R, and sound off is M. The hints in the levels name the usual keys.' })));
+    el('p.note', { text: 'Pause is Esc or P, start again is R, and sound off is M.' })));
 }
 
 // ---- the rest ----
@@ -405,7 +408,7 @@ export function showHow() {
   clear(); document.body.classList.add('dim');
   const k = how(), rows = k === 'touch' ? [['Run', 'Slide your left thumb left or right.'], ['Jump', 'The upper button. Tap for a hop, hold for a leap.'], ['Slide', 'Hold the lower button on ice and snow.'], ['Float', 'Hold jump in the air to spread wide and fall slowly.'], ['Roll', 'From Cappadocia on, hold the lower button to tuck in and roll.'], ['Lift', 'From Cappadocia on, press jump again in the air. Mu lifts Theta once between one landing and the next.'], ['Turbo', 'The star button. A burst of speed from Eta. It uses up one spark.']]
     : [['Run', '← → or A D'], ['Jump', 'Space. Tap for a hop, hold for a leap.'], ['Slide', 'Hold Shift on ice and snow.'], ['Float', 'Hold Space in the air to spread wide and fall slowly.'], ['Roll', 'From Cappadocia on, hold Shift to tuck in and roll.'], ['Lift', 'From Cappadocia on, press Space again in the air. Mu lifts Theta once between one landing and the next.'], ['Turbo', 'E. A burst of speed from Eta. It uses up one spark.'], ['Start again', 'R'], ['Pause', 'Esc or P'], ['Sound off', 'M']];
-  ui.append(sheet('How to play', showTitle, el('p.lead', { text: 'Find the lowest ground. Every level ends in the deepest valley, where a light is waiting.' }), el('dl.keys', {}, rows.flatMap(([a, b]) => [el('dt', { text: a }), el('dd', { text: b })])),
+  ui.append(sheet('How to play', showTitle, el('p.lead', { text: 'Find the lowest ground. Every level ends in the deepest valley, where a light is waiting.' }), el('dl.keys', {}, rows.flatMap(([a, b]) => [el('dt', { text: a }), el('dd', { text: keyed(b) })])),
     el('h3', { text: 'To win a level' }), el('p', { text: 'Bring the seed to the lowest valley while it still has a light, and before that light fades.' }),
     el('h3', { text: 'How a level is lost' }), el('p', { text: 'The seed has three lights, shown at the top left. Every fall puts one out, and so does being thrown by the Geyser. When the last goes out the level is lost.' }), el('p', { text: 'The light also fades with time. The bar under the clock shows how much is left. It is generous, but it does run out.' }), el('p', { text: 'A lost level starts again from the top.' }),
     el('h3', { text: 'Sparks' }), el('p', { text: 'The small stars under the lights are sparks. You begin a level with one, and every five seeds earn another, up to three.' }), el('p', { text: 'A spark can be spent as a turbo. Or it can be kept: if Theta falls with a spark in hand, Eta makes the catch, the spark is spent and no light is lost.' }),

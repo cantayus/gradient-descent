@@ -88,7 +88,6 @@ After the last world a sandbox opens: pick a landscape, set learning rate, momen
   "Also play this!", credits. Level name card at the start of each level, with a wide opening look before the first step.
 - The opening scene (`Play._intro`, level 1-1, once; `?level=1-1&intro` to see it again): Theta asleep, a seed of light falls, the waking, the finding, Eta rising.
 - Smooth movement: the body is drawn between physics steps (`b.mix`, `Play.view`), camera eased by time, turning through the front view. `python3 scripts/smooth.py` measures it.
-- A private preview page exists (artifact slug `05675afd-d58f-4c1b-9fe1-b361fe6fa345`); republish `dist/` to it with `publish_files` after changes.
 - Sound (`js/core/audio.js`): music for title, Iceland, boss and card, written as notes; effects; Theta's wordless voice; rain and wind.
 - Saves (`js/core/save.js`): best times, medals, ghosts, notebook pages, settings.
 
@@ -143,10 +142,9 @@ After the last world a sandbox opens: pick a landscape, set learning rate, momen
 
 ## Not built yet
 
-- A hidden level, hats that react to weather, and other small surprises from the build prompt's list.
+- Hats that react to weather, and other small surprises from the build prompt's list. (The hidden valley is built: `HIDDEN` in `worlds.js`, id `H`, opened by a full page of stamps.)
 - A play-through by hand for feel, and a frame-rate check on real hardware: every number here comes from a scripted player and a software renderer.
 - Cappadocia's last level still has no mechanic of its own. Poplars and oryx could be drawn better. Iceland wants a great geyser behind its boss level.
-- The in-level hints name the usual keys even after the keys have been changed.
 
 ## Checks to run
 

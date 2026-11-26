@@ -19,3 +19,5 @@ for (const w of WORLDS) for (const l of w.levels) {
 import { levelById as byId, todayId } from '../dist/js/data/worlds.js';
 for (let d = 0; d < 21; d++) { const id = todayId(new Date(Date.UTC(2026, 10, 20 + d)));
   test(`${id}: the daily valley can be finished`, () => { const f = byId(id), r = runBot(f.spec, { ...f.world.can }); assert.ok(r.ok, `stuck at x ${r.at} in ${f.world.id}`); assert.ok(r.falls <= 2, `lost ${r.falls} lights`); assert.ok(r.t < f.spec.par * 2.3 * 0.75, `took ${r.t.toFixed(1)} s against a limit of ${Math.round(f.spec.par * 2.3)}`); }); }
+
+test('H: the hidden valley can be finished, and nothing in it can be lost', () => { const f = byId('H'), r = runBot(f.spec, { ...f.world.can, ...f.spec.can }); assert.ok(r.ok, `stuck at x ${r.at}`); assert.equal(r.falls, 0); });
