@@ -16,8 +16,8 @@ Everything seen is drawn by the program and everything heard is made in the brow
 - Credits: "Created by Cantay Caliskan", one modest sentence, his site. Nothing about how the code was written, no AI tools named, no jokes. His university and courses are never named in the game.
 - The link to his other games is headed "Also play this!" and never uses the word "sister".
 - The hero is always easy to see. No see-through shells round things. No timers that lock play, no streak penalties, no purchases.
-- Do not push or publish to GitHub until he says so. Commit messages end with the two trailer lines given in the session.
-- Real people are described in the third person, with nothing invented put in their mouths. Only places listed in the brief are used.
+- The repository is public and every push to `main` that touches `dist/` goes live on GitHub Pages: push only work he has asked for. Commit messages end with the two trailer lines given in the session.
+- Real people are described in the third person, with nothing invented put in their mouths. Only places he has named are used: the seven in the brief, with New Zealand in Yakushima's place at his word (26 November).
 
 ## Run and test
 
@@ -37,7 +37,7 @@ Everything seen is drawn by the program and everything heard is made in the brow
 ## The hero
 
 Theta: rice-cake cream, gumdrop when standing and a ball when tucked, a teal band at eye level (the bar of θ; it shows the spin), gold eyes, round teal-tipped ears,
-a pom tail, teal feet, a plain smile, and a warm light low on the belly where the seed is kept (a pouch drawn there read as a second mouth and was removed at the owner's word; the band was plum and he asked for a calmer colour). Eta (a firefly) is the learning rate; Mu (a small bird, from the second world) is momentum.
+a pom tail, teal feet, a plain smile, and a warm light low on the belly where the seed is kept (a pouch drawn there read as a second mouth and was removed at the owner's word; the band was plum and he asked for a calmer colour). Eta (a firefly) is the learning rate; Mu (a small bird, who joins at the third level of the first country) is momentum.
 The design is original and must stay clear of any known character.
 
 
@@ -51,7 +51,7 @@ The design is original and must stay clear of any known character.
 - **Mist and light shafts are drawn before the ground**, so that they lie over the far country and never over the cut earth or the hero.
 - **The title** is a `Play` with `cine: true`: no input, a wide slow camera (`Play._cine`), the sun moved over the valley, the far country dropped a
   little (`scene.drop`). Its hour follows the player's clock. The first key press starts the sound (browsers allow none before it) and brings in the menu.
-- **The Geyser** only costs time. Pressure rises on landings harder than 8 units a second on `drum` ground, leaks at 0.1 a second, and after an eruption
+- **The Geyser** (now the Dovecotes of Cappadocia: the same code with `kind: 'doves'`, pigeons for water) costs a light when it goes off. Pressure rises on landings harder than 8 units a second on `drum` ground, leaks at 0.1 a second, and after an eruption
   the crust is spent for 7 seconds. The eruption is an ordinary jet with `grip` (sideways drag) so the hero is held in the column.
 - **Panels** are dark glass over the live, blurred scene; thin tracked capitals for headings; gold only for the thing to press.
 
@@ -77,3 +77,29 @@ The design is original and must stay clear of any known character.
 - The tutorial (`TUTORIAL`, id `T`) is not in `WORLDS` or `ALL`; `levelById('T')` knows it. Its lessons are `TUTOR` in `notebook.js`, keyed by the
   `text` of marks of kind `tutor`. Finishing it is not recorded as a level.
 - The ending is a `Play` with `cine` and `ending` set (`main.js` `ending()`); `attract()` will not reuse it for the title.
+
+## Notes added on 26 November: the order of the countries, New Zealand, the fall, the menus
+
+- **The order of the countries is not the order of the lessons' ground.** `CAP` (ids `1-x`) is Cappadocia and holds the level designs first made for Iceland;
+  `ICE` (ids `2-x`) is Iceland and holds the ones first made for Cappadocia. Ids, lessons, notebook pages and class questions did not move, so a saved game
+  still means what it meant. `tests/worlds.test.mjs` fixes the order of countries and lessons, and checks that every level has its page, question, hints,
+  hour and ground.
+- **Every world can roll and has Mu,** except levels `1-1`, `1-2` and the practice slope, which set `can: { mu: false }` (Mu arrives at `1-3`; the meeting is
+  `Play.meet`, asked for by `ui.js` for that id). The scripted player is `cautious` in Cappadocia as it is among Zhangjiajie's pillars: it does not roll at a
+  row of chimney caps.
+- **The lip of a gap is level.** `Terrain.h` and `dh` no longer let a cliff in the next sample bend the piece before it (`CLIFF`, 1.5 units between samples:
+  only a gap's wall is that steep; a geyser wall of 11 in 2.5 is 1.1). Before this every gap had a bump 0.18 high in its last quarter unit, which kicked a
+  walker up and back, and carried careless ones over narrow gaps. If a `line` steeper than 6 in 1 is ever wanted, raise `CLIFF` or it will be treated as a lip.
+- **A fall into a gap** (`Play._rescue`, `Play._eye`): the camera stops going down 2.2 units below the rim, so the hero drops out of the picture; `fell()` still
+  fires 9 units down; then Eta catches Theta on a thread and flies a curve back to the checkpoint, Theta hanging as a damped pendulum from it (`rig.hang`,
+  `rig.swing`). The clock, the ghost's record and the loss curve all stand still for it. With a spark it is quicker and no light is lost; with the last light
+  gone there is no catch and the card comes up. Nothing in it touches the physics step, so the scripted player (which has its own, older way back) is unaffected.
+- **Deep dust** (`surf: 'dust'`) has `plough`, like powder. The `dust` zone must always carry it: same look, same physics. Sand does not stop a ball.
+- **New Zealand** (`js/art/worlds/newzealand.js`). Kiwi are painted at every hour (the stamp needs them) but stand beside the path only after dark, through the
+  sprite names `kiwiNight`/`kiwiNightB`, which exist only then. `glow` (glowworms) is an empty sprite by day. The Memorizer's sprites are still called
+  `elder`/`elderB`, because `Play` looks for those names; they are a kākāpō now. Facts used in the words were checked on 26 November: rain on about 182 days
+  a year at Milford Sound; kākāpō flightless, nocturnal, long-lived, and inclined to freeze; royal albatrosses breeding in New Zealand, wintering off
+  southern South America and going round the Southern Ocean downwind; Cappadocian dovecotes cut in the rock with painted doors.
+- **One press to the title:** `UI.home()`. The T key is ignored if the player has given T to something in "Choose keys".
+- **More** opens tile by tile on one condition, `doneLv('1-1')` (or `?unlock`/`?class`). The lab is not in it.
+- **The title menu** has twelve entries once a level is finished; its type and spacing are sized by the window's height (`.titem`, end of `app.css`).

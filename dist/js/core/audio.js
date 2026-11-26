@@ -130,15 +130,16 @@ TRACKS.patagonia = { bpm: 104, len: 96, parts: [
   line('bass', 0.2, 0.4, T(Array.from({ length: 8 }, (_, b) => { const r = [45, 43, 41, 40, 45, 48, 43, 45][b]; return `${r} . . . . . ${r + 7} . . ${r} . .`; }).join(' '))),
   beat('tom', 0.11, 0.5, 'o.....x..x..', 8), beat('shake', 0.04, 0.65, '..x..x..x..x', 8),
 ] };
-// Yakushima: the five notes of the in scale on D (D, E flat, G, A, B flat), plucked slowly as on a koto, a breathy flute a long way off, and bells like drops falling from leaves.
-TRACKS.yakushima = { bpm: 66, len: 128, parts: [
-  chords(0.13, [[50, 57, 62], [55, 62, 67], [51, 58, 63], [50, 57, 62], [55, 62, 70], [57, 62, 69], [51, 58, 67], [50, 57, 62]], 16),
-  line('pluck', 0.2, 0, T(['74 . . 75 . . 74 . 70 . . . 69 . . .', '67 . . . 69 . 70 . 74 . . . . . . .', '75 . 74 . 70 . . . 69 . 67 . 63 . . .', '62 . . . . . . . 67 . 69 . 70 . . .', '79 . . 81 . . 82 . 81 . . . 79 . . .', '75 . 74 . . . 70 . 74 . . . . . . .', '69 . 70 . 74 . 75 . 74 . 70 . 69 . 67 .', '62 . . . . . . . . . . . . . . .'].join(' '))),
-  line('keys', 0.08, 0.3, T(['. . . . . . . . . . . . 62 . 67 .', '. . . . . . . . . . . . 70 . 69 .', '. . . . . . . . . . . . . . 62 .', '. . 63 . 62 . . . . . . . . . . .', '. . . . . . . . . . . . 74 . 75 .', '. . . . . . . . . . . . 69 . 67 .', '. . . . . . . . . . . . . . . .', '. . 67 . 69 . 70 . 69 . 67 . 63 . 62 .'].join(' '))),
-  line('flute', 0.1, 0.25, T(['. . . . . . . . 86 . . . . . . .', '. . . . . . . . . . . . . . . .', '87 . . . . . . . 86 . . . . . . .', '. . . . . . . . 82 . . . . . . .', '. . . . . . . . 91 . . . . . . .', '87 . . . . . . . 86 . . . . . . .', '. . . . . . . . 81 . . . . . . .', '86 . . . . . . . . . . . . . . .'].join(' '))),
-  line('bell', 0.045, 0.45, T(Array.from({ length: 8 }, (_, b) => { const n = [98, 94, 93, 99, 98, 91, 94, 86][b]; return b % 2 ? `. . . . . ${n} . . . . . . . . ${n - 5} .` : `. . . . . . . . . . ${n} . . . . .`; }).join(' '))),
-  line('bass', 0.18, 0.4, T(Array.from({ length: 8 }, (_, b) => { const r = [38, 43, 39, 38, 43, 45, 39, 38][b]; return `${r} . . . . . . . . . . . ${r + 7} . . .`; }).join(' '))),
-  beat('tick', 0.025, 0.6, '....x.......x...', 8), beat('tom', 0.1, 0.7, 'o...............', 8),
+// New Zealand: three to the bar in G, a slow tune on five notes over held chords, and now and then three clear high notes dropped in from above,
+// as a bellbird drops them into a wet forest.
+TRACKS.newzealand = { bpm: 88, len: 96, parts: [
+  chords(0.13, [[55, 59, 62], [52, 59, 64], [48, 60, 64], [50, 57, 66], [59, 62, 67], [48, 60, 67], [57, 60, 64], [50, 57, 62]], 12),
+  line('keys', 0.16, 0, T(['79 . . . . . 76 . . 74 . .', '71 . . . . . 74 . . 76 . .', '79 . . . . . 83 . . 81 . .', '78 . . . . . . . . 74 . .', '79 . . 81 . . 83 . . 86 . .', '84 . . . . . 83 . . 79 . .', '81 . . . . . 76 . . 79 . .', '74 . . . . . . . . . . .'].join(' '))),
+  line('pluck', 0.1, 0.2, T(Array.from({ length: 8 }, (_, b) => { const c = [[67, 71, 74], [64, 71, 76], [64, 67, 72], [66, 69, 74], [67, 71, 74], [67, 72, 76], [64, 69, 72], [66, 69, 74]][b]; return `${c[0]} . . ${c[1]} . . ${c[2]} . . ${c[1]} . .`; }).join(' '))),
+  line('flute', 0.09, 0.3, T(['. . . . . . . . . . . .', '83 . . . . . . . . . . .', '. . . . . . 86 . . . . .', '. . . . . . 81 . . . . .', '. . . . . . . . . . . .', '88 . . . . . . . . . . .', '. . . . . . 84 . . . . .', '86 . . . . . . . . . . .'].join(' '))),
+  line('bell', 0.05, 0.4, T(['. . . . . . . . . . . .', '. . . . . . . . . 95 91 98', '. . . . . . . . . . . .', '. . . 93 90 . . . . . . .', '. . . . . . . . . . . .', '. . . . . . . . . 96 91 95', '. . . . . . . . . . . .', '. . . 98 93 90 . . . . . .'].join(' '))),
+  line('bass', 0.18, 0.4, T(Array.from({ length: 8 }, (_, b) => { const r = [43, 40, 36, 38, 43, 36, 45, 38][b]; return `${r} . . . . . ${r + 7} . . . . .`; }).join(' '))),
+  beat('shake', 0.03, 0.55, '...x.....x..', 8), beat('tom', 0.09, 0.75, 'o...........', 8),
 ] };
 export const trackNames = () => Object.keys(TRACKS);
 export function addTrack(name, def) { TRACKS[name] = def; }
@@ -183,7 +184,13 @@ export const sfx = {
   seed() { if (!A.ctx) return; const t = now(); A.combo = t - A.comboT < 1.6 ? Math.min(A.combo + 1, 10) : 0; A.comboT = t; const n = 76 + PENTA[A.combo]; tone(A.sfx, 'sine', midi(n), t, 0.3, 0.24, { a: 0.004, r: 0.25, send: 0.6 }); tone(A.sfx, 'sine', midi(n + 7), t + 0.06, 0.3, 0.16, { a: 0.004, r: 0.25, send: 0.6 }); },
   goal() { if (!A.ctx) return; const t = now(); [62, 66, 69, 74, 78, 81, 86].forEach((n, i) => tone(A.sfx, 'triangle', midi(n), t + i * 0.085, 1.3, 0.16, { a: 0.01, r: 1, send: 0.8, lp: 4000 })); },
   medal(k) { if (!A.ctx) return; const t = now(); [[72, 76, 79], [72, 76, 79, 84], [72, 76, 79, 84, 88]][k].forEach((n, i) => tone(A.sfx, 'sine', midi(n), t + i * 0.1, 0.5, 0.2, { r: 0.4, send: 0.7 })); },
-  fall() { if (!A.ctx) return; tone(A.sfx, 'sine', 620, now(), 0.5, 0.16, { f2: 170, r: 0.2 }); },
+  // the long whistle of something going down a hole, the twang of the thread that stops it, and a very small engine carrying far too much
+  fall(len = 1) { if (!A.ctx) return; const t = now(); tone(A.sfx, 'sine', 980, t, 0.75 * len, 0.15, { f2: 150, r: 0.25, send: 0.3 }); tone(A.sfx, 'sine', 1470, t, 0.6 * len, 0.04, { f2: 230, r: 0.2 }); },
+  catch() { if (!A.ctx) return; const t = now(); tone(A.sfx, 'triangle', 150, t, 0.3, 0.2, { f2: 420, r: 0.2 }); tone(A.sfx, 'sine', midi(88), t + 0.02, 0.5, 0.1, { r: 0.4, send: 0.7 }); tone(A.sfx, 'sine', midi(93), t + 0.1, 0.5, 0.07, { r: 0.4, send: 0.7 }); },
+  // pigeons: the soft double note of one disturbed, and the clatter of a whole loft leaving at once
+  coo(p = 0.3) { if (!A.ctx) return; const t = now(), f = 330 + p * 90; tone(A.sfx, 'sine', f, t + 0.05, 0.16, 0.09, { f2: f * 1.18, r: 0.08, lp: 900 }); tone(A.sfx, 'sine', f * 1.2, t + 0.24, 0.3, 0.11, { f2: f * 0.92, r: 0.18, lp: 900 }); },
+  flock() { if (!A.ctx) return; const t = now(); for (let i = 0; i < 26; i++) hiss(A.sfx, t + i * 0.06 + Math.random() * 0.03, 0.07, 0.22 * (1 - i / 34), { type: 'bandpass', f: 700 + Math.random() * 900, q: 0.9 }); for (let i = 0; i < 5; i++) { const f = 340 + Math.random() * 120; tone(A.sfx, 'sine', f, t + 0.1 + i * 0.27, 0.2, 0.07, { f2: f * 1.15, r: 0.1, lp: 900 }); } },
+  haul(secs = 1.2) { if (!A.ctx) return; const t = now(), n = Math.floor(secs / 0.075); for (let i = 0; i < n; i++) { const u = i / n; tone(A.sfx, 'triangle', 190 + u * 150 + (i % 2) * 22, t + i * 0.075, 0.06, 0.07 * (1 - u * 0.4), { a: 0.008, r: 0.04, lp: 1400 }); } },
   back() { if (!A.ctx) return; const t = now(); tone(A.sfx, 'sine', 300, t, 0.12, 0.2, { f2: 720, r: 0.08 }); hiss(A.sfx, t, 0.12, 0.1, { f: 3000 }); },
   geyser() { if (!A.ctx) return; hiss(A.sfx, now(), 1.4, 0.3, { f: 500, f2: 2600, q: 0.5, a: 0.3 }); },
   drum(p = 0) { if (!A.ctx) return; const t = now(); tone(A.sfx, 'sine', 70 + p * 60, t, 0.5, 0.5, { a: 0.004, r: 0.4, f2: 46 + p * 30, send: 0.3 }); hiss(A.sfx, t, 0.25 + p * 0.5, 0.06 + p * 0.14, { f: 1800, f2: 4200, q: 0.7 }); },
@@ -224,6 +231,8 @@ export const voice = {
   trill() { const b = pick([520, 560]); say([[[b, b], 0.09, 0.02], [[b * 1.26, b * 1.26], 0.09, 0.02], [[b * 1.5, b * 1.5], 0.09, 0.02], [[b * 2, b * 1.9], 0.34]], { vol: 0.24, vowel: 'a', vowel2: 'i', vib: 12 }); },
   grumble() { const b = pick([230, 250, 270]); say([[[b, b * 0.9], 0.12, 0.03], [[b * 0.95, b * 0.8], 0.22]], { vol: 0.26, vowel: 'u', vowel2: 'o', vib: 22, breath: 0.04 }); },
   hm() { const b = pick([420, 460]); say([[[b, b * 1.18], 0.16]], { vol: 0.16, vowel: 'u', vowel2: 'e' }); },
+  wail() { const b = pick([760, 820]); say([[[b * 1.15, b * 0.62], 0.62]], { vol: 0.2, vowel: 'a', vowel2: 'o', vib: 30 }); },
+  wobble() { const b = pick([520, 560]); say([[[b, b * 0.96], 0.11, 0.035], [[b * 1.05, b], 0.11, 0.035], [[b * 1.1, b * 1.04], 0.11, 0.035], [[b * 1.16, b * 1.08], 0.2]], { vol: 0.17, vowel: 'o', vowel2: 'u', vib: 18 }); },
   eep() { const b = pick([820, 900]); say([[[b, b * 1.3], 0.07]], { vol: 0.2, vowel: 'i' }); },
   blub() { say([[[300, 520], 0.07, 0.02], [[340, 600], 0.08]], { vol: 0.2, vowel: 'u', vowel2: 'o' }); },
   yawn() { say([[[360, 520], 0.35], [[520, 300], 0.5]], { vol: 0.16, vowel: 'a', vowel2: 'o', vib: 5 }); },

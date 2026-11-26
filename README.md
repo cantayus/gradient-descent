@@ -6,23 +6,23 @@ Theta finds a seed of light that will grow only in the lowest valley in the worl
 
 **Play it:** https://cantayus.github.io/gradient-descent/
 
+![Cappadocia](docs/shot-cappadocia.png)
 ![Iceland](docs/shot-iceland.png)
-![Patagonia](docs/shot-patagonia.png)
-![Yakushima](docs/shot-yakushima.png)
+![New Zealand](docs/shot-newzealand.png)
 
 ## The seven countries
 
 | | Country | What it teaches |
 |---|---|---|
-| 1 | Iceland | Loss, the gradient, the learning rate, overshooting |
-| 2 | Cappadocia | Momentum, local minima, where you start |
+| 1 | Cappadocia | Loss, the gradient, the learning rate, overshooting |
+| 2 | Iceland | Momentum, local minima, where you start |
 | 3 | Galápagos | Stochastic gradient descent: batches and noise |
 | 4 | Namib | Plateaus and learning-rate schedules |
 | 5 | Zhangjiajie | Ravines, and a step for each direction: AdaGrad, RMSProp, Adam |
 | 6 | Patagonia | Backpropagation, exploding and vanishing gradients, clipping, skip connections |
-| 7 | Yakushima | Generalising, overfitting, validation, early stopping, dropout |
+| 7 | New Zealand | Generalising, overfitting, validation, early stopping, dropout |
 
-Each country has five levels and a harder last one, a page of the notebook for every level, and six stamps to find. There is a short tutorial, a story, and, under "More" on the title menu, a valley of the day, a long descent, a sorting game about precision and recall, a wardrobe, and a lab in which Theta walks down a hill alone by the real rule of gradient descent.
+Each country has five levels and a harder last one, a page of the notebook for every level, and six stamps to find. There is a short tutorial, a story, and a lab, on the title menu, in which Theta walks down a hill alone by the real rule of gradient descent. Under "More", once the first level is finished, there are a valley of the day, a long descent, a sorting game about precision and recall, a hidden valley and a wardrobe. T or Home goes back to the title screen from anywhere.
 
 ## For teachers
 

@@ -102,3 +102,14 @@ test('turbo adds its speed along the ground and its energy is counted as work', 
   assert.ok(Math.abs(v1 - v0 - TURBO_V) < 0.05, `speed rose by ${(v1 - v0).toFixed(2)}, expected ${TURBO_V}`);
   assert.ok(Math.abs((b.energy() - e0) - (b.work - w0)) < 1e-6, 'the energy gained must equal the work entered');
 });
+
+// The lip of a gap. The curve through the ground's samples once bent upward just before a sudden drop, and the bump threw a walker up and back as they
+// stepped off. The ground must run level to the edge, and whoever walks off it must simply fall.
+test('the ground is level right up to the lip of a gap, and a walker who steps off it falls', () => {
+  const L = build({ id: 'lip', items: false, strokes: [['flat', 30], ['gap', 6], ['flat', 20], ['bowl', 12, 2]] }), T = L.T, pit = L.pits[0], y = T.h(pit.x0 - 3);
+  for (let x = pit.x0 - 3; x <= pit.x0 - 0.26; x += 0.01) assert.ok(Math.abs(T.h(x) - y) < 1e-6 && Math.abs(T.dh(x)) < 1e-6, `the ground is not level at ${(pit.x0 - x).toFixed(2)} before the lip`);
+  for (let x = pit.x1 + 0.26; x <= pit.x1 + 3; x += 0.01) assert.ok(Math.abs(T.h(x) - y) < 1e-6, `the ground is not level at ${(x - pit.x1).toFixed(2)} past the far lip`);
+  const b = new Body(pit.x0 - 6, y + R); b.grounded = true; b.can.roll = false; let up = 0, back = 1e9;
+  for (let i = 0; i < 240 * 2 && !L.fell(b); i++) { step(b, T, { move: 1, jump: false, jumpNow: false, tuck: false }); up = Math.max(up, b.vy); if (b.x > pit.x0 - 1 && b.x < pit.x0 + 1.5) back = Math.min(back, b.vx); }
+  assert.ok(up < 0.05, `thrown upward at ${up.toFixed(2)} units a second`); assert.ok(back > 5, `thrown back: the speed along the ground fell to ${back.toFixed(1)}`); assert.ok(L.fell(b), 'and it falls');
+});

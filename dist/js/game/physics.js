@@ -13,6 +13,7 @@ export const R = 0.46;          // the hero's radius
 const K = 0.4;                  // moment of inertia of a solid ball, as a share of m r²
 
 // Each surface: mu = grip for feet, muk = sliding friction, crr = rolling resistance, e = bounce of a tucked ball.
+const CLIFF = 1.5;         // a change of height from one sample to the next that only the wall of a gap has
 export const SURF = {
   rock:  { mu: 0.95, muk: 0.6,   crr: 0.012, e: 0.2 },
   grass: { mu: 0.85, muk: 0.5,   crr: 0.026, e: 0.12 },
@@ -26,6 +27,8 @@ export const SURF = {
   wood:  { mu: 0.8,  muk: 0.45,  crr: 0.016, e: 0.22 },
   // deep, loose snow. Anything moving through it has to throw snow aside, and that costs with the square of the speed: fast things are cut down hard, slow ones hardly at all
   powder: { mu: 0.6, muk: 0.25, crr: 0.08,  e: 0,   plough: 0.085 },
+  // deep dry dust, ankle-deep and finer than sand. It has to be thrown aside in the same way, and it takes speed off in the same way
+  dust:   { mu: 0.7, muk: 0.5,  crr: 0.08,  e: 0,   plough: 0.07 },
 };
 
 // What the legs can do.
@@ -53,12 +56,17 @@ export class Terrain {
     this.floor = floor;           // below this the hero has fallen out of the level
   }
   _i(x) { const u = (x - this.x0) / this.dx, n = this.ys.length; const i = clamp(Math.floor(u), 1, n - 3); return [i, clamp(u - i, -1, 2)]; }
+  // The curve through the samples bends a little before a sudden change, as any smooth curve must. At the lip of a gap that bend was a small bump,
+  // which threw a walker up and back just as they stepped off. So a cliff next door is not allowed to shape this piece: the ground runs straight to the
+  // lip and straight on from the far one, and something that walks off an edge simply falls.
   h(x) {
-    const [i, t] = this._i(x), y = this.ys, p0 = y[i - 1], p1 = y[i], p2 = y[i + 1], p3 = y[i + 2];
+    const [i, t] = this._i(x), y = this.ys, p1 = y[i], p2 = y[i + 1], run = Math.abs(p2 - p1) <= CLIFF; let p0 = y[i - 1], p3 = y[i + 2];
+    if (run) { if (Math.abs(p3 - p2) > CLIFF) p3 = 2 * p2 - p1; if (Math.abs(p0 - p1) > CLIFF) p0 = 2 * p1 - p2; }
     return 0.5 * (2 * p1 + (-p0 + p2) * t + (2 * p0 - 5 * p1 + 4 * p2 - p3) * t * t + (-p0 + 3 * p1 - 3 * p2 + p3) * t * t * t);
   }
   dh(x) {
-    const [i, t] = this._i(x), y = this.ys, p0 = y[i - 1], p1 = y[i], p2 = y[i + 1], p3 = y[i + 2];
+    const [i, t] = this._i(x), y = this.ys, p1 = y[i], p2 = y[i + 1], run = Math.abs(p2 - p1) <= CLIFF; let p0 = y[i - 1], p3 = y[i + 2];
+    if (run) { if (Math.abs(p3 - p2) > CLIFF) p3 = 2 * p2 - p1; if (Math.abs(p0 - p1) > CLIFF) p0 = 2 * p1 - p2; }
     return (0.5 * ((-p0 + p2) + 2 * (2 * p0 - 5 * p1 + 4 * p2 - p3) * t + 3 * (-p0 + 3 * p1 - 3 * p2 + p3) * t * t)) / this.dx;
   }
   ddh(x) { const e = this.dx * 0.5; return (this.dh(x + e) - this.dh(x - e)) / (2 * e); }

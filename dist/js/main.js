@@ -44,18 +44,18 @@ function attract() {
 }
 // The way to a country: its own title scene, with Theta arriving in it.
 function travel(id, kind) { const world = WORLDS.find((w) => w.id === id) || WORLDS[0], h = new Date().getHours(), time = h < 5 ? 'night' : h < 8 ? 'dawn' : h < 16 ? 'day' : h < 19 ? 'golden' : h < 22 ? 'dusk' : 'night';
-  G.play = new Play({ spec: { ...TITLE(...world.title), time: world.theme.times[time] ? time : 'day' }, theme: world.theme, can: {}, cine: true, travel: { kind, dark: id === 'patagonia' || id === 'yakushima' }, hooks: {} }); G.play.end = G.play.end || null; G.play.arrive = true; G.play.scene.q = G.gfx; G.play.resize(G.W, G.H); G.mode = 'title'; G.paused = false; S.reset(); return G.play; }
+  G.play = new Play({ spec: { ...TITLE(...world.title), time: world.theme.times[time] ? time : 'day' }, theme: world.theme, can: {}, cine: true, travel: { kind, dark: id === 'patagonia' }, hooks: {} }); G.play.end = G.play.end || null; G.play.arrive = true; G.play.scene.q = G.gfx; G.play.resize(G.W, G.H); G.mode = 'title'; G.paused = false; S.reset(); return G.play; }
 // The last scene: the hollow in the old forest.
-function ending() { const world = WORLDS.find((w) => w.id === 'yakushima'), from = (id, name, dx, t, o = {}) => { const w = WORLDS.find((k) => k.id === id), list = w && daySprites(w.theme)[name]; return list ? { sp: list[0], dx, t, ...o } : null; };
-  // one or two from each country, in the order the countries were crossed. The old macaque came with Theta, so he is there first.
-  const guests = [{ s: 'elder', dx: 2.1, t: 6 }, from('iceland', 'puffin', -3, 11), from('iceland', 'horse', -10.6, 12), from('cappadocia', 'balloon', -7.5, 13.5, { up: 7.6, size: 0.42 }), from('galapagos', 'tortoise', 4.4, 15), from('galapagos', 'booby', 6.2, 16),
-    from('namib', 'oryx', -7.4, 18), from('zhangjiajie', 'macaque', -4.6, 20), from('patagonia', 'guanaco', 8.4, 22), { s: 'deer', dx: 11.4, t: 24 }, from('cappadocia', 'balloon', 10.5, 26, { up: 9.4, size: 0.3 })].filter(Boolean);
+function ending() { const world = WORLDS.find((w) => w.id === 'newzealand'), from = (id, name, dx, t, o = {}) => { const w = WORLDS.find((k) => k.id === id), list = w && daySprites(w.theme)[name]; return list ? { sp: list[0], dx, t, ...o } : null; };
+  // one or two from each country, in the order the countries were crossed. The old kākāpō came with Theta, so it is there first.
+  const guests = [{ s: 'elder', dx: 2.1, t: 6 }, from('cappadocia', 'dove', -3, 11), from('cappadocia', 'balloon', -7.5, 12, { up: 7.6, size: 0.42 }), from('iceland', 'puffin', -4.1, 13.5), from('iceland', 'horse', -10.6, 14.5), from('galapagos', 'tortoise', 4.4, 16), from('galapagos', 'booby', 6.2, 17),
+    from('namib', 'oryx', -7.4, 18.5), from('zhangjiajie', 'macaque', -5.6, 20), from('patagonia', 'guanaco', 8.4, 22), { s: 'takahe', dx: 11.4, t: 24 }, from('cappadocia', 'balloon', 10.5, 26, { up: 9.4, size: 0.3 })].filter(Boolean);
   G.play = new Play({ spec: ENDING, theme: world.theme, can: world.can, cine: true, ending: { guests }, hooks: {} }); G.play.scene.q = G.gfx; G.play.resize(G.W, G.H); G.mode = 'title'; G.paused = false; S.reset(); return G.play; }
 function greet() { const p = G.play; if (!p || G.mode !== 'title') return; p.rig.feel('joy', 1.8); p.rig.sq.kick(5); setTimeout(() => voice.trill(), 350); }
 
 // ---- what the hero's doings sound like ----
 const S = { steps: 0, air: 0, wheed: false, idle: 0, yawned: false, last: 0, seeds: 0, reset() { this.steps = this.air = this.idle = this.seeds = 0; this.wheed = this.yawned = false; } };
-const SOFT = { powder: 1, snow: 1, sand: 1, grass: 1, moss: 1, clay: 1 };
+const SOFT = { powder: 1, dust: 1, snow: 1, sand: 1, grass: 1, moss: 1, clay: 1 };
 const say = (fn, gap = 0.25) => { const t = performance.now() / 1000; if (t - S.last < gap) return; S.last = t; fn(); };
 G.hooks = {
   start() {},
@@ -65,10 +65,11 @@ G.hooks = {
     else if (name === 'splash') { sfx.splash(); say(() => voice.blub()); }
     else if (name === 'slide') say(() => voice.whee(0.3), 0.8);
     else if (name === 'seed') { sfx.seed(); if (++S.seeds % 6 === 0) say(() => voice.giggle(), 0.6); }
-    else if (name === 'fall') { sfx.fall(); say(() => voice.eep(), 0); }
-    else if (name === 'back') { sfx.back(); setTimeout(() => voice.grumble(), 250); }
+    else if (name === 'fall') { sfx.fall(); say(() => voice.wail(), 0); }
+    else if (name === 'catch') { sfx.catch(); sfx.haul(extra); setTimeout(() => voice.wobble(), 260); }
+    else if (name === 'back') { sfx.back(); setTimeout(() => voice.grumble(), 420); }
     else if (name === 'goal') { sfx.goal(); setTimeout(() => voice.trill(), 300); }
-    else if (name === 'thump') sfx.drum(extra);
+    else if (name === 'thump') { if (G.play?.boss?.kind === 'doves') { sfx.drum(extra * 0.5); sfx.coo(extra); } else sfx.drum(extra); }
     else if (name === 'hop') { sfx.hop(); say(() => voice.hup(0.9), 0); }
     else if (name === 'stamp') { sfx.stamp(); setTimeout(() => voice.trill(), 200); }
     else if (name === 'dew') sfx.dew();
@@ -76,19 +77,19 @@ G.hooks = {
     else if (name === 'meet') { if (extra === 'see') voice.hm(); else { sfx.hop(); setTimeout(() => voice.trill(), 200); UI.muMet(); } }
     else if (name === 'turbo') { sfx.turbo(); say(() => voice.whee(0.6), 0); }
     else if (name === 'spark') sfx.medal(0);
-    else if (name === 'saved') { sfx.back(); say(() => voice.eep(), 0); }
+    else if (name === 'saved') { sfx.fall(0.45); say(() => voice.eep(), 0); }
     else if (name === 'tuck') say(() => voice.hup(0.2), 0.3);
     else if (name === 'lift') { sfx.geyser(); say(() => voice.eep(), 0); setTimeout(() => voice.whee(1), 900); }
     else if (name === 'down') { sfx.land(6, true); setTimeout(() => voice.giggle(), 200); }
     else if (name === 'intro') { if (extra === 'fall') sfx.wake(); else if (extra === 'land') sfx.seed(); else if (extra === 'wake') voice.hm(); else if (extra === 'take') { sfx.goal(); setTimeout(() => voice.trill(), 250); } else if (extra === 'end') UI.introDone(); }
-    else if (name === 'erupt') { sfx.geyser(); sfx.drum(1); say(() => voice.eep(), 0); setTimeout(() => voice.whee(1), 600); }
+    else if (name === 'erupt') { if (G.play?.boss?.kind === 'doves') sfx.flock(); else { sfx.geyser(); sfx.drum(1); } say(() => voice.eep(), 0); setTimeout(() => voice.whee(1), 600); }
   },
   finish(res) { UI.showFinish(res); },
   fail(why, res) { sfx.fall(); setTimeout(() => voice.grumble(), 500); UI.showFail(why, res); },
 };
 function sounds(p, dt) {
   const b = p.b, sp = b.speed(), wx = p.weather, live = G.mode === 'level' && !p.done && !p.failed;
-  ambient({ speed: live ? sp : 0, air: !b.grounded, rolling: live && b.grounded && b.mode === 'ball', sliding: live && b.grounded && b.mode === 'slide', soft: !!SOFT[b.surf], jet: Math.max(b.inJet, p.boss ? p.boss.p * 0.25 : 0), rain: wx.rain * (1 - p.scene.coldNow), wind: wx.wind, gust: wx.gust });
+  ambient({ speed: live ? sp : 0, air: !b.grounded, rolling: live && b.grounded && b.mode === 'ball', sliding: live && b.grounded && b.mode === 'slide', soft: !!SOFT[b.surf], jet: p.boss?.kind === 'doves' ? 0 : Math.max(b.inJet, p.boss ? p.boss.p * 0.25 : 0), rain: wx.rain * (1 - p.scene.coldNow), wind: wx.wind, gust: wx.gust });
   if (wx.thunder) { wx.thunder = false; sfx.thunder(); }
   if (!live) return; setIntensity(Math.min(1, Math.max(0, (sp - 5) / 15)));
   if (b.grounded && b.mode === 'run' && sp > 1.5) { S.steps += sp * dt; if (S.steps > 1.15) { S.steps = 0; sfx.step(!!SOFT[b.surf]); } }
@@ -100,7 +101,7 @@ function sounds(p, dt) {
 function frame(now) {
   requestAnimationFrame(frame);
   let dt = Math.min(0.05, (now - G.last) / 1000 || 0.016); G.last = now; for (const hz of [60, 120, 144, 90, 75, 165, 240]) if (Math.abs(dt - 1 / hz) < 0.0011) { dt = 1 / hz; break; } G.fps += (1 / Math.max(dt, 0.001) - G.fps) * 0.05;
-  const inp = readInput(), p = G.play;
+  const inp = readInput(), p = G.play; if (inp.homeNow) { inp.homeNow = false; UI.home(); }
   if (p) {
     if (!G.paused) {
       if (G.mode === 'level' && save.settings.assist) dt *= 0.8;         // assist: everything a fifth slower

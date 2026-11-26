@@ -53,7 +53,7 @@ export function build(spec, opt = {}) {
     for (const it of opt.items || []) placed.push({ kind: it.kind, x: at(it.at ?? 0.5), up: it.up ?? 1.3 });
     if (opt.mark) marks.push({ x: at(opt.at ?? 0.5), kind: opt.mark, text: opt.text });
     if (opt.zone) zones.push({ x0, x1, kind: opt.zone });
-    if (opt.ride) rides.push({ x: at(opt.ride.at ?? 0.5), x1: at(opt.ride.at ?? 0.5) + opt.ride.to, up: opt.ride.up ?? 12 });
+    if (opt.ride) rides.push({ x: at(opt.ride.at ?? 0.5), x1: at(opt.ride.at ?? 0.5) + opt.ride.to, up: opt.ride.up ?? 12, quick: !!opt.ride.quick });
     if (type === 'bowl') marks.push({ x: at(0.5), kind: 'goal' });
   }
   // Past the end the ground stands up as a cliff, so that nothing that overshoots the last bowl can leave the level: it meets the wall and comes back down.

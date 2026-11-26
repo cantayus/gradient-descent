@@ -29,8 +29,8 @@ export function runRule(land, o, { steps = 150, start = land.start, rand = () =>
 }
 // Each boss again, as numbers: what went wrong there, and the one thing to change.
 export const PRESETS = [
-  { name: 'The Geyser', land: 'narrow', eta: 0.72, mu: 0, sigma: 0, limit: 0, say: 'The step is too long for this valley. Each one lands higher on the far wall than the last. Bring η down to 0.3 and run it again.' },
-  { name: 'The Hollows', land: 'hollow', eta: 0.3, mu: 0, sigma: 0, limit: 0, say: 'Without momentum Theta comes to rest in the first hollow, which is not the lowest. Raise μ to 0.9 and run it again.' },
+  { name: 'The Dovecotes', land: 'narrow', eta: 0.72, mu: 0, sigma: 0, limit: 0, say: 'The step is too long for this valley. Each one lands higher on the far wall than the last. Bring η down to 0.3 and run it again.' },
+  { name: 'The Craters', land: 'hollow', eta: 0.3, mu: 0, sigma: 0, limit: 0, say: 'Without momentum Theta comes to rest in the first hollow, which is not the lowest. Raise μ to 0.9 and run it again.' },
   { name: 'The Tide', land: 'rough', eta: 0.05, mu: 0, sigma: 0, limit: 0, say: 'Every ripple in this ground is a place to get stuck. Raise the noise to 3 and the shaking carries Theta from one to the next, lower each time.' },
   { name: 'The Long Flat', land: 'flat', eta: 0.3, mu: 0, sigma: 0, limit: 0, say: 'Almost no slope, so almost no step. Raise μ to 0.9, and the little steps add up until the flat is crossed.' },
   { name: 'The Thousand Pillars', land: 'ravine', eta: 0.6, mu: 0, sigma: 0, limit: 0, say: 'The walls are steep right down to the floor, so every step crosses it and lands on the other side. Bring η down to 0.05 and watch it settle.' },

@@ -17,7 +17,7 @@ const lamps = (time) => (time.stars || 0) > 0.3 || time.dark > 0.2;
 
 export const cappadocia = {
   id: 'cappadocia', name: 'Cappadocia', zone: 'tuff', times: TIMES,
-  stamps: [{ s: 'chimneyBig', name: 'Fairy chimney' }, { s: 'balloon', name: 'Hot-air balloon' }, { s: 'jars', name: 'Clay jars' }, { s: 'poplar', name: 'Poplar' }, { s: 'apricot', name: 'Apricot tree' }, { s: 'castle', name: 'Rock castle' }],
+  stamps: [{ s: 'chimneyBig', name: 'Fairy chimney' }, { s: 'balloon', name: 'Hot-air balloon' }, { s: 'jars', name: 'Clay jars' }, { s: 'poplar', name: 'Poplar' }, { s: 'apricot', name: 'Apricot tree' }, { s: 'castle', name: 'Rock castle' }, { s: 'dove', name: 'Pigeon' }],
   note: 'Cappadocia’s soft rock is tuff: ash from old volcanoes, hardened into stone. Where a harder cap protects it, a pillar is left standing.',
 
   far(time) {
@@ -63,6 +63,8 @@ export const cappadocia = {
     { s: 'apricot', every: 6, p: 0.45, size: 1, seed: 413, sink: 0.2, zone: ['vine', 'tuff'] },
     { s: 'rockBig', every: 9, p: 0.35, size: 1, seed: 417, sink: 0.5 },
     { s: 'jars', every: 23, p: 0.5, size: 1, seed: 421, sink: 0.05, zone: ['dust', 'honey', 'tuff'] },
+    { s: 'dove', frames: ['dove', 'doveB'], fps: 0.9, every: 3.4, p: 0.5, size: 1, seed: 431, sink: 0, zone: ['drum'] },
+    { s: 'dove', frames: ['dove', 'doveB'], fps: 0.7, every: 17, p: 0.45, size: 1, seed: 433, sink: 0, zone: ['cap', 'tuff', 'honey'] },
     { s: 'horse', frames: ['horse', 'horseB'], fps: 0.5, every: 29, p: 0.5, size: 1, seed: 425, sink: 0.04, zone: ['vine', 'dust'], roam: 1.7, speed: 0.07 },
   ],
   ground(time) {
@@ -74,7 +76,7 @@ export const cappadocia = {
       embed: { s: 'stone', every: 1.8, p: 0.4, a: 0.5 },
       skin: {
         tuff: band('#c9a984', '#ecd8b4', '#fff4dc'), rose: band('#c77a70', '#eba79a', '#ffd8cc'), honey: band('#c99a48', '#edc878', '#fff0b4'), dust: band('#a88868', '#d4b890', '#f2e2c4', [0.8, 0.34, 0.09]),
-        vine: band('#4f7030', '#86a84a', '#c2dc7a'), cap: band('#4a3e3a', '#75665e', '#a89888', [0.8, 0.3, 0.08]), snow: band('#b4c6e0', '#e6eefa', '#ffffff', [1.2, 0.6, 0.2]),
+        drum: band('#bfa588', '#eadcc0', '#fffaf0', [0.9, 0.4, 0.16]), vine: band('#4f7030', '#86a84a', '#c2dc7a'), cap: band('#4a3e3a', '#75665e', '#a89888', [0.8, 0.3, 0.08]), snow: band('#b4c6e0', '#e6eefa', '#ffffff', [1.2, 0.6, 0.2]),
       },
       decor: {
         tuff: [{ s: 'pebble', p: 0.4, size: 1, sink: 0.03 }, { s: 'tuftDry', p: 0.3, size: 1, sway: 0.06 }, { s: 'thyme', p: 0.12, size: 1, sway: 0.04 }, { s: 'rock', p: 0.1, size: 1, sink: 0.08 }],
@@ -83,6 +85,7 @@ export const cappadocia = {
         dust: [{ s: 'pebble', p: 0.5, size: 1, sink: 0.03 }, { s: 'rock', p: 0.14, size: 1, sink: 0.08 }, { s: 'tuftDry', p: 0.16, size: 0.9, sway: 0.06 }],
         vine: [{ s: 'tuft', p: 0.8, size: 1, sway: 0.06 }, { s: 'vine', p: 0.3, size: 1, sink: 0.04, steep: 0.8 }, { s: 'poppy', p: 0.3, size: 1, sway: 0.07 }, { s: 'thyme', p: 0.14, size: 1, sway: 0.04 }],
         cap: [{ s: 'rock', p: 0.3, size: 1, sink: 0.08 }, { s: 'pebble', p: 0.5, size: 1, sink: 0.03 }],
+        drum: [{ s: 'pebble', p: 0.2, size: 0.8, sink: 0.03 }],
         snow: [{ s: 'drift', p: 0.5, size: 1, sink: 0.06, steep: 1.6 }, { s: 'tuftDry', p: 0.12, size: 0.8, sway: 0.05 }],
       },
     };
@@ -145,6 +148,18 @@ export const cappadocia = {
     S.foreRock = v(3, 'cap-frock', (r) => r.range(4, 7), (r) => r.range(1.4, 2.4), P.rock, () => ({ col: near, lit: mix(near, time.haze, 0.3) }), { ppu: 30, blur: 1.1 });
     S.foreGrass = v(4, 'cap-fgrass', (r) => r.range(1.6, 2.6), (r) => r.range(1.3, 2.4), (ctx, w, h, r) => { P.tuft(ctx, w, h, r, { col: near, tip: mix(near, time.haze, 0.25), n: 16 }); if (r.chance(0.6)) { ctx.save(); ctx.translate(w * 0.35, h * 0.2); P.flower(ctx, w * 0.3, h * 0.8, r, { kind: 'cup', col: mix('#e63a2e', near, 0.55), col2: mix('#ff8a6a', near, 0.5), stem: near }); ctx.restore(); } }, {}, { ppu: 30, blur: 1 });
     // the place the seed is planted: a ring of pale stones with poppies
+    // the pigeons of the valley: one looking about, one with its head down
+    const dove = (peck, i) => sprite(0.58, 0.46, (ctx, w, h) => { const body = t(i ? '#c2cad6' : '#aeb8c8'), dark = t(i ? '#8f9aac' : '#7a8496'), hx = peck ? 0.45 : 0.39, hy = peck ? h - 0.13 : h - 0.33;
+      ctx.strokeStyle = t('#e08a70'); ctx.lineWidth = 0.02; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(0.24, h - 0.1); ctx.lineTo(0.24, h - 0.01); ctx.moveTo(0.3, h - 0.1); ctx.lineTo(0.31, h - 0.01); ctx.stroke();
+      ctx.fillStyle = dark; ctx.beginPath(); ctx.moveTo(0.1, h - 0.24); ctx.lineTo(0.0, h - 0.15); ctx.lineTo(0.18, h - 0.14); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = body; ctx.beginPath(); ctx.ellipse(0.25, h - 0.2, 0.165, 0.115, -0.25, 0, TAU); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(0.3, h - 0.28); ctx.quadraticCurveTo(hx - 0.07, hy + 0.04, hx - 0.03, hy - 0.03); ctx.lineTo(hx + 0.04, hy + 0.04); ctx.quadraticCurveTo(0.42, h - 0.16, 0.37, h - 0.12); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = t('#7fae9c'); ctx.globalAlpha = 0.7; ctx.beginPath(); ctx.ellipse((0.34 + hx) / 2, (h - 0.22 + hy) / 2 + 0.02, 0.05, 0.035, peck ? 0.6 : -0.9, 0, TAU); ctx.fill(); ctx.globalAlpha = 1;
+      ctx.fillStyle = dark; ctx.beginPath(); ctx.ellipse(0.2, h - 0.2, 0.12, 0.065, -0.18, 0, TAU); ctx.fill(); ctx.strokeStyle = t('#5a6474'); ctx.lineWidth = 0.014; ctx.beginPath(); ctx.moveTo(0.13, h - 0.2); ctx.lineTo(0.28, h - 0.23); ctx.moveTo(0.12, h - 0.17); ctx.lineTo(0.27, h - 0.19); ctx.stroke();
+      ctx.fillStyle = body; ctx.beginPath(); ctx.arc(hx, hy, 0.07, 0, TAU); ctx.fill();
+      ctx.fillStyle = t('#f0a860'); ctx.beginPath(); ctx.moveTo(hx + 0.055, hy - 0.02); ctx.lineTo(hx + 0.13, hy + (peck ? 0.06 : 0.015)); ctx.lineTo(hx + 0.05, hy + 0.035); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#231a22'; ctx.beginPath(); ctx.arc(hx + 0.022, hy - 0.016, 0.016, 0, TAU); ctx.fill(); });
+    S.dove = [dove(false, 0), dove(false, 1)]; S.doveB = [dove(true, 0), dove(true, 1)];
     S.nest = [sprite(3.4, 0.7, (ctx, w, h) => { const r = new RNG('capnest'); for (let i = 0; i < 9; i++) { const x = ((i + 0.5) / 9) * w; ctx.save(); ctx.translate(x - 0.2, h - 0.3); P.rock(ctx, 0.4, 0.3, r, { col: t('#d9c3a0'), lit: t('#fff4dc') }); ctx.restore(); if (i % 2) { ctx.save(); ctx.translate(x - 0.1, h - 0.6); P.flower(ctx, 0.2, 0.36, r, { kind: 'cup', col: t('#e63a2e'), col2: t('#ff8a6a'), stem: t('#5a8a45') }); ctx.restore(); } } })];
     return S;
   },

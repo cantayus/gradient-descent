@@ -8,90 +8,105 @@ import { galapagos } from '../art/worlds/galapagos.js';
 import { namib } from '../art/worlds/namib.js';
 import { zhangjiajie } from '../art/worlds/zhangjiajie.js';
 import { patagonia } from '../art/worlds/patagonia.js';
-import { yakushima } from '../art/worlds/yakushima.js';
+import { newzealand } from '../art/worlds/newzealand.js';
 
 const m = 'meadow', g = 'grass';
-const ICE = [
-  { id: '1-1', name: 'First Light', time: 'dawn', card: 'loss', par: 33, intro: true,
-    strokes: [['flat', 10, { mark: 'hint', text: 'move' }], ['slope', 36, -9, { zone: 'sand', seeds: 3 }], ['flat', 9, { zone: 'moss', mark: 'hint', text: 'jump' }], ['steps', 8, 2, 1, { zone: 'moss' }], ['slope', 30, -11, { zone: 'moss', seeds: 3 }],
-      ['valley', 16, 2.2, -2, { zone: 'moss' }], ['hill', 12, 1.6, -1, { zone: 'sand' }], ['flat', 8, { zone: 'snow', surf: 'snow', mark: 'hint', text: 'slide' }], ['slope', 46, -18, { surf: 'ice', zone: 'ice', seeds: 4 }], ['flat', 12, { zone: 'snow', surf: 'snow' }],
-      ['steps', 24, 4, -1.6, { zone: 'basalt' }], ['slope', 34, -12, { zone: m, surf: g, seeds: 3 }], ['waves', 30, 1.1, 3, -5, { zone: m, surf: g }], ['slope', 26, -9, { zone: 'sand' }], ['bowl', 20, 4, 3.5, { zone: m, surf: g }]] },
-  { id: '1-2', name: 'The Slope Knows', time: 'day', card: 'gradient', par: 38,
-    strokes: [['flat', 8, { mark: 'hint', text: 'turbo', at: 0.2 }], ['slope', 24, -4, { zone: m, surf: g, seeds: 2 }], ['slope', 26, -14, { zone: m, surf: g, seeds: 3 }], ['flat', 9, { zone: 'sand' }], ['gap', 4], ['flat', 8, { zone: 'sand', seeds: [{ at: 0.5 }] }], ['gap', 5], ['flat', 10, { zone: 'rock' }],
-      ['slope', 22, -5, { surf: 'ice', zone: 'ice', seeds: 2 }], ['slope', 30, -19, { surf: 'ice', zone: 'ice', seeds: 3 }], ['kicker', 7, 1.6, { surf: 'ice', zone: 'ice' }], ['gap', 7, -4], ['flat', 12, { zone: 'snow', surf: 'snow', seeds: 2 }], ['slope', 30, -8, { zone: 'snow', surf: 'snow' }],
-      ['valley', 24, 3, 0, { zone: 'hot', water: [0.2, 0.8, -1.3], hot: true, plat: [{ at: 0.36, up: -0.9, w: 2.6 }, { at: 0.64, up: -0.9, w: 2.6 }], seeds: [{ at: 0.36, up: 0.6 }, { at: 0.64, up: 0.6 }] }],
-      ['flat', 10, { zone: 'hot', jets: [{ at: 0.84, top: 10, v: 18, w: 1.6 }], mark: 'hint', text: 'jet', at: 0.2 }], ['line', 2.5, 5.5, { zone: 'rock' }], ['flat', 12, { zone: 'moss', seeds: 2 }], ['slope', 40, -21, { zone: 'moss', seeds: 4 }],
-      ['waves', 28, 1.4, 3, -6, { zone: m, surf: g }], ['bowl', 20, 4.5, 3.5, { zone: m, surf: g }]] },
-  { id: '1-3', name: 'Short Steps, Long Steps', time: 'golden', card: 'rate', par: 44,
-    strokes: [['flat', 8], ['slope', 22, -7, { zone: 'sand', seeds: 2 }], ['flat', 5, { zone: 'basalt' }], ['gap', 2.4], ['flat', 3, { zone: 'basalt', seeds: [{ at: 0.5 }] }], ['gap', 2.4], ['flat', 3, { zone: 'basalt' }], ['gap', 2.4], ['flat', 3, { zone: 'basalt', seeds: [{ at: 0.5 }] }], ['gap', 2.4], ['flat', 8, { zone: 'basalt' }],
-      ['slope', 26, -9, { zone: 'moss', seeds: 3 }], ['flat', 10, { zone: 'sand' }], ['gap', 6.5], ['flat', 12, { zone: 'sand', seeds: 1 }], ['gap', 7], ['flat', 10, { zone: m, surf: g }],
-      ['steps', 15, 5, -1.3, { zone: 'basalt', seeds: 5 }], ['gap', 3, -1], ['steps', 12, 4, -1.3, { zone: 'basalt' }], ['flat', 8, { zone: 'moss' }],
-      ['slope', 34, -15, { surf: 'ice', zone: 'ice', seeds: 3 }], ['kicker', 8, 2, { surf: 'ice', zone: 'ice' }], ['gap', 9, -6, { plat: [{ at: 0.5, up: -3.2, w: 3 }] }], ['flat', 12, { zone: 'snow', surf: 'snow', seeds: 2 }],
-      ['slope', 28, -10, { zone: m, surf: g, seeds: 3 }], ['flat', 14, { zone: m, surf: g }], ['gap', 2.6], ['flat', 3.4, { zone: 'basalt', seeds: [{ at: 0.5 }] }], ['gap', 6], ['flat', 4, { zone: 'basalt' }], ['gap', 2.6], ['flat', 10, { zone: m, surf: g }],
-      ['slope', 30, -12, { zone: m, surf: g, seeds: 3 }], ['bowl', 18, 4, 3.5, { zone: m, surf: g }]] },
-  { id: '1-4', name: 'Overshoot', time: 'mist', card: 'overshoot', par: 46,
-    strokes: [['flat', 8, { zone: 'snow', surf: 'snow' }], ['slope', 30, -14, { surf: 'ice', zone: 'ice', seeds: 3 }], ['valley', 9, 3.2, 0.5, { zone: 'snow', surf: 'snow', seeds: [{ at: 0.5, up: 0.9 }] }], ['flat', 7, { zone: 'snow', surf: 'snow' }], ['gap', 3.2], ['flat', 9, { zone: 'rock' }],
-      ['slope', 26, -13, { surf: 'ice', zone: 'ice', seeds: 2 }], ['valley', 8, 3.6, 1, { zone: 'hot', seeds: [{ at: 0.5, up: 0.9 }] }], ['hill', 9, 1.2, -1, { zone: 'rock' }], ['valley', 8, 3.4, 0, { zone: 'hot', seeds: [{ at: 0.5, up: 0.9 }] }], ['flat', 8, { zone: 'rock' }],
-      ['slope', 20, -8, { zone: 'sand', seeds: 2 }], ['flat', 10, { zone: 'hot', jets: [{ at: 0.84, top: 11, v: 19, every: 3.6, len: 2, w: 1.6 }] }], ['line', 2.5, 6, { zone: 'rock' }], ['flat', 9, { zone: 'moss', seeds: 1 }], ['gap', 4.5], ['flat', 3.2, { zone: 'basalt', seeds: [{ at: 0.5 }] }], ['gap', 4.5], ['flat', 9, { zone: 'moss' }],
-      ['slope', 36, -20, { surf: 'ice', zone: 'ice', seeds: 4 }], ['valley', 12, 4, 2, { zone: 'snow', surf: 'snow', seeds: [{ at: 0.45, up: 0.9 }] }], ['flat', 6, { zone: 'snow', surf: 'snow' }], ['gap', 5, -2], ['flat', 10, { zone: 'snow', surf: 'snow' }],
-      ['slope', 30, -12, { zone: 'snow', surf: 'snow', seeds: 3 }], ['valley', 20, 2.6, 0, { zone: 'hot', water: [0.22, 0.78, -1.1], hot: true, plat: [{ at: 0.5, up: -0.8, w: 3 }], seeds: [{ at: 0.5, up: 0.7 }] }],
-      ['slope', 26, -11, { zone: 'moss', seeds: 3 }], ['bowl', 12, 4.2, 4, { zone: 'moss' }]] },
-  { id: '1-5', name: 'Under the Lights', time: 'night', card: 'descent', par: 62,
-    strokes: [['flat', 10, { zone: 'snow', surf: 'snow' }], ['slope', 40, -16, { zone: 'snow', surf: 'snow', seeds: 4 }], ['waves', 30, 1.3, 3, -5, { surf: 'ice', zone: 'ice', seeds: 3 }], ['kicker', 7, 1.8, { surf: 'ice', zone: 'ice' }], ['gap', 8, -5], ['flat', 12, { zone: 'snow', surf: 'snow', seeds: 2 }],
-      ['steps', 20, 5, -1.4, { zone: 'basalt', seeds: 5 }], ['flat', 6, { zone: 'basalt' }], ['gap', 2.6], ['flat', 3, { zone: 'basalt' }], ['gap', 2.6], ['flat', 3, { zone: 'basalt', seeds: [{ at: 0.5 }] }], ['gap', 6], ['flat', 9, { zone: 'moss' }],
-      ['slope', 30, -13, { zone: 'moss', seeds: 3 }], ['valley', 26, 3, 0, { zone: 'hot', water: [0.18, 0.82, -1.2], hot: true, plat: [{ at: 0.32, up: -0.85, w: 2.4 }, { at: 0.5, up: -0.85, w: 2.4, bob: { amp: 0.25, per: 3 } }, { at: 0.68, up: -0.85, w: 2.4 }], seeds: [{ at: 0.32, up: 0.7 }, { at: 0.5, up: 0.9 }, { at: 0.68, up: 0.7 }] }],
-      ['flat', 10, { zone: 'hot', jets: [{ at: 0.84, top: 12, v: 20, w: 1.6 }] }], ['line', 2.5, 7.5, { zone: 'rock' }], ['flat', 10, { zone: 'snow', surf: 'snow', seeds: 2 }],
-      ['slope', 50, -27, { surf: 'ice', zone: 'ice', seeds: 5 }], ['valley', 14, 3.6, 1.5, { zone: 'snow', surf: 'snow', seeds: [{ at: 0.48, up: 0.9 }] }], ['flat', 8, { zone: 'snow', surf: 'snow' }], ['gap', 4.5], ['flat', 8, { zone: 'rock' }],
-      ['slope', 26, -10, { zone: m, surf: g, seeds: 3 }], ['flat', 7, { zone: 'hot', jets: [{ at: 0.3, top: 8, v: 17, every: 3, len: 1.4 }, { at: 0.8, top: 8, v: 17, every: 3, phase: 1.5, len: 1.4 }] }],
-      ['slope', 34, -14, { zone: m, surf: g, seeds: 4 }], ['waves', 26, 1.2, 3, -4, { zone: m, surf: g }], ['bowl', 18, 4.5, 4, { zone: m, surf: g }]] },
-  { id: '1-B', name: 'The Geyser', time: 'dusk', boss: 'geyser', par: 31, music: 'boss',
-    strokes: [['flat', 10, { zone: 'hot' }], ['slope', 20, -7, { zone: 'hot', seeds: 2 }],
-      ['steps', 21, 3, -2, { zone: 'drum', seeds: 3 }], ['flat', 8, { zone: 'hot' }], ['gap', 3], ['flat', 7, { zone: 'hot', seeds: [{ at: 0.5 }] }], ['gap', 3], ['flat', 8, { zone: 'hot' }],
-      ['steps', 28, 4, -2, { zone: 'drum', seeds: 4 }], ['slope', 18, -6, { zone: 'hot' }], ['flat', 5, { zone: 'hot' }], ['gap', 2.6], ['flat', 3, { zone: 'hot' }], ['gap', 2.6], ['flat', 3, { zone: 'hot', seeds: [{ at: 0.5 }] }], ['gap', 2.6], ['flat', 8, { zone: 'hot' }],
-      ['steps', 30, 5, -1.8, { zone: 'drum', seeds: 5 }], ['slope', 24, -9, { zone: 'hot', seeds: 2 }], ['bowl', 11, 3.5, 5, { zone: 'hot' }]] },
-];
-
-// ---- Cappadocia: rolling, hollows, and where you start ----
+// Building blocks that more than one country uses.
 // A hollow: a long way in (gentle enough to walk back up), a short floor, and a rim too steep to walk and too high to jump. Speed is the only way over.
-const T2 = 'tuff', R2 = 'rose', H2 = 'honey', V2 = 'vine', D2 = 'dust';
 const hollow = (inL, inD, rimL, rimH, o = {}, seeds = 3) => [['slope', inL, -inD, { ...o, seeds }], ['flat', 3, o], ['line', rimL, rimH, o]];
-// Building blocks. After a rim the ball is in the air, so the ground beyond it is always long and level: no pit is ever hidden behind a rim.
+// After a rim the ball is in the air, so the ground beyond it is always long and level: no pit is ever hidden behind a rim.
 const run = (L, dy, zone, seeds = 3, surf) => ['slope', L, dy, { zone, seeds, ...(surf ? { surf } : {}) }];
 const land = (zone, L = 16, seeds = 2) => ['flat', L, { zone, seeds }];
-const dustFlat = (L = 12) => ['flat', L, { zone: D2, surf: 'sand' }];      // deep dust takes the speed out of a roll: a place to slow down
+
+// ---- Cappadocia, the first country: height is error, the slope says which way, and every step has a length ----
+// Pale tuff to roll down, vineyards, the caps of fairy chimneys to hop across, the red river to ford, and a balloon where the way on is up.
+const T2 = 'tuff', R2 = 'rose', H2 = 'honey', V2 = 'vine', D2 = 'dust', C2 = 'cap', SW = 'snow';
+const deep = (L = 12, seeds = 0) => ['flat', L, { zone: D2, surf: 'dust', seeds }];      // deep dust: whatever comes through it fast is slowed hard, as in loose snow
+const snowy = (L, o = {}) => ['flat', L, { zone: SW, surf: 'snow', ...o }];
 const CAP = [
+  { id: '1-1', name: 'First Light', time: 'dawn', card: 'loss', par: 29, intro: true, can: { mu: false },
+    strokes: [['flat', 10, { zone: T2, mark: 'hint', text: 'move' }], ['slope', 36, -9, { zone: H2, seeds: 3 }], ['flat', 9, { zone: V2, surf: g, mark: 'hint', text: 'jump' }], ['steps', 8, 2, 1, { zone: T2 }], ['slope', 30, -11, { zone: R2, seeds: 3 }],
+      ['valley', 16, 2.2, -2, { zone: R2 }], ['hill', 12, 1.6, -1, { zone: H2 }], ['flat', 8, { zone: T2, mark: 'hint', text: 'roll' }], ['slope', 46, -18, { zone: T2, seeds: 4 }], deep(12),
+      ['steps', 24, 4, -1.6, { zone: C2 }], ['slope', 34, -12, { zone: V2, surf: g, seeds: 3 }], ['waves', 30, 1.1, 3, -5, { zone: V2, surf: g }], ['slope', 26, -9, { zone: H2 }], ['bowl', 20, 4, 3.5, { zone: V2, surf: g }]] },
+  { id: '1-2', name: 'The Slope Knows', time: 'day', card: 'gradient', par: 38, can: { mu: false },
+    strokes: [['flat', 8, { zone: T2, mark: 'hint', text: 'turbo', at: 0.2 }], ['slope', 24, -4, { zone: V2, surf: g, seeds: 2 }], ['slope', 26, -14, { zone: V2, surf: g, seeds: 3 }], ['flat', 9, { zone: H2 }], ['gap', 4], ['flat', 8, { zone: C2, seeds: [{ at: 0.5 }] }], ['gap', 5], ['flat', 10, { zone: T2 }],
+      ['slope', 22, -5, { zone: T2, seeds: 2 }], ['slope', 30, -19, { zone: T2, seeds: 3 }], ['kicker', 7, 1.6, { zone: T2 }], ['gap', 7, -4], ['flat', 12, { zone: R2, seeds: 2 }], ['slope', 30, -8, { zone: R2 }],
+      // the red river, forded on slabs of cap rock. Falling in costs time and nothing else
+      ['valley', 24, 3, 0, { zone: R2, water: [0.2, 0.8, -1.3], plat: [{ at: 0.36, up: -0.9, w: 2.6 }, { at: 0.64, up: -0.9, w: 2.6 }], seeds: [{ at: 0.36, up: 0.6 }, { at: 0.64, up: 0.6 }] }],
+      // and a wall with no way up it but the balloon
+      ['flat', 14, { zone: T2, mark: 'hint', text: 'ride', at: 0.15, ride: { at: 0.55, to: 13, up: 5, quick: true } }], ['line', 2.5, 5.5, { zone: C2 }], ['flat', 14, { zone: H2, seeds: 2 }], ['slope', 40, -21, { zone: R2, seeds: 4 }],
+      ['waves', 28, 1.4, 3, -6, { zone: V2, surf: g }], ['bowl', 20, 4.5, 3.5, { zone: V2, surf: g }]] },
+  // Mu comes here, and with Mu the lift: a second, smaller step in the middle of a long one
+  { id: '1-3', name: 'Short Steps, Long Steps', time: 'golden', card: 'rate', par: 44,
+    strokes: [['flat', 12, { zone: T2, mark: 'hint', text: 'lift', at: 0.4 }], ['slope', 22, -7, { zone: H2, seeds: 2 }], ['flat', 5, { zone: C2 }], ['gap', 2.4], ['flat', 3, { zone: C2, seeds: [{ at: 0.5 }] }], ['gap', 2.4], ['flat', 3, { zone: C2 }], ['gap', 2.4], ['flat', 3, { zone: C2, seeds: [{ at: 0.5 }] }], ['gap', 2.4], ['flat', 8, { zone: C2 }],
+      ['slope', 26, -9, { zone: R2, seeds: 3 }], ['flat', 10, { zone: H2 }], ['gap', 6.5], ['flat', 12, { zone: H2, seeds: 1 }], ['gap', 7], ['flat', 10, { zone: V2, surf: g }],
+      ['steps', 15, 5, -1.3, { zone: T2, seeds: 5 }], ['gap', 3, -1], ['steps', 12, 4, -1.3, { zone: T2 }], ['flat', 8, { zone: R2 }],
+      ['slope', 34, -15, { zone: T2, seeds: 3 }], ['kicker', 8, 2, { zone: T2 }], ['gap', 9, -6, { plat: [{ at: 0.5, up: -3.2, w: 3 }] }], ['flat', 12, { zone: H2, seeds: 2 }],
+      ['slope', 28, -10, { zone: V2, surf: g, seeds: 3 }], ['flat', 14, { zone: V2, surf: g }], ['gap', 2.6], ['flat', 3.4, { zone: C2, seeds: [{ at: 0.5 }] }], ['gap', 6], ['flat', 4, { zone: C2 }], ['gap', 2.6], ['flat', 10, { zone: V2, surf: g }],
+      ['slope', 30, -12, { zone: V2, surf: g, seeds: 3 }], ['bowl', 18, 4, 3.5, { zone: V2, surf: g }]] },
+  // winter: bare tuff is quick, and the snow lying in each small valley is where the seed is. Come in too fast and you are over it and gone
+  { id: '1-4', name: 'Overshoot', time: 'winter', card: 'overshoot', par: 49,
+    strokes: [snowy(8), ['slope', 30, -14, { zone: T2, seeds: 3 }], ['valley', 9, 3.2, 0.5, { zone: SW, surf: 'snow', seeds: [{ at: 0.5, up: 0.9 }] }], snowy(14), ['gap', 3.2], ['flat', 9, { zone: C2 }],
+      ['slope', 26, -13, { zone: T2, seeds: 2 }], ['valley', 8, 3.6, 1, { zone: SW, surf: 'snow', seeds: [{ at: 0.5, up: 0.9 }] }], ['hill', 9, 1.2, -1, { zone: C2 }], ['valley', 8, 3.4, 0, { zone: SW, surf: 'snow', seeds: [{ at: 0.5, up: 0.9 }] }], ['flat', 8, { zone: C2 }],
+      ['slope', 20, -8, { zone: T2, seeds: 2 }], snowy(12, { seeds: 1 }), ['gap', 4.5], ['flat', 3.2, { zone: C2, seeds: [{ at: 0.5 }] }], ['gap', 4.5], snowy(9),
+      ['slope', 36, -20, { zone: T2, seeds: 4 }], ['valley', 12, 4, 2, { zone: SW, surf: 'snow', seeds: [{ at: 0.45, up: 0.9 }] }], snowy(14), ['gap', 5, -2], snowy(10),
+      ['slope', 30, -12, { zone: SW, surf: 'snow', seeds: 3 }], ['valley', 20, 2.6, 0, { zone: R2, water: [0.22, 0.78, -1.1], plat: [{ at: 0.5, up: -0.8, w: 3 }], seeds: [{ at: 0.5, up: 0.7 }] }],
+      ['slope', 26, -11, { zone: T2, seeds: 3 }], ['bowl', 12, 4.2, 4, { zone: SW, surf: 'snow' }]] },
+  { id: '1-5', name: 'By Lamplight', time: 'night', card: 'descent', par: 56,
+    strokes: [['flat', 10, { zone: T2 }], ['slope', 40, -16, { zone: T2, seeds: 4 }], ['waves', 30, 1.3, 3, -5, { zone: R2, seeds: 3 }], ['kicker', 7, 1.8, { zone: R2 }], ['gap', 8, -5], ['flat', 12, { zone: H2, seeds: 2 }],
+      ['steps', 20, 5, -1.4, { zone: T2, seeds: 5 }], ['flat', 6, { zone: C2 }], ['gap', 2.6], ['flat', 3, { zone: C2 }], ['gap', 2.6], ['flat', 3, { zone: C2, seeds: [{ at: 0.5 }] }], ['gap', 6], ['flat', 9, { zone: H2 }],
+      ['slope', 30, -13, { zone: H2, seeds: 3 }], ['valley', 26, 3, 0, { zone: R2, water: [0.18, 0.82, -1.2], plat: [{ at: 0.32, up: -0.85, w: 2.4 }, { at: 0.5, up: -0.85, w: 2.4 }, { at: 0.68, up: -0.85, w: 2.4 }], seeds: [{ at: 0.32, up: 0.7 }, { at: 0.5, up: 0.9 }, { at: 0.68, up: 0.7 }] }],
+      ['flat', 14, { zone: T2, ride: { at: 0.55, to: 13, up: 5, quick: true } }], ['line', 2.5, 7.5, { zone: C2 }], ['flat', 14, { zone: H2, seeds: 2 }],
+      ['slope', 50, -27, { zone: T2, seeds: 5 }], ['valley', 14, 3.6, 1.5, { zone: R2, seeds: [{ at: 0.48, up: 0.9 }] }], deep(8), ['gap', 4.5], ['flat', 8, { zone: C2 }],
+      ['slope', 26, -10, { zone: V2, surf: g, seeds: 3 }], ['flat', 7, { zone: V2, surf: g }],
+      ['slope', 34, -14, { zone: V2, surf: g, seeds: 4 }], ['waves', 26, 1.2, 3, -4, { zone: V2, surf: g }], ['bowl', 18, 4.5, 4, { zone: V2, surf: g }]] },
+  // The roofs of the dovecotes are thin. Land hard on one and the pigeons under it take fright; frighten them enough and the whole flock comes up at once
+  { id: '1-B', name: 'The Dovecotes', time: 'dusk', boss: 'doves', par: 31, music: 'boss',
+    strokes: [['flat', 10, { zone: H2 }], ['slope', 20, -7, { zone: H2, seeds: 2 }],
+      ['steps', 21, 3, -2, { zone: 'drum', seeds: 3 }], ['flat', 8, { zone: T2 }], ['gap', 3], ['flat', 7, { zone: C2, seeds: [{ at: 0.5 }] }], ['gap', 3], ['flat', 8, { zone: T2 }],
+      ['steps', 28, 4, -2, { zone: 'drum', seeds: 4 }], ['slope', 18, -6, { zone: R2 }], ['flat', 5, { zone: C2 }], ['gap', 2.6], ['flat', 3, { zone: C2 }], ['gap', 2.6], ['flat', 3, { zone: C2, seeds: [{ at: 0.5 }] }], ['gap', 2.6], ['flat', 8, { zone: T2 }],
+      ['steps', 30, 5, -1.8, { zone: 'drum', seeds: 5 }], ['slope', 24, -9, { zone: H2, seeds: 2 }], ['bowl', 11, 3.5, 5, { zone: V2, surf: g }]] },
+];
+
+// ---- Iceland, the second country: speed that is kept, craters that are not the lowest ground, and where you start ----
+// Lava, moss and warm ochre earth; black sand deep enough to stop a roll; blue ice that stops nothing; and geysers, which are the only way out of the deepest places.
+const K2 = 'rock', M2 = 'moss', O2 = 'hot', B2 = 'basalt', I2 = 'ice';
+const ash = (L = 12) => ['flat', L, { zone: 'sand', surf: 'sand' }];      // deep black sand takes the speed out of a roll: a place to slow down
+const icy = (L, dy, seeds = 3) => ['slope', L, dy, { zone: I2, surf: 'ice', seeds }];
+const geyser = (wall, o = {}) => [['flat', 14, { zone: 'sand', surf: 'sand', jets: [{ at: 0.86, top: wall + 3, v: 17 + wall * 0.45, w: 1.8 }], ...o }], ['line', 2.5, wall, { zone: B2 }]];
+const ICE = [
   { id: '2-1', name: 'A Running Start', time: 'dawn', card: 'momentum', par: 35,
-    strokes: [['flat', 10, { zone: D2, mark: 'hint', text: 'roll' }], run(34, -11, V2, 4, g), ['flat', 6, { zone: D2 }], ['line', 3.4, 1.7, { zone: T2 }], land(T2), run(24, -8, R2), ...hollow(26, 9, 3, 2.8, { zone: R2 }), land(R2),
-      run(36, -13, H2, 4), ['waves', 32, 1.2, 3, -6, { zone: T2, seeds: 3 }], dustFlat(), run(28, -9, V2, 3, g), ...hollow(26, 10, 3.2, 3.2, { zone: V2, surf: g }), land(D2), run(30, -10, T2), ['hill', 14, 1.6, -1, { zone: R2 }],
-      run(34, -12, R2, 4), ...hollow(24, 9, 3.2, 3.4, { zone: H2 }), land(H2), ['waves', 30, 1.1, 3, -5, { zone: V2, surf: g, seeds: 3 }], dustFlat(10), run(30, -10, T2), ['flat', 10, { zone: V2, surf: g }], ['bowl', 22, 4, 4, { zone: V2, surf: g }]] },
-  { id: '2-2', name: 'The Hollow', time: 'day', card: 'local', par: 42,
-    strokes: [['flat', 9, { zone: T2, mark: 'hint', text: 'lift', at: 0.3 }], run(20, -6, T2, 2), ['flat', 7, { zone: D2, mark: 'hint', text: 'rim', at: 0.4 }], ['line', 2.8, 3, { zone: H2 }], land(H2), ...hollow(30, 12, 3.2, 3.6, { zone: R2 }, 4), land(R2, 18),
-      ['gap', 4, -1], land(T2, 12), run(26, -9, T2), ...hollow(32, 13, 3.4, 4.2, { zone: H2 }, 4), land(D2, 18, 1), run(28, -10, V2, 3, g), ['valley', 18, 2.4, 0, { zone: V2, surf: g, seeds: [{ at: 0.5, up: 0.8 }] }], dustFlat(),
-      run(30, -11, T2), ...hollow(24, 9, 3, 3.4, { zone: R2 }), land(R2), run(22, -7, H2), ...hollow(28, 11, 3.2, 3.8, { zone: H2 }), land(T2), ['waves', 30, 1.3, 3, -6, { zone: T2, seeds: 3 }], dustFlat(10),
-      run(30, -11, R2), ...hollow(26, 10, 3.4, 4, { zone: V2, surf: g }), land(D2), run(28, -9, H2), ['flat', 10, { zone: V2, surf: g }], ['bowl', 22, 4.4, 4, { zone: V2, surf: g }]] },
+    strokes: [['flat', 10, { zone: B2, mark: 'hint', text: 'speed' }], run(34, -11, m, 4, g), ['flat', 6, { zone: B2 }], ['line', 3.4, 1.7, { zone: K2 }], land(K2), run(24, -8, M2), ...hollow(26, 9, 3, 2.8, { zone: M2 }), land(M2),
+      icy(36, -13, 4), ['waves', 32, 1.2, 3, -6, { zone: K2, seeds: 3 }], ash(), run(28, -9, m, 3, g), ...hollow(26, 10, 3.2, 3.2, { zone: m, surf: g }), land(B2), run(30, -10, K2), ['hill', 14, 1.6, -1, { zone: M2 }],
+      run(34, -12, M2, 4), ...hollow(24, 9, 3.2, 3.4, { zone: O2 }), land(O2), ['waves', 30, 1.1, 3, -5, { zone: m, surf: g, seeds: 3 }], ash(10), run(30, -10, K2), ['flat', 10, { zone: m, surf: g }], ['bowl', 22, 4, 4, { zone: m, surf: g }]] },
+  { id: '2-2', name: 'The Crater', time: 'day', card: 'local', par: 42,
+    strokes: [['flat', 9, { zone: K2 }], run(20, -6, K2, 2), ['flat', 7, { zone: B2, mark: 'hint', text: 'rim', at: 0.4 }], ['line', 2.8, 3, { zone: O2 }], land(O2), ...hollow(30, 12, 3.2, 3.6, { zone: M2 }, 4), land(M2, 18),
+      ['gap', 4, -1], land(K2, 12), run(26, -9, K2), ...hollow(32, 13, 3.4, 4.2, { zone: O2 }, 4), land(B2, 18, 1), run(28, -10, m, 3, g), ['valley', 18, 2.4, 0, { zone: m, surf: g, seeds: [{ at: 0.5, up: 0.8 }] }], ash(),
+      icy(30, -11), ...hollow(24, 9, 3, 3.4, { zone: M2 }), land(M2), run(22, -7, O2), ...hollow(28, 11, 3.2, 3.8, { zone: O2 }), land(K2), ['waves', 30, 1.3, 3, -6, { zone: K2, seeds: 3 }], ash(10),
+      run(30, -11, M2), ...hollow(26, 10, 3.4, 4, { zone: m, surf: g }), land(B2), run(28, -9, O2), ['flat', 10, { zone: m, surf: g }], ['bowl', 22, 4.4, 4, { zone: m, surf: g }]] },
   { id: '2-3', name: 'Carry It Over', time: 'golden', card: 'carry', par: 46,
-    strokes: [['flat', 9, { zone: H2 }], run(36, -14, H2, 4), ['flat', 3, { zone: T2 }], ['line', 3, 2.6, { zone: T2 }], run(24, -9, R2), ['flat', 3, { zone: R2 }], ['line', 3, 2.8, { zone: R2 }], run(26, -10, T2), ['flat', 3, { zone: T2 }], ['line', 3.2, 3, { zone: H2 }], land(H2, 20),
-      dustFlat(8), run(30, -11, V2, 4, g), ['flat', 4, { zone: T2 }], ['kicker', 6, 2.2, { zone: H2 }], ['gap', 8, -4], land(D2, 20), run(32, -12, R2, 4), ['waves', 38, 1.6, 4, -7, { zone: R2, seeds: 4 }], ['flat', 4, { zone: T2 }], ['line', 3.4, 3.4, { zone: T2 }], land(T2, 20),
-      run(26, -9, H2), ...hollow(30, 13, 3.6, 4.4, { zone: H2 }, 4), run(26, -10, R2), ['flat', 3, { zone: R2 }], ['line', 3, 2.6, { zone: R2 }], run(24, -9, T2), ['flat', 3, { zone: T2 }], ['line', 3.2, 3.2, { zone: T2 }], land(V2, 18),
-      dustFlat(8), run(30, -11, V2, 3, g), ...hollow(26, 11, 3.4, 4, { zone: H2 }), land(H2), run(28, -9, R2), ['flat', 10, { zone: V2, surf: g }], ['bowl', 22, 4.4, 4, { zone: V2, surf: g }]] },
-  { id: '2-4', name: 'Where You Start', time: 'winter', card: 'start', par: 49,
-    strokes: [['flat', 9, { zone: 'snow' }], run(30, -10, 'snow'), ...hollow(24, 9, 3, 3, { zone: 'snow' }), land(T2), run(34, -14, 'snow', 4),
-      // the deep place: no speed gets you out of this one. A balloon is waiting at the bottom
-      ['flat', 14, { zone: T2, surf: 'sand', mark: 'hint', text: 'ride', at: 0.2, ride: { at: 0.62, to: 48, up: 15 } }], ['line', 5, 11, { zone: 'cap' }], ['flat', 34, { zone: 'snow', seeds: 3 }],
-      run(32, -12, 'snow', 4), ...hollow(26, 11, 3.2, 3.8, { zone: T2 }), land('snow', 18), ['gap', 4, -1], land('snow', 12), run(30, -11, 'snow'), ['waves', 30, 1.3, 3, -5, { zone: T2, seeds: 3 }], run(30, -12, 'snow', 4),
-      ['flat', 14, { zone: T2, surf: 'sand', ride: { at: 0.62, to: 42, up: 13 } }], ['line', 5, 9, { zone: 'cap' }], ['flat', 28, { zone: 'snow', seeds: 3 }], run(34, -14, 'snow', 4), ...hollow(26, 10, 3.2, 3.6, { zone: T2 }), land('snow'),
-      run(30, -11, 'snow'), ['hill', 14, 1.6, -1, { zone: T2 }], run(28, -10, 'snow'), ['flat', 10, { zone: 'snow' }], ['bowl', 22, 4.4, 4, { zone: 'snow' }]] },
+    strokes: [['flat', 9, { zone: O2 }], run(36, -14, O2, 4), ['flat', 3, { zone: K2 }], ['line', 3, 2.6, { zone: K2 }], run(24, -9, M2), ['flat', 3, { zone: M2 }], ['line', 3, 2.8, { zone: M2 }], run(26, -10, K2), ['flat', 3, { zone: K2 }], ['line', 3.2, 3, { zone: O2 }], land(O2, 20),
+      ash(8), run(30, -11, m, 4, g), ['flat', 4, { zone: K2 }], ['kicker', 6, 2.2, { zone: O2 }], ['gap', 8, -4], land(B2, 20), icy(32, -12, 4), ['waves', 38, 1.6, 4, -7, { zone: M2, seeds: 4 }], ['flat', 4, { zone: K2 }], ['line', 3.4, 3.4, { zone: K2 }], land(K2, 20),
+      run(26, -9, O2), ...hollow(30, 13, 3.6, 4.4, { zone: O2 }, 4), run(26, -10, M2), ['flat', 3, { zone: M2 }], ['line', 3, 2.6, { zone: M2 }], run(24, -9, K2), ['flat', 3, { zone: K2 }], ['line', 3.2, 3.2, { zone: K2 }], land(m, 18),
+      ash(8), run(30, -11, m, 3, g), ...hollow(26, 11, 3.4, 4, { zone: O2 }), land(O2), run(28, -9, M2), ['flat', 10, { zone: m, surf: g }], ['bowl', 22, 4.4, 4, { zone: m, surf: g }]] },
+  { id: '2-4', name: 'Where You Start', time: 'mist', card: 'start', par: 55,
+    strokes: [['flat', 9, { zone: M2 }], run(30, -10, M2), ...hollow(24, 9, 3, 3, { zone: M2 }), land(K2), run(34, -14, M2, 4),
+      // the deep place: no speed gets you out of this one. A geyser is the way up, and it sets you down somewhere new
+      ...geyser(11, { mark: 'hint', text: 'jet', at: 0.2 }), ['flat', 34, { zone: M2, seeds: 3 }],
+      run(32, -12, K2, 4), ...hollow(26, 11, 3.2, 3.8, { zone: K2 }), land(M2, 18), ['gap', 4, -1], land(M2, 12), run(30, -11, M2), ['waves', 30, 1.3, 3, -5, { zone: K2, seeds: 3 }], run(30, -12, M2, 4),
+      ...geyser(9), ['flat', 28, { zone: M2, seeds: 3 }], run(34, -14, K2, 4), ...hollow(26, 10, 3.2, 3.6, { zone: K2 }), land(M2),
+      run(30, -11, M2), ['hill', 14, 1.6, -1, { zone: K2 }], run(28, -10, M2), ['flat', 10, { zone: m, surf: g }], ['bowl', 22, 4.4, 4, { zone: m, surf: g }]] },
   { id: '2-5', name: 'Past the Mark', time: 'dusk', card: 'heavy', par: 52,
-    strokes: [['flat', 9, { zone: R2 }], run(34, -13, R2, 4), ['flat', 3, { zone: R2 }], ['line', 3, 2.6, { zone: T2 }], land(T2, 20, 3), dustFlat(8), ['gap', 5, -1], land(T2, 12), run(30, -12, H2),
-      ['valley', 10, 2.6, 0.4, { zone: H2, seeds: [{ at: 0.5, up: 0.8 }] }], dustFlat(10), ['gap', 4.5], land(D2, 10, 1), run(24, -8, R2), ...hollow(26, 11, 3.2, 3.6, { zone: R2 }), land(R2, 20), dustFlat(8),
-      ['gap', 3], ['flat', 4, { zone: 'cap', seeds: [{ at: 0.5 }] }], ['gap', 3], land(T2, 12), run(36, -15, T2, 4), ['kicker', 6, 2, { zone: T2 }], ['gap', 9, -6, { plat: [{ at: 0.5, up: -3.2, w: 3 }] }], land(V2, 20),
-      run(28, -10, V2, 3, g), ['valley', 12, 3, 1, { zone: R2, seeds: [{ at: 0.5, up: 0.8 }] }], dustFlat(10), run(30, -11, H2), ...hollow(24, 10, 3.2, 3.6, { zone: H2 }), land(H2, 20), dustFlat(8), ['gap', 4], land(T2, 10),
-      run(28, -10, R2), ['flat', 12, { zone: V2, surf: g }], ['bowl', 22, 4.4, 4.2, { zone: V2, surf: g }]] },
-  { id: '2-B', name: 'The Hollows', time: 'night', boss: 'hollows', par: 47, music: 'boss',
-    strokes: [['flat', 9, { zone: T2 }], run(32, -12, T2), ['flat', 3, { zone: T2 }], ['line', 3, 3, { zone: R2 }], run(24, -10, R2), ['flat', 3, { zone: R2 }], ['line', 3.2, 3.6, { zone: H2 }], run(26, -11, H2), ['flat', 3, { zone: H2 }], ['line', 3.4, 4.2, { zone: T2 }], land(T2, 20),
-      dustFlat(8), ['gap', 3.4, -1], land('cap', 12), run(32, -14, R2, 4), ['flat', 3, { zone: R2 }], ['line', 3.6, 4.8, { zone: R2 }], run(28, -12, T2), ['flat', 3, { zone: T2 }], ['line', 3.4, 4, { zone: T2 }], land(H2, 20),
-      run(30, -12, H2), ['flat', 4, { zone: H2 }], ['kicker', 6, 2.4, { zone: H2 }], ['gap', 9, -5], land(H2, 20), run(34, -15, H2, 4), ['flat', 3, { zone: T2 }], ['line', 3.8, 5.2, { zone: T2 }], run(26, -10, R2), ['flat', 3, { zone: R2 }], ['line', 3.4, 4.2, { zone: R2 }], land(T2, 20),
-      run(30, -12, T2), ...hollow(28, 12, 3.8, 5.4, { zone: R2 }, 4), land(R2), run(26, -9, H2), ['flat', 12, { zone: R2 }], ['bowl', 22, 4.6, 4.4, { zone: R2 }]] },
+    strokes: [['flat', 9, { zone: M2 }], run(34, -13, M2, 4), ['flat', 3, { zone: M2 }], ['line', 3, 2.6, { zone: K2 }], land(K2, 20, 3), ash(8), ['gap', 5, -1], land(K2, 12), icy(30, -12),
+      ['valley', 10, 2.6, 0.4, { zone: O2, seeds: [{ at: 0.5, up: 0.8 }] }], ash(10), ['gap', 4.5], land(B2, 10, 1), run(24, -8, M2), ...hollow(26, 11, 3.2, 3.6, { zone: M2 }), land(M2, 20), ash(8),
+      ['gap', 3], ['flat', 4, { zone: B2, seeds: [{ at: 0.5 }] }], ['gap', 3], land(K2, 12), run(36, -15, K2, 4), ['kicker', 6, 2, { zone: K2 }], ['gap', 9, -6, { plat: [{ at: 0.5, up: -3.2, w: 3 }] }], land(m, 20),
+      run(28, -10, m, 3, g), ['valley', 12, 3, 1, { zone: M2, seeds: [{ at: 0.5, up: 0.8 }] }], ash(10), run(30, -11, O2), ...hollow(24, 10, 3.2, 3.6, { zone: O2 }), land(O2, 20), ash(8), ['gap', 4], land(K2, 10),
+      run(28, -10, M2), ['flat', 12, { zone: m, surf: g }], ['bowl', 22, 4.4, 4.2, { zone: m, surf: g }]] },
+  { id: '2-B', name: 'The Craters', time: 'night', boss: 'craters', par: 47, music: 'boss',
+    strokes: [['flat', 9, { zone: K2 }], run(32, -12, K2), ['flat', 3, { zone: K2 }], ['line', 3, 3, { zone: M2 }], run(24, -10, M2), ['flat', 3, { zone: M2 }], ['line', 3.2, 3.6, { zone: O2 }], run(26, -11, O2), ['flat', 3, { zone: O2 }], ['line', 3.4, 4.2, { zone: K2 }], land(K2, 20),
+      ash(8), ['gap', 3.4, -1], land(B2, 12), icy(32, -14, 4), ['flat', 3, { zone: M2 }], ['line', 3.6, 4.8, { zone: M2 }], run(28, -12, K2), ['flat', 3, { zone: K2 }], ['line', 3.4, 4, { zone: K2 }], land(O2, 20),
+      run(30, -12, O2), ['flat', 4, { zone: O2 }], ['kicker', 6, 2.4, { zone: O2 }], ['gap', 9, -5], land(O2, 20), run(34, -15, O2, 4), ['flat', 3, { zone: K2 }], ['line', 3.8, 5.2, { zone: K2 }], run(26, -10, M2), ['flat', 3, { zone: M2 }], ['line', 3.4, 4.2, { zone: M2 }], land(K2, 20),
+      run(30, -12, K2), ...hollow(28, 12, 3.8, 5.4, { zone: M2 }, 4), land(M2), run(26, -9, O2), ['flat', 12, { zone: M2 }], ['bowl', 22, 4.6, 4.4, { zone: M2 }]] },
 ];
 
 // ---- Galápagos: a noisy slope, and what chance is good for ----
@@ -208,7 +223,7 @@ const blow = (L, wx, o = {}) => ['flat', L, { zone: PM, surf: g, wind: [{ from: 
 const berg = (at, w = 2.8) => ({ at, up: -0.1, w, float: true, kind: 'ice' });
 const lake = (L, depth, things, o = {}) => ['valley', L, depth, 0, { zone: MR, water: [0.08, 0.92, -0.42], tide: { amp: 0.25, per: 5 }, plat: things, seeds: things.map((p) => ({ at: p.at, up: 0.75 })), ...o }];
 // The short way: a shelf of wind-packed snow built out from each rim of a deep cut, with a jump between them. The long way is down one side and up the other, and it takes all the speed you had.
-const cut = (L, depth, gap = 5, o = {}) => { const w = (L - gap) / 2; return ['valley', L, depth, 0, { zone: SN, surf: 'snow', plat: [{ at: w / 2 / L, up: 0, w, kind: 'corniceL', type: 'snow' }, { at: 1 - w / 2 / L, up: 0, w, kind: 'corniceR', type: 'snow' }], seeds: [{ at: 0.5, up: 1.7 }, { at: 0.5, up: 0.9 - depth }, { at: 0.2, up: 1 }, { at: 0.8, up: 1 }], ...o }]; };
+const cut = (L, depth, gap = 5, o = {}) => { const w = (L - gap) / 2; return ['valley', L, depth, 0, { zone: SW, surf: 'snow', plat: [{ at: w / 2 / L, up: 0, w, kind: 'corniceL', type: 'snow' }, { at: 1 - w / 2 / L, up: 0, w, kind: 'corniceR', type: 'snow' }], seeds: [{ at: 0.5, up: 1.7 }, { at: 0.5, up: 0.9 - depth }, { at: 0.2, up: 1 }, { at: 0.8, up: 1 }], ...o }]; };
 const PAT = [
   { id: '6-1', name: 'Link by Link', time: 'dawn', zone: MR, card: 'chain', par: 45,
     strokes: [['flat', 10, { zone: PM, surf: g }], scree(30, -10, 3, PM), grass(12), scree(30, -10), drift(10), scree(30, -10), grass(14, 2, LG), scree(30, -10, 3, LG), ['gap', 3], grass(12), blow(30, 11, { mark: 'hint', text: 'gale', at: 0.1 }), scree(30, -10),
@@ -224,7 +239,7 @@ const PAT = [
     strokes: [['flat', 10, { zone: GN }], chute(24, -12, 3), drift(14, 0), ['gap', 4], drift(8), chute(26, -14, 4), drift(14), ['gap', 4.5, -1], grass(12), blow(34, 13), scree(26, -10), chute(24, -13), ['flat', 16, { zone: SN, surf: 'powder', mark: 'hint', text: 'drift', at: 0.1 }], ['gap', 5, -1], drift(8),
       chute(28, -16, 4), drift(18, 2), ...hollow(26, 10, 3.2, 3.6, { zone: MR }), land(MR, 16), chute(22, -11), drift(14), ['gap', 4], grass(14), scree(24, -8, 3, PM), drift(14), grass(10), ['bowl', 22, 4.2, 4, { zone: PM, surf: g }]] },
   { id: '6-5', name: 'The Short Way', time: 'mist', zone: MR, card: 'skip', par: 54,
-    strokes: [['flat', 10, { zone: SN, surf: 'snow' }], scree(26, -9), ['flat', 8, { zone: MR, mark: 'hint', text: 'short', at: 0.2 }], cut(22, 4, 4.5), scree(26, -10), grass(12), cut(24, 5, 5), chute(24, -10), drift(12), lake(24, 2.2, [berg(0.3), berg(0.52), berg(0.74)]), scree(26, -10, 3, LG),
+    strokes: [['flat', 10, { zone: SW, surf: 'snow' }], scree(26, -9), ['flat', 8, { zone: MR, mark: 'hint', text: 'short', at: 0.2 }], cut(22, 4, 4.5), scree(26, -10), grass(12), cut(24, 5, 5), chute(24, -10), drift(12), lake(24, 2.2, [berg(0.3), berg(0.52), berg(0.74)]), scree(26, -10, 3, LG),
       cut(26, 5.5, 5.5), blow(30, 12), scree(24, -9), ['gap', 3.4], grass(10), cut(28, 6, 6.5), scree(26, -10, 3, MR), grass(12), cut(22, 4.5, 4.5), chute(24, -10), drift(12), lake(26, 2.4, [berg(0.28), berg(0.5), berg(0.72)]), scree(24, -9, 3, PM), cut(26, 5.5, 5.5), scree(24, -8, 3, PM), drift(12), grass(8), ['bowl', 22, 4, 4, { zone: PM, surf: g }]] },
   { id: '6-B', name: 'The Towers', time: 'night', zone: MR, boss: 'towers', par: 56, music: 'boss',
     strokes: [['flat', 10, { zone: GN }], chute(22, -8), chute(24, -13, 4), drift(14), ['gap', 4.5, -1], grass(12), blow(34, 13), scree(26, -10), cut(24, 5, 5), scree(24, -8), scree(22, -4, 2), scree(20, -2, 2), ['flat', 26, { zone: IC, surf: 'ice', seeds: 3 }],
@@ -232,17 +247,18 @@ const PAT = [
       ...hollow(28, 12, 3.6, 4.2, { zone: MR }, 4), land(MR, 18), blow(34, 14), scree(28, -11, 3, PM), drift(16), grass(10), ['bowl', 24, 4.6, 4.4, { zone: PM, surf: g }]] },
 ];
 
-// ---- Yakushima: what was learned by heart, and what holds on ground not yet walked ----
-const MS = 'moss', CE = 'cedar', RT = 'root', SR = 'stream';
+// ---- New Zealand, the last country: what was learned by heart, and what holds on ground not yet walked ----
+// The rain forest of Fiordland: moss, the litter under the beeches, roots across the path, streams at every turn.
+const MS = 'moss', CE = 'litter', RT = 'root', SR = 'stream';
 const roots = (L, n = 3, dy = -1, seeds = 2) => ['waves', L, 0.7, n, dy, { zone: RT, seeds }];                 // roots across the path
 const mossy = (L, dy, seeds = 3) => ['slope', L, dy, { zone: MS, surf: 'moss', seeds }];
-const duff = (L, seeds = 2, o = {}) => ['flat', L, { zone: CE, seeds, ...o }];                                // the forest floor under the cedars
+const duff = (L, seeds = 2, o = {}) => ['flat', L, { zone: CE, seeds, ...o }];                                // the forest floor under the old trees
 const fall = (L, dy, seeds = 3) => ['slope', L, dy, { zone: CE, seeds }];
 // A stream across the path, with boulders to cross by. Wading costs time and nothing else. In flood the water comes and goes over the boulders' heads.
 const boulder = (at, w = 1.9) => ({ at, up: 0.12, w, kind: 'stone', type: 'wet' });
 const brook = (L, depth = 1.5, at = [0.3, 0.52, 0.74], o = {}) => ['valley', L, depth, 0, { zone: SR, surf: 'wet', water: [0.1, 0.9, -0.35], plat: at.map((a) => boulder(a)), seeds: at.map((a) => ({ at: a, up: 0.9 })), ...o }];
 const flood = (L, depth = 1.7, at = [0.28, 0.5, 0.72], o = {}) => brook(L, depth, at, { tide: { amp: 0.42, per: 5.5 }, ...o });
-// A gully with a fallen cedar across it. A hop from the rim puts you on the log; miss it, and the way is down and up again.
+// A gully with a fallen tree across it. A hop from the rim puts you on the log; miss it, and the way is down and up again.
 const gully = (L, depth, log = true, o = {}) => ['valley', L, depth, 0, { zone: RT, seeds: [{ at: 0.5, up: 0.9 - depth }, { at: 0.5, up: 1.3 }], ...(log ? { plat: [{ at: 0.5, up: 0.3, w: L * 0.86, kind: 'log', type: 'wood' }] } : {}), ...o }];
 // One verse of the path: roots, a brook, a drop, a log, a crack, a mossy slope. Three times over and it is known by heart.
 // The fourth time something has changed, and the seeds still lie where they lay before.
@@ -250,7 +266,7 @@ const verse = (o = {}) => [roots(18, 3, -1), brook(16, 1.5, o.stones || [0.3, 0.
 // The last hollow, where the light is, and past it a crack in the rock where nothing is. The crack is deeper, but it is not a valley:
 // the lowest ground that can hold anything is the place to stop, and going on past it is going too far.
 const shelf = (depth = 2.4) => [['bowl', 18, depth, depth - 0.4, { zone: MS, surf: 'moss' }], ['slope', 14, -11, { zone: RT }], ['gap', 16, -8], ['flat', 12, { zone: RT }]];
-const YAK = [
+const NZL = [
   { id: '7-1', name: 'The Old Forest', time: 'dawn', card: 'general', par: 41, zone: RT,
     strokes: [duff(10), fall(26, -9), roots(18, 3, -1), ['flat', 8, { zone: CE, mark: 'hint', text: 'brook' }], brook(16), mossy(24, -9), ['flat', 8, { zone: RT, mark: 'hint', text: 'log' }], gully(14, 3.4), fall(24, -8), roots(16, 3, -1), ['gap', 3], duff(10),
       mossy(26, -10), brook(18, 1.6), fall(22, -8), gully(16, 3.8), duff(10), roots(18, 3, -1), mossy(22, -8), brook(16), fall(20, -7), duff(10), ['bowl', 22, 4, 4, { zone: MS, surf: 'moss' }]] },
@@ -269,10 +285,10 @@ const YAK = [
     strokes: [duff(12, 0, { mark: 'hint', text: 'memo', at: 0.2 }), ...verse({ memo: true }), ...verse({ memo: true }), ...verse({ memo: true }), ...verse({ memo: true, stones: [0.2, 0.62], gap: 5 }), ...verse({ memo: true, log: false, stones: [0.36, 0.7] }), flood(18), fall(22, -8),
       ...verse({ memo: true, stones: [0.24, 0.5, 0.8], gap: 5.5, log: false }), mossy(24, -10, 4), duff(14), ...shelf(2.6)] },
 ];
-// where the story ends: a hollow in the moss, among the old trees
+// where the story ends: a hollow in the moss, among the old trees of Fiordland
 export const ENDING = { id: 'ending', name: '', time: 'dawn', items: false, zone: MS, strokes: [['slope', 14, -2.5, { zone: MS, surf: 'moss' }], ['valley', 26, 1.6, 0, { zone: MS, surf: 'moss' }], ['slope', 16, 2, { zone: CE }], ['bowl', 20, 3, 3, { zone: MS, surf: 'moss' }]] };
 
-// ---- a hidden valley: Iceland again, by night, with everything learned since. No gaps, nothing to lose: a long way down, to be flown. ----
+// ---- a hidden valley: Iceland by night. No gaps, nothing to lose: a long way down, to be flown. ----
 export const HIDDEN = { id: 'H', name: 'The Hidden Valley', time: 'night', hidden: true, par: 35, zone: 'moss', can: { roll: true, mu: true }, li: 4,
   strokes: [['flat', 10, { zone: 'moss', surf: g }], ['slope', 40, -16, { zone: m, surf: g, seeds: 5 }], ['waves', 30, 1.2, 3, -4, { zone: 'moss', surf: g, seeds: 4 }], ['slope', 34, -14, { zone: 'snow', surf: 'snow', seeds: 4 }],
     ['kicker', 7, 2.4, { zone: 'ice', surf: 'ice' }], ['flat', 30, { zone: 'snow', surf: 'snow', seeds: [{ at: 0.15, up: 4.2 }, { at: 0.3, up: 5 }, { at: 0.45, up: 4.6 }, { at: 0.62, up: 3.2 }] }], ['slope', 44, -19, { zone: 'ice', surf: 'ice', seeds: 6 }],
@@ -281,29 +297,29 @@ export const HIDDEN = { id: 'H', name: 'The Hidden Valley', time: 'night', hidde
     ['waves', 30, 1, 3, -5, { zone: m, surf: g, seeds: 4 }], ['slope', 30, -11, { zone: 'moss', surf: g, seeds: 4 }], ['flat', 16, { zone: 'snow', surf: 'powder' }], ['flat', 10, { zone: m, surf: g }], ['bowl', 24, 4.4, 4.4, { zone: m, surf: g }]] };
 
 // ---- the practice slope: a short lesson, one thing at a time, on which nothing can be lost ----
-export const TUTORIAL = { id: 'T', name: 'The Practice Slope', time: 'day', tutorial: true, par: 60, li: 6, items: 'own', zone: 'moss', checkEvery: 14,
-  strokes: [['flat', 14, { zone: 'moss', surf: g, mark: 'tutor', text: 'run', at: 0 }], ['slope', 16, -4, { zone: m, surf: g, seeds: 2 }],
-    ['flat', 9, { zone: 'moss', surf: g, mark: 'tutor', text: 'jump', at: 0 }], ['steps', 8, 2, 1, { zone: 'rock' }], ['flat', 8, { zone: 'rock' }], ['gap', 2.5], ['flat', 8, { zone: 'rock' }],
-    ['flat', 10, { zone: 'sand', mark: 'tutor', text: 'leap', at: 0 }], ['gap', 5.5], ['flat', 10, { zone: 'sand', seeds: 1 }],
-    ['flat', 9, { zone: 'snow', surf: 'snow', mark: 'tutor', text: 'slide', at: 0 }], ['slope', 40, -16, { zone: 'ice', surf: 'ice', seeds: 5 }], ['flat', 16, { zone: 'snow', surf: 'powder' }],
-    ['flat', 14, { zone: 'sand', mark: 'tutor', text: 'turbo', at: 0 }], ['kicker', 5, 1.4, { zone: 'sand' }], ['gap', 12, -2], ['flat', 16, { zone: 'moss', surf: g }],
-    ['flat', 16, { zone: m, surf: g, mark: 'tutor', text: 'lights', at: 0, items: [{ kind: 'dew', at: 0.7, up: 1.25 }] }],
-    ['flat', 16, { zone: 'moss', surf: g, mark: 'tutor', text: 'stamp', at: 0, items: [{ kind: 'stamp', at: 0.7, up: 2.4 }] }],
-    ['slope', 26, -9, { zone: m, surf: g, seeds: 3, mark: 'tutor', text: 'goal', at: 0 }], ['bowl', 22, 4, 4, { zone: m, surf: g }]] };
+export const TUTORIAL = { id: 'T', name: 'The Practice Slope', time: 'day', tutorial: true, par: 60, li: 6, items: 'own', zone: T2, checkEvery: 14, can: { mu: false },
+  strokes: [['flat', 14, { zone: V2, surf: g, mark: 'tutor', text: 'run', at: 0 }], ['slope', 16, -4, { zone: V2, surf: g, seeds: 2 }],
+    ['flat', 9, { zone: T2, mark: 'tutor', text: 'jump', at: 0 }], ['steps', 8, 2, 1, { zone: T2 }], ['flat', 8, { zone: C2 }], ['gap', 2.5], ['flat', 8, { zone: C2 }],
+    ['flat', 10, { zone: H2, mark: 'tutor', text: 'leap', at: 0 }], ['gap', 5.5], ['flat', 10, { zone: H2, seeds: 1 }],
+    ['flat', 9, { zone: T2, mark: 'tutor', text: 'roll', at: 0 }], ['slope', 40, -16, { zone: T2, seeds: 5 }], deep(18),
+    ['flat', 14, { zone: H2, mark: 'tutor', text: 'turbo', at: 0 }], ['kicker', 5, 1.4, { zone: H2 }], ['gap', 12, -2], ['flat', 16, { zone: R2 }],
+    ['flat', 16, { zone: V2, surf: g, mark: 'tutor', text: 'lights', at: 0, items: [{ kind: 'dew', at: 0.7, up: 1.25 }] }],
+    ['flat', 16, { zone: R2, mark: 'tutor', text: 'stamp', at: 0, items: [{ kind: 'stamp', at: 0.7, up: 2.4 }] }],
+    ['slope', 26, -9, { zone: V2, surf: g, seeds: 3, mark: 'tutor', text: 'goal', at: 0 }], ['bowl', 22, 4, 4, { zone: V2, surf: g }]] };
 
 // the ground behind the title: a mossy ledge above a long green slope
 export const TITLE = (z1, z2) => ({ id: 'title', name: '', time: 'golden', strokes: [['flat', 6, { zone: z1 }], ['hill', 8, 0.9, -0.4, { zone: z2, surf: g }], ['slope', 13, -9, { zone: z2, surf: g }], ['slope', 30, -9, { zone: z1 }], ['waves', 30, 1.2, 2, -6, { zone: z2, surf: g }], ['bowl', 20, 3, 3, { zone: z2, surf: g }]] });
 
 export const WORLDS = [
-  { id: 'iceland', n: 1, name: 'Iceland', theme: iceland, music: 'iceland', can: { slide: true, roll: false, spread: true }, title: ['moss', 'meadow'], levels: ICE },
-  { id: 'cappadocia', n: 2, name: 'Cappadocia', theme: cappadocia, music: 'cappadocia', can: { slide: true, roll: true, spread: true, mu: true }, title: ['tuff', 'vine'], levels: CAP },
+  { id: 'cappadocia', n: 1, name: 'Cappadocia', theme: cappadocia, music: 'cappadocia', can: { slide: true, roll: true, spread: true, mu: true }, title: ['tuff', 'vine'], cautious: true, levels: CAP },
+  { id: 'iceland', n: 2, name: 'Iceland', theme: iceland, music: 'iceland', can: { slide: true, roll: true, spread: true, mu: true }, title: ['moss', 'meadow'], levels: ICE },
   { id: 'galapagos', n: 3, name: 'Galápagos', theme: galapagos, music: 'galapagos', can: { slide: true, roll: true, spread: true, mu: true }, title: ['lava', 'green'], levels: GAL },
   { id: 'namib', n: 4, name: 'Namib', theme: namib, music: 'namib', can: { slide: true, roll: true, spread: true, mu: true }, title: ['gravel', 'grassy'], levels: NAM },
   { id: 'zhangjiajie', n: 5, name: 'Zhangjiajie', theme: zhangjiajie, music: 'zhangjiajie', can: { slide: true, roll: true, spread: true, mu: true }, title: ['ledge', 'forest'], cautious: true, levels: ZHA },
   { id: 'patagonia', n: 6, name: 'Patagonia', theme: patagonia, music: 'patagonia', can: { slide: true, roll: true, spread: true, mu: true }, title: ['pampa', 'lenga'], levels: PAT },
-  { id: 'yakushima', n: 7, name: 'Yakushima', theme: yakushima, music: 'yakushima', can: { slide: true, roll: true, spread: true, mu: true }, title: ['moss', 'cedar'], cautious: true, levels: YAK },
+  { id: 'newzealand', n: 7, name: 'New Zealand', theme: newzealand, music: 'newzealand', can: { slide: true, roll: true, spread: true, mu: true }, title: ['moss', 'litter'], cautious: true, levels: NZL },
 ];
-export const levelById = (id) => { if (id === 'T') return { world: WORLDS[0], spec: TUTORIAL }; if (id === 'H') return { world: WORLDS[0], spec: HIDDEN }; if (/^[DE]-/.test(id)) return made(id); for (const w of WORLDS) for (const l of w.levels) if (l.id === id) return { world: w, spec: l }; return null; };
+export const levelById = (id) => { if (id === 'T') return { world: WORLDS[0], spec: TUTORIAL }; if (id === 'H') return { world: WORLDS[1], spec: HIDDEN }; if (/^[DE]-/.test(id)) return made(id); for (const w of WORLDS) for (const l of w.levels) if (l.id === id) return { world: w, spec: l }; return null; };
 export const ALL = WORLDS.flatMap((w) => w.levels.map((l) => l.id));
 export const nextLevel = (id) => { const i = ALL.indexOf(id); return i >= 0 && i < ALL.length - 1 ? ALL[i + 1] : null; };
 // Gold is a clean, quick run. Silver and bronze give more room.

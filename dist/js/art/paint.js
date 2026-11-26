@@ -357,9 +357,8 @@ export const P = {
     ctx.fillStyle = col; for (const e of [-0.018, 0.022]) { ctx.beginPath(); ctx.moveTo(w * (hx + e - 0.014), h * (hy + 0.01)); ctx.lineTo(w * (hx + e - 0.012 - graze * 0.02), h * (hy - 0.07)); ctx.lineTo(w * (hx + e + 0.016), h * (hy + 0.005)); ctx.closePath(); ctx.fill(); }
     ctx.fillStyle = face; ctx.beginPath(); ctx.ellipse(w * (hx + 0.035), h * (hy + 0.035), w * 0.065, h * 0.036, 0.25 + graze * 0.7, 0, TAU); ctx.fill(); ctx.fillStyle = '#2a2224'; ctx.beginPath(); ctx.arc(w * (hx + 0.03), h * (hy + 0.022), w * 0.011, 0, TAU); ctx.fill();
   },
-  deer(ctx, w, h, r, o = {}) { P.guanaco(ctx, w, h, r, { col: '#8a6248', pale: '#e8dccc', dark: '#5a4034', face: '#7a5a48', top: 0.25, ...o }); },
-  // one of the old cedars: a trunk as wide as a house at the root, bark in long grey-red fibres, moss to the height of a man, and the first boughs a long way up
-  cedar(ctx, w, h, r, { bark = '#7a5a4c', lit = '#b89a84', dark = '#3a2a26', moss = '#5f9a3c', mossLit = '#b4e060', leaf = '#2f5f3a', leafLit = '#6fa850' } = {}) {
+  // one of the old trees of a rain forest: a trunk as wide as a house at the root, bark in long fibres, moss to the height of a man, and the first boughs a long way up
+  giant(ctx, w, h, r, { bark = '#7a5a4c', lit = '#b89a84', dark = '#3a2a26', moss = '#5f9a3c', mossLit = '#b4e060', leaf = '#2f5f3a', leafLit = '#6fa850' } = {}) {
     const cx = w * 0.5, tw = w * r.range(0.15, 0.19), lean = r.range(-0.04, 0.04) * w;
     // boughs first, so the trunk stands in front of where they leave it
     for (let i = 0; i < 6; i++) { const y = h * (0.04 + i * 0.075 + r.range(-0.01, 0.01)), sd = i % 2 ? 1 : -1, len = w * r.range(0.22, 0.34), ex = cx + lean + sd * (tw + len), ey = y - h * r.range(0.0, 0.03);
@@ -375,18 +374,101 @@ export const P = {
     for (let i = 0; i < 46; i++) { const u = r.u(), y = h * (1 - u * u * 0.5), x = cx + r.range(-1, 0.6) * (tw * 1.2 + (y / h - 0.6) * w * 0.7); ctx.fillStyle = rgba(mix(moss, mossLit, r.u() * 0.7), 0.85); ctx.beginPath(); ctx.ellipse(x, y, w * r.range(0.03, 0.07), h * r.range(0.006, 0.014), r.range(-0.4, 0.4), 0, TAU); ctx.fill(); }
     ctx.restore();
   },
-  // a cedar as the far slopes show it: a spire of drooping tiers
-  sugi(ctx, w, h, r, { col = '#2f5f3a', lit = '#6fa850', trunk = '#4a3a30' } = {}) {
-    ctx.fillStyle = trunk; ctx.fillRect(w * 0.47, h * 0.5, w * 0.06, h * 0.5); const n = 7;
-    for (let i = n - 1; i >= 0; i--) { const u = i / (n - 1), y = h * (0.05 + u * 0.72), hw = w * (0.1 + u * 0.36) * r.range(0.85, 1.1); ctx.fillStyle = mix(lit, col, 0.25 + u * 0.75); ctx.beginPath(); ctx.moveTo(w * 0.5, y - h * 0.1); ctx.quadraticCurveTo(w * 0.5 + hw * 0.5, y, w * 0.5 + hw, y + h * 0.1); ctx.quadraticCurveTo(w * 0.5, y + h * 0.04, w * 0.5 - hw, y + h * 0.1); ctx.quadraticCurveTo(w * 0.5 - hw * 0.5, y, w * 0.5, y - h * 0.1); ctx.fill(); }
-  },
-  // what is left of a cedar cut down long ago: hollow, roofless, green all over, big enough to stand in
+  // what is left of a great tree that came down long ago: hollow, roofless, green all over, big enough to stand in
   stump(ctx, w, h, r, { bark = '#6a4c40', lit = '#a88a74', dark = '#2a1c1a', moss = '#5f9a3c', mossLit = '#b4e060' } = {}) {
     const g = ctx.createLinearGradient(0, 0, w, 0); g.addColorStop(0, lit); g.addColorStop(0.5, bark); g.addColorStop(1, dark); ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(0, h); ctx.quadraticCurveTo(w * 0.14, h * 0.8, w * 0.17, h * 0.3);
     const n = 9; for (let i = 0; i <= n; i++) ctx.lineTo(w * (0.17 + (0.66 * i) / n), h * (i % 2 ? r.range(0.02, 0.14) : r.range(0.16, 0.3))); ctx.quadraticCurveTo(w * 0.86, h * 0.8, w, h); ctx.closePath(); ctx.fill();
     ctx.fillStyle = dark; ctx.beginPath(); ctx.moveTo(w * 0.4, h); ctx.quadraticCurveTo(w * 0.38, h * 0.45, w * 0.5, h * 0.42); ctx.quadraticCurveTo(w * 0.62, h * 0.45, w * 0.6, h); ctx.closePath(); ctx.fill();
     ctx.strokeStyle = rgba(dark, 0.4); ctx.lineWidth = w * 0.012; for (let i = 0; i < 10; i++) { const x = w * r.range(0.14, 0.86); ctx.beginPath(); ctx.moveTo(x, h * r.range(0.3, 0.5)); ctx.lineTo(x + r.range(-0.03, 0.03) * w, h * 0.98); ctx.stroke(); }
     for (let i = 0; i < 26; i++) { const x = w * r.range(0.04, 0.96), y = r.chance(0.5) ? h * r.range(0.14, 0.34) : h * r.range(0.8, 1); ctx.fillStyle = rgba(mix(moss, mossLit, r.u() * 0.8), 0.9); ctx.beginPath(); ctx.ellipse(x, y, w * r.range(0.04, 0.09), h * r.range(0.03, 0.06), 0, 0, TAU); ctx.fill(); }
+  },
+  // ---- New Zealand ----
+  // A tree fern: a dark fibrous trunk, a skirt of last year's fronds hanging brown under the crown, the crown itself a wheel of arching fronds,
+  // and in the middle of it a new one still rolled up.
+  ponga(ctx, w, h, r, { trunk = '#3a2c24', lit = '#7a6250', frond = '#2f7a3a', frondLit = '#8fd060', dead = '#8a6a48', koru = '#c8b070' } = {}) {
+    const cx = w * 0.5, top = h * 0.3, bend = r.range(-0.05, 0.05) * w, tw = w * 0.05, ox = cx + bend;
+    ctx.lineCap = 'round';
+    for (let i = 0; i < 7; i++) { const a = r.range(-0.5, 0.5); ctx.strokeStyle = rgba(dead, r.range(0.5, 0.9)); ctx.lineWidth = w * 0.02; ctx.beginPath(); ctx.moveTo(ox, top + h * 0.01); ctx.quadraticCurveTo(ox + a * w * 0.3, top + h * 0.08, ox + a * w * 0.34, top + h * r.range(0.16, 0.26)); ctx.stroke(); }
+    const g = ctx.createLinearGradient(cx - tw * 1.4, 0, cx + tw * 1.4, 0); g.addColorStop(0, lit); g.addColorStop(0.5, trunk); g.addColorStop(1, mix(trunk, '#000000', 0.35)); ctx.fillStyle = g;
+    ctx.beginPath(); ctx.moveTo(cx - tw * 1.6, h); ctx.quadraticCurveTo(cx - tw * 0.9, h * 0.7, ox - tw * 0.8, top); ctx.lineTo(ox + tw * 0.8, top); ctx.quadraticCurveTo(cx + tw * 0.9, h * 0.7, cx + tw * 1.6, h); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = rgba('#000000', 0.22); ctx.lineWidth = w * 0.008; for (let i = 0; i < 18; i++) { const y = lerp(top, h, (i + 0.5) / 18), k = (y - top) / (h - top), x0 = cx + bend * (1 - k) * (1 - k); ctx.beginPath(); ctx.moveTo(x0 - tw, y); ctx.lineTo(x0 + tw, y + h * 0.012); ctx.stroke(); }
+    const frondAt = (a, len, shade) => { const ex = ox + Math.sin(a) * len * w * 0.49, ey = top - Math.cos(a) * len * h * 0.22 + (0.25 + Math.abs(Math.sin(a)) * 0.55) * len * h * 0.2, mx = ox + Math.sin(a) * len * w * 0.3, my = top - h * 0.17 * len - Math.cos(a) * h * 0.06, col = mix(frond, frondLit, shade);
+      ctx.strokeStyle = col;      // the leaflets: short strokes off the midrib, longest in the middle of the frond
+      for (let k = 1; k < 15; k++) { const u = k / 15, q = 1 - u, px = q * q * ox + 2 * q * u * mx + u * u * ex, py = q * q * top + 2 * q * u * my + u * u * ey, tx = 2 * q * (mx - ox) + 2 * u * (ex - mx), ty = 2 * q * (my - top) + 2 * u * (ey - my), tl = Math.hypot(tx, ty) || 1, nx = -ty / tl, ny = tx / tl, L = w * 0.085 * Math.sin(Math.PI * Math.min(1, u * 1.12)) * len;
+        ctx.lineWidth = w * 0.024 * (1 - u * 0.5); ctx.beginPath(); ctx.moveTo(px + nx * L, py + ny * L); ctx.lineTo(px, py); ctx.lineTo(px - nx * L, py - ny * L); ctx.stroke(); }
+      ctx.strokeStyle = mix(col, '#1a2a16', 0.45); ctx.lineWidth = w * 0.012; ctx.beginPath(); ctx.moveTo(ox, top); ctx.quadraticCurveTo(mx, my, ex, ey); ctx.stroke(); };
+    const n = 11, ang = Array.from({ length: n }, (_, i) => lerp(-1.75, 1.75, i / (n - 1)) + r.range(-0.08, 0.08));
+    for (let i = 1; i < n; i += 2) frondAt(ang[i], r.range(0.8, 0.94), 0.12);
+    for (let i = 0; i < n; i += 2) frondAt(ang[i], r.range(0.9, 1.04), 0.5 + r.range(0, 0.4));
+    const kx = ox + w * 0.01, ky = top - h * 0.12, R0 = w * 0.034; ctx.strokeStyle = koru; ctx.lineWidth = w * 0.02; ctx.beginPath(); ctx.moveTo(ox, top); ctx.quadraticCurveTo(kx - w * 0.01, top - h * 0.06, kx, ky); for (let a = 0; a < 5.4; a += 0.3) { const q = R0 * (1 - a / 6.6); ctx.lineTo(kx + R0 - Math.cos(a) * q, ky - Math.sin(a) * q); } ctx.stroke();
+  },
+  // a southern beech as the far slopes show it: a pale trunk and a crown laid in flat tiers
+  beech(ctx, w, h, r, { col = '#2f5f3a', lit = '#6fa850', trunk = '#8a8478' } = {}) {
+    ctx.fillStyle = trunk; ctx.fillRect(w * 0.47, h * 0.45, w * 0.06, h * 0.55);
+    const n = 6; for (let i = n - 1; i >= 0; i--) { const u = i / (n - 1), y = h * (0.1 + u * 0.5), hw = w * (0.2 + Math.sin((u * 0.8 + 0.15) * Math.PI) * 0.3) * r.range(0.85, 1.1), ox = w * r.range(-0.06, 0.06); ctx.fillStyle = mix(lit, col, 0.2 + u * 0.8); ctx.beginPath(); ctx.ellipse(w * 0.5 + ox, y, hw, h * 0.085, 0, 0, TAU); ctx.fill(); }
+  },
+  // harakeke, the flax: a fan of long sword leaves, and flower stalks standing well above it
+  flax(ctx, w, h, r, { col = '#3f7a3a', lit = '#9ac860', stalk = '#3a2a26', bloom = '#b8442c' } = {}) {
+    const n = 13; for (let i = 0; i < n; i++) { const a = lerp(-0.95, 0.95, i / (n - 1)) + r.range(-0.06, 0.06), L = h * r.range(0.5, 0.68), ex = w * 0.5 + Math.sin(a) * L * 0.9, ey = h - Math.cos(a) * L + (r.chance(0.3) ? L * 0.15 : 0); ctx.fillStyle = mix(col, lit, r.u() * 0.8);
+      ctx.beginPath(); ctx.moveTo(w * 0.47, h); ctx.quadraticCurveTo(w * 0.47 + Math.sin(a) * L * 0.4, h - L * 0.6, ex, ey); ctx.quadraticCurveTo(w * 0.53 + Math.sin(a) * L * 0.4, h - L * 0.6, w * 0.53, h); ctx.closePath(); ctx.fill(); }
+    ctx.lineCap = 'round'; for (const sx of [-0.12, 0.1]) { const x0 = w * (0.5 + sx * 0.3), x1 = w * (0.5 + sx), y1 = h * r.range(0.02, 0.1); ctx.strokeStyle = stalk; ctx.lineWidth = w * 0.022; ctx.beginPath(); ctx.moveTo(x0, h); ctx.quadraticCurveTo(x0, h * 0.4, x1, y1); ctx.stroke();
+      for (let k = 0; k < 6; k++) { const u = k / 6, y = lerp(y1, h * 0.36, u), x = lerp(x1, x0 + (x1 - x0) * 0.75, u), sd = k % 2 ? 1 : -1; ctx.strokeStyle = bloom; ctx.lineWidth = w * 0.03; ctx.beginPath(); ctx.moveTo(x, y); ctx.quadraticCurveTo(x + sd * w * 0.06, y - h * 0.01, x + sd * w * 0.1, y - h * 0.045); ctx.stroke(); } }
+  },
+  // new fern fronds, still rolled up
+  koru(ctx, w, h, r, { col = '#6f9a48', tip = '#c8b070' } = {}) {
+    ctx.lineCap = 'round'; for (const [x, s] of [[0.3, 1], [0.68, 0.7]]) { const cx = w * x, R0 = w * 0.13 * s, top = h * (1 - 0.72 * s) + R0; ctx.strokeStyle = col; ctx.lineWidth = w * 0.07 * s; ctx.beginPath(); ctx.moveTo(cx - w * 0.03, h); ctx.quadraticCurveTo(cx - w * 0.05, h - h * 0.35 * s, cx, top);
+      for (let a = 0; a < 6; a += 0.3) { const q = R0 * (1 - a / 7.4); ctx.lineTo(cx + R0 - Math.cos(a) * q, top - Math.sin(a) * q); } ctx.stroke(); ctx.fillStyle = tip; ctx.beginPath(); ctx.arc(cx + R0, top - R0 * 0.1, w * 0.035 * s, 0, TAU); ctx.fill(); }
+  },
+  // a kiwi: a pear of shaggy brown feathers on two stout legs, with a long pale bill carried low
+  kiwi(ctx, w, h, r, { col = '#6a4c38', lit = '#a88462', bill = '#e8d8c0', leg = '#8a7460', peck = false } = {}) {
+    const bx = w * 0.4, by = h * 0.52; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.strokeStyle = leg; ctx.lineWidth = w * 0.045; ctx.beginPath(); ctx.moveTo(w * 0.34, h * 0.76); ctx.lineTo(w * 0.32, h * 0.96); ctx.lineTo(w * 0.41, h * 0.97); ctx.moveTo(w * 0.48, h * 0.78); ctx.lineTo(w * 0.5, h * 0.96); ctx.lineTo(w * 0.59, h * 0.97); ctx.stroke();
+    const g = ctx.createRadialGradient(bx - w * 0.06, by - h * 0.12, w * 0.04, bx, by, w * 0.42); g.addColorStop(0, lit); g.addColorStop(1, col); ctx.fillStyle = g;
+    ctx.beginPath(); ctx.ellipse(bx, by, w * 0.33, h * 0.31, -0.25, 0, TAU); ctx.fill();
+    const hx = w * (peck ? 0.68 : 0.7), hy = h * (peck ? 0.5 : 0.3);
+    ctx.beginPath(); ctx.moveTo(w * 0.48, h * 0.3); ctx.quadraticCurveTo(hx - w * 0.1, hy - h * 0.12, hx, hy - h * 0.09); ctx.lineTo(hx + w * 0.03, hy + h * 0.09); ctx.quadraticCurveTo(w * 0.64, h * 0.62, w * 0.54, h * 0.66); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.arc(hx, hy, w * 0.1, 0, TAU); ctx.fill();
+    ctx.strokeStyle = bill; ctx.lineWidth = w * 0.032; ctx.beginPath(); ctx.moveTo(hx + w * 0.07, hy + h * 0.01); ctx.quadraticCurveTo(hx + w * 0.2, hy + h * (peck ? 0.2 : 0.07), hx + w * (peck ? 0.2 : 0.28), hy + h * (peck ? 0.42 : 0.19)); ctx.stroke();
+    ctx.fillStyle = '#1a1210'; ctx.beginPath(); ctx.arc(hx + w * 0.03, hy - h * 0.015, w * 0.017, 0, TAU); ctx.fill();
+    ctx.strokeStyle = rgba(mix(col, '#000000', 0.4), 0.5); ctx.lineWidth = w * 0.012; for (let i = 0; i < 28; i++) { const a = r.range(0, TAU), d = r.range(0, 0.85), x = bx + Math.cos(a) * w * 0.3 * d, y = by + Math.sin(a) * h * 0.27 * d; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x - w * 0.05, y + h * 0.07); ctx.stroke(); }
+  },
+  // a kea: an olive-green mountain parrot with a long hooked bill, and orange under the wing when it lifts one
+  kea(ctx, w, h, r, { col = '#5f7a3c', lit = '#a4b868', dark = '#2f3f24', bill = '#3a3632', under = '#f08a3c', open = false } = {}) {
+    ctx.lineCap = 'round'; ctx.strokeStyle = '#4a4440'; ctx.lineWidth = w * 0.04; ctx.beginPath(); ctx.moveTo(w * 0.42, h * 0.8); ctx.lineTo(w * 0.42, h * 0.97); ctx.moveTo(w * 0.54, h * 0.8); ctx.lineTo(w * 0.55, h * 0.97); ctx.stroke();
+    ctx.fillStyle = dark; ctx.beginPath(); ctx.moveTo(w * 0.3, h * 0.6); ctx.lineTo(w * 0.04, h * 0.9); ctx.lineTo(w * 0.16, h * 0.94); ctx.lineTo(w * 0.42, h * 0.74); ctx.closePath(); ctx.fill();
+    if (open) { ctx.fillStyle = under; ctx.beginPath(); ctx.moveTo(w * 0.4, h * 0.46); ctx.quadraticCurveTo(w * 0.1, h * 0.22, w * 0.03, h * 0.03); ctx.quadraticCurveTo(w * 0.32, h * 0.12, w * 0.54, h * 0.4); ctx.closePath(); ctx.fill(); ctx.strokeStyle = col; ctx.lineWidth = w * 0.035; ctx.beginPath(); ctx.moveTo(w * 0.03, h * 0.03); ctx.quadraticCurveTo(w * 0.12, h * 0.24, w * 0.4, h * 0.46); ctx.stroke(); }
+    const g = ctx.createLinearGradient(w * 0.2, h * 0.2, w * 0.7, h * 0.8); g.addColorStop(0, lit); g.addColorStop(1, col); ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(w * 0.46, h * 0.58, w * 0.22, h * 0.27, -0.35, 0, TAU); ctx.fill();
+    ctx.strokeStyle = rgba(dark, 0.45); ctx.lineWidth = w * 0.012; for (let j = 0; j < 4; j++) for (let i = 0; i < 4; i++) { const x = w * (0.34 + i * 0.07 + (j % 2) * 0.035), y = h * (0.44 + j * 0.08); ctx.beginPath(); ctx.arc(x, y, w * 0.035, 0.2, Math.PI - 0.2); ctx.stroke(); }
+    if (!open) { ctx.fillStyle = mix(col, dark, 0.45); ctx.beginPath(); ctx.ellipse(w * 0.4, h * 0.6, w * 0.12, h * 0.2, -0.5, 0, TAU); ctx.fill(); }
+    ctx.fillStyle = lit; ctx.beginPath(); ctx.arc(w * 0.6, h * 0.3, w * 0.14, 0, TAU); ctx.fill();
+    ctx.fillStyle = bill; ctx.beginPath(); ctx.moveTo(w * 0.7, h * 0.23); ctx.quadraticCurveTo(w * 0.93, h * 0.24, w * 0.9, h * 0.47); ctx.quadraticCurveTo(w * 0.82, h * 0.34, w * 0.7, h * 0.36); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#16120f'; ctx.beginPath(); ctx.arc(w * 0.64, h * 0.27, w * 0.024, 0, TAU); ctx.fill(); ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(w * 0.646, h * 0.264, w * 0.009, 0, TAU); ctx.fill();
+  },
+  // a kākāpō: the heaviest of the parrots, round and moss-green, mottled like the forest floor, with the pale flat face of an owl. It walks; it does not fly.
+  kakapo(ctx, w, h, r, { col = '#5f8a34', lit = '#b4d060', dark = '#2f4a22', face = '#e8dca0', bill = '#c8c0b0', alt = false } = {}) {
+    const bx = w * 0.44, by = h * 0.6; ctx.lineCap = 'round';
+    ctx.strokeStyle = '#8a8478'; ctx.lineWidth = w * 0.05; ctx.beginPath(); ctx.moveTo(w * 0.36, h * 0.86); ctx.lineTo(w * (alt ? 0.3 : 0.36), h * 0.97); ctx.moveTo(w * 0.54, h * 0.86); ctx.lineTo(w * (alt ? 0.6 : 0.55), h * 0.97); ctx.stroke();
+    ctx.fillStyle = dark; ctx.beginPath(); ctx.moveTo(w * 0.24, h * 0.66); ctx.lineTo(w * 0.02, h * 0.92); ctx.lineTo(w * 0.2, h * 0.94); ctx.lineTo(w * 0.36, h * 0.82); ctx.closePath(); ctx.fill();
+    const g = ctx.createRadialGradient(bx + w * 0.06, by - h * 0.12, w * 0.05, bx, by, w * 0.44); g.addColorStop(0, lit); g.addColorStop(1, col); ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(bx, by, w * 0.33, h * 0.31, -0.15, 0, TAU); ctx.fill();
+    for (let i = 0; i < 50; i++) { const a = r.range(0, TAU), d = Math.sqrt(r.u()) * 0.9, x = bx + Math.cos(a) * w * 0.3 * d, y = by + Math.sin(a) * h * 0.28 * d; ctx.fillStyle = rgba(r.chance(0.5) ? dark : '#e8f0a0', r.range(0.25, 0.5)); ctx.beginPath(); ctx.ellipse(x, y, w * 0.03, h * 0.012, r.range(-0.4, 0.4), 0, TAU); ctx.fill(); }
+    const hx = w * (alt ? 0.65 : 0.63), hy = h * (alt ? 0.31 : 0.28), fx = hx + w * 0.04, fy = hy + h * 0.02;
+    ctx.fillStyle = col; ctx.beginPath(); ctx.arc(hx, hy, w * 0.2, 0, TAU); ctx.fill();
+    ctx.fillStyle = face; ctx.beginPath(); ctx.ellipse(fx, fy, w * 0.15, h * 0.15, 0, 0, TAU); ctx.fill();
+    ctx.strokeStyle = rgba('#8a7a40', 0.5); ctx.lineWidth = w * 0.008; for (let i = 0; i < 14; i++) { const a = (i / 14) * TAU; ctx.beginPath(); ctx.moveTo(fx + Math.cos(a) * w * 0.06, fy + Math.sin(a) * h * 0.06); ctx.lineTo(fx + Math.cos(a) * w * 0.14, fy + Math.sin(a) * h * 0.14); ctx.stroke(); }
+    ctx.fillStyle = bill; ctx.beginPath(); ctx.moveTo(hx + w * 0.06, hy); ctx.quadraticCurveTo(hx + w * 0.17, hy + h * 0.02, hx + w * 0.12, hy + h * 0.13); ctx.quadraticCurveTo(hx + w * 0.07, hy + h * 0.08, hx + w * 0.04, hy + h * 0.06); ctx.closePath(); ctx.fill();
+    for (const ex of [-0.03, 0.115]) { ctx.fillStyle = '#1a1410'; ctx.beginPath(); ctx.arc(hx + w * ex, hy - h * 0.02, w * (alt ? 0.018 : 0.025), 0, TAU); ctx.fill(); ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(hx + w * (ex + 0.008), hy - h * 0.028, w * 0.008, 0, TAU); ctx.fill(); }
+  },
+  // a takahē: stout and flightless, deep blue with a green back, and a great red bill that runs up onto its forehead
+  takahe(ctx, w, h, r, { col = '#2f4fa0', lit = '#5f8ae0', back = '#4f8a50', red = '#d8442c', leg = '#d86a4c', graze = 0 } = {}) {
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = leg; ctx.lineWidth = w * 0.045; ctx.beginPath(); ctx.moveTo(w * 0.34, h * 0.74); ctx.lineTo(w * 0.32, h * 0.96); ctx.lineTo(w * 0.42, h * 0.97); ctx.moveTo(w * 0.48, h * 0.76); ctx.lineTo(w * 0.5, h * 0.96); ctx.lineTo(w * 0.6, h * 0.97); ctx.stroke();
+    ctx.fillStyle = '#f4f0e8'; ctx.beginPath(); ctx.ellipse(w * 0.12, h * 0.56, w * 0.07, h * 0.08, 0.4, 0, TAU); ctx.fill();
+    const g = ctx.createLinearGradient(w * 0.2, h * 0.3, w * 0.6, h * 0.85); g.addColorStop(0, lit); g.addColorStop(1, col); ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(w * 0.38, h * 0.56, w * 0.3, h * 0.25, -0.12, 0, TAU); ctx.fill();
+    ctx.fillStyle = back; ctx.beginPath(); ctx.ellipse(w * 0.31, h * 0.47, w * 0.22, h * 0.14, -0.2, Math.PI * 0.9, Math.PI * 2.05); ctx.fill();
+    const hx = w * lerp(0.68, 0.76, graze), hy = h * lerp(0.26, 0.7, graze);
+    ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(w * 0.5, h * 0.38); ctx.quadraticCurveTo(hx - w * 0.1, hy - h * 0.12, hx - w * 0.02, hy - h * 0.1); ctx.lineTo(hx + w * 0.03, hy + h * 0.08); ctx.quadraticCurveTo(w * 0.64, h * 0.62, w * 0.54, h * 0.66); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.arc(hx, hy, w * 0.1, 0, TAU); ctx.fill();
+    ctx.fillStyle = red; ctx.beginPath(); ctx.moveTo(hx + w * 0.02, hy - h * 0.1); ctx.quadraticCurveTo(hx + w * 0.15, hy - h * 0.06, hx + w * 0.21, hy + h * (0.06 + graze * 0.06)); ctx.lineTo(hx + w * 0.07, hy + h * 0.07); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#5a1810'; ctx.beginPath(); ctx.arc(hx + w * 0.015, hy - h * 0.02, w * 0.019, 0, TAU); ctx.fill();
   },
   // toadstools in the moss
   shroom(ctx, w, h, r, { cap = '#d8603c', lit = '#ffb080', stem = '#f4ead8', dot = '#fff6e0' } = {}) {

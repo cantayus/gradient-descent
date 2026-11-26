@@ -42,6 +42,10 @@ export const POSE = () => ({
   air: 0,         // -1 falling, +1 rising: tucks the feet and lifts the arms
   spread: 0,      // limbs flung wide, with the flaps open
   slide: 0,       // on the belly
+  flail: 0,       // a long fall with nothing to hold: arms going round, feet pedalling at the air
+  hang: 0,        // carried by the scruff: everything hangs, and swings
+  dangle: 0,      // how far the hanging feet lag behind the swing, radians
+  stars: 0,       // the little stars that go round a dizzy head
   crouch: 0,
   side: 1,        // 1 in profile, 0 at the moment of turning round, when the hero faces the viewer
   earL: 0, earR: 0, tail: 0,   // what the springs have done to the ears and tail
@@ -120,6 +124,7 @@ export function drawTheta(ctx, p) {
   const tk = clamp(p.tuck, 0, 1), up = 1 - tk, f = p.face >= 0 ? 1 : -1, ghost = p.ghost;
   ctx.save(); ctx.globalAlpha *= p.alpha;
   if (ghost) ctx.globalAlpha *= 0.42;
+  const a0 = ctx.globalAlpha;
   // the whole body turns with the roll when tucked, and leans when standing
   ctx.rotate(tk > 0.02 ? p.roll * tk + p.lean * up : p.lean);
   // squash and stretch about the feet when standing, about the centre when rolled; the volume is kept
@@ -128,7 +133,7 @@ export function drawTheta(ctx, p) {
   ctx.scale(f, 1);                                   // from here on, +x is the way the hero faces
   const turn = p.turn * up, shift = 0.085 * turn;    // features slide toward the facing side in three-quarter view
   const line = ghost ? 'rgba(255,255,255,0.9)' : COL.line;
-  const runA = p.runAmt * up, ph = p.run, air = p.air * up, spr = p.spread * up, sl = p.slide * up;
+  const runA = p.runAmt * up, ph = p.run, air = p.air * up, spr = p.spread * up, sl = p.slide * up, fl = (p.flail || 0) * up * (1 - (p.hang || 0)), hg = (p.hang || 0) * up, pt = p.t || 0;
 
   // tail
   if (!ghost) { ctx.save(); ctx.translate(lerp(-0.4, -0.3, tk) * (0.2 + 0.8 * (p.side ?? 1)), lerp(0.25, 0.26, tk)); ctx.rotate(p.tail * up); ell(ctx, -0.07, 0, 0.115, 0.105); ctx.fillStyle = COL.body; ctx.fill(); ctx.strokeStyle = line; ctx.lineWidth = 0.028; ctx.stroke(); ell(ctx, -0.115, -0.02, 0.055, 0.05); ctx.fillStyle = COL.band; ctx.fill(); ctx.restore(); }
@@ -140,6 +145,8 @@ export function drawTheta(ctx, p) {
     x = lerp(x, 0.1 + 0.1 * side, Math.abs(air)); y = lerp(y, air > 0 ? 0.44 : 0.4, Math.abs(air)); rot = lerp(rot, air > 0 ? 0.5 : -0.35, Math.abs(air));
     x = lerp(x, side > 0 ? 0.36 : -0.42, spr); y = lerp(y, 0.4, spr); rot = lerp(rot, side > 0 ? -0.5 : 0.5, spr);
     x = lerp(x, 0.3 + 0.12 * side, sl); y = lerp(y, 0.4, sl); rot = lerp(rot, -0.9, sl);
+    if (fl > 0.01) { const a = pt * 23 + (side > 0 ? 0 : Math.PI); x = lerp(x, 0.17 * side + 0.02 + 0.1 * Math.cos(a), fl); y = lerp(y, 0.44 + 0.07 * Math.sin(a), fl); rot = lerp(rot, 0.8 * Math.sin(a), fl); }
+    if (hg > 0.01) { x = lerp(x, 0.14 * side + 0.02 - (p.dangle || 0) * 0.3, hg); y = lerp(y, 0.57, hg); rot = lerp(rot, 0.3 + side * 0.12 - (p.dangle || 0) * 1.2, hg); }
     return { x, y, rot };
   };
   const hand = (side) => {
@@ -148,6 +155,8 @@ export function drawTheta(ctx, p) {
     x = lerp(x, x + 0.03 * side, Math.abs(air)); y = lerp(y, air > 0 ? -0.12 : -0.2, Math.abs(air)); rot = lerp(rot, side * 1.5, Math.abs(air));
     x = lerp(x, side > 0 ? 0.58 : -0.56, spr); y = lerp(y, -0.24, spr); rot = lerp(rot, side * 2.0, spr);
     x = lerp(x, 0.36 + side * 0.1, sl); y = lerp(y, -0.02 - side * 0.03, sl); rot = lerp(rot, 1.4, sl);
+    if (fl > 0.01) { const a = pt * 17 + (side > 0 ? 1.4 : 0); x = lerp(x, side * 0.55 + 0.02 + 0.13 * Math.cos(a), fl); y = lerp(y, -0.06 + 0.25 * Math.sin(a), fl); rot = lerp(rot, side * (1.6 + 0.9 * Math.sin(a)), fl); }
+    if (hg > 0.01) { x = lerp(x, side * 0.44 + 0.02 - (p.dangle || 0) * 0.18, hg); y = lerp(y, 0.27, hg); rot = lerp(rot, side * 0.12 - (p.dangle || 0), hg); }
     return { x, y, rot };
   };
   const limb = (o, rx, ry, col) => { ctx.save(); ctx.translate(o.x, o.y); ctx.rotate(o.rot); ell(ctx, 0, 0, rx, ry); ctx.fillStyle = ghost ? 'rgba(255,255,255,0.5)' : col; ctx.fill(); if (!ghost) { ctx.strokeStyle = line; ctx.lineWidth = 0.028; ctx.stroke(); } ctx.restore(); };
@@ -196,6 +205,10 @@ export function drawTheta(ctx, p) {
   if (up > 0.05) { ctx.save(); ctx.globalAlpha *= clamp(up * 1.6, 0, 1); limb(fA, 0.14, 0.08, COL.foot); limb(fB, 0.15, 0.085, COL.foot); limb(hB, 0.062, 0.098, COL.body); ctx.restore(); }
   ear(ctx, eB.x, eB.y, eB.a, earLen, earWid, p, false);
   if (WEAR.hat && !ghost && up > 0.3) hat(ctx, WEAR.hat, shift * 0.6, clamp((up - 0.3) * 2.5, 0, 1));
+  if (!ghost && fl > 0.3) {        // drops of fright, left behind above a falling head
+    ctx.fillStyle = 'rgba(214,240,255,0.9)'; for (let i = 0; i < 3; i++) { const u = (pt * 2.6 + i / 3) % 1, x = (i - 1) * 0.3 + Math.sin(i * 5 + pt * 3) * 0.04, y = -0.72 - u * 0.5; ctx.globalAlpha = a0 * fl * (1 - u); ctx.beginPath(); ctx.moveTo(x, y + 0.075); ctx.quadraticCurveTo(x + 0.05, y, x, y - 0.045); ctx.quadraticCurveTo(x - 0.05, y, x, y + 0.075); ctx.fill(); } ctx.globalAlpha = a0; }
+  if (!ghost && p.stars > 0.03 && up > 0.5) {  // and the stars that go round it afterwards
+    for (let i = 0; i < 3; i++) { const a = pt * 5.2 + (i * TAU) / 3, x = Math.cos(a) * 0.4, y = -0.74 + Math.sin(a) * 0.1, s = (0.075 + 0.02 * Math.sin(a)) * p.stars; ctx.globalAlpha = a0 * p.stars * (0.6 + 0.4 * (Math.sin(a) > 0 ? 1 : 0.5)); ctx.fillStyle = i === 1 ? '#fff6c8' : '#ffd76a'; ctx.beginPath(); for (let k = 0; k < 8; k++) { const r = k % 2 ? s * 0.42 : s, b = (k * Math.PI) / 4 + pt * 3; k ? ctx.lineTo(x + Math.cos(b) * r, y + Math.sin(b) * r) : ctx.moveTo(x + Math.cos(b) * r, y + Math.sin(b) * r); } ctx.closePath(); ctx.fill(); } ctx.globalAlpha = a0; }
   ctx.restore();
 }
 
@@ -206,6 +219,7 @@ export class Rig {
   constructor() {
     this.p = POSE(); this.sq = new Spring(260, 14); this.sq.x = 1; this.lean = new Spring(90, 14);
     this.earL = new Spring(70, 7); this.earR = new Spring(64, 6.4); this.tail = new Spring(80, 8);
+    this.falling = 0; this.hang = 0; this.swing = 0; this.dg = new Spring(60, 5);
     this.tuck = 0; this.run = 0; this.blinkT = 2; this.idle = 0; this.mood = null; this.moodT = 0; this.lookX = 0; this.lookY = 0; this.pvx = 0; this.pvy = 0; this.spin = 0; this.dizzy = 0; this.wind = 0; this.rain = 0; this.awake = false; this.head = 1; this.ax = 0; this.expr = 'smile'; this.exprT = 1;
   }
   feel(expr, secs = 1) { this.mood = expr; this.moodT = secs; }     // an expression that holds for a while: pride at the goal, a sulk after a fall
@@ -228,18 +242,23 @@ export class Rig {
     // stretch with speed in the air; press flat when sliding
     const airStretch = gnd ? 0 : clamp(Math.abs(b.vy) * 0.012, 0, 0.2), want = 1 + airStretch - (b.mode === 'slide' ? 0.28 : 0) + (inp.tuck && !ball && gnd && b.mode !== 'slide' ? -0.12 : 0);
     p.sy = this.sq.step(want, dt);
+    // a fall long enough to be frightening (six units and more), or one into a gap: nothing to do with the arms and legs but wave them
+    const fall = this.hang ? 0 : this.falling || (!gnd && !ball && !b.spread && !(b.inWater > 0.3) && !(b.inJet > 0) && b.vy < -20 ? clamp((-b.vy - 20) / 6, 0, 1) : 0);
     // lean: into the slope when standing on one, into the motion when running, along the path when in the air
     const slope = Math.atan2(-b.nx, b.ny); this.ax += ((b.vx - this.pvx) / Math.max(dt, 0.004) - this.ax) * ease(14); const ax = this.ax; this.pvx = b.vx; this.pvy = b.vy;
     let wantLean = 0;
     if (gnd) wantLean = slope * 0.75 + clamp(vt * 0.022, -0.3, 0.3) + clamp(ax * 0.0035, -0.25, 0.25) * (b.mode === 'run' ? 1 : 0);
     else wantLean = clamp(b.vx * 0.02, -0.4, 0.4) * (b.spread ? 2.2 : 1) - (b.spread ? 0 : clamp(b.vy * 0.012, -0.25, 0.25) * b.face);
     if (b.mode === 'slide') wantLean = slope + 1.15 * b.face;
+    if (fall > 0) wantLean += Math.sin(p.t * 8.5) * 0.24 * fall;      // and the body rocks as the arms go round
+    if (this.hang) wantLean = this.swing;
     p.lean = this.lean.step(wantLean, dt);
     // legs
     const running = gnd && b.mode === 'run' && Math.abs(vt) > 0.4;
     this.run += Math.abs(vt) * dt * 2.3; p.run = this.run; p.runAmt += ((running ? clamp(Math.abs(vt) / 4, 0.3, 1) : 0) - p.runAmt) * ease(12);
     const airT = gnd || b.inWater > 0.3 ? 0 : clamp(b.vy / 8, -1, 1); p.air += (airT - p.air) * ease(14);
     p.spread += ((b.spread ? 1 : 0) - p.spread) * ease(12);
+    p.flail += (fall - p.flail) * ease(fall > p.flail ? 9 : 16); p.hang += ((this.hang ? 1 : 0) - p.hang) * ease(14); p.dangle = this.hang ? this.dg.step(this.swing, dt) - this.swing : 0; p.stars += ((this.dizzy > 0 ? 1 : 0) - p.stars) * ease(7);
     p.slide += ((b.mode === 'slide' ? 1 : 0) - p.slide) * ease(12);
     this.turnT = (this.turnT ?? 0.5) + ((Math.abs(vt) > 0.3 || !gnd ? 0.9 : 0.35) - (this.turnT ?? 0.5)) * ease(6); p.turn = this.turnT * p.side;
     // ears and tail trail behind whatever the body does, and answer the air as it passes, wind included
@@ -260,6 +279,7 @@ export class Rig {
     else if (b.mode === 'slide') e = 'glee';
     else if (!gnd) e = b.spread ? 'effort' : b.vy > 2 ? 'joy' : b.vy < -16 ? 'wow' : b.vy < -6 ? 'worry' : 'joy';
     else if (running) e = Math.abs(vt) > 7 ? 'joy' : 'smile';
+    if (p.flail > 0.35) e = 'wow'; if (this.hang) e = 'worry';
     if (b.impact > 12) this.feel('squint', 0.45);
     if (this.dizzy > 0) e = 'dizzy';
     if (this.moodT > 0 && this.mood) e = this.mood;

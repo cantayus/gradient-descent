@@ -22,7 +22,7 @@ const clear = () => { ui.replaceChildren(); document.body.classList.remove('dim'
 const MEDAL = ['', 'bronze', 'silver', 'gold'];
 const how = () => (input.touch.used ? 'touch' : input.pad.used ? 'pad' : 'key');
 
-export function initUI(a) { api = a; hud.replaceChildren(el('div.h-lights'), el('div.h-sparks'), el('div.h-bar', {}, el('i')), el('div.h-name', {}, el('small'), el('b'), el('i')), el('div.h-clock'), el('div.h-seeds'), el('div.h-stamp', { title: 'The stamp hidden in this level' }), el('div.h-hint'), el('div.h-tutor', { hidden: true }), el('button.h-pause', { type: 'button', 'aria-label': 'Pause', on: { click: () => pause() } }, 'II')); }
+export function initUI(a) { api = a; hud.replaceChildren(el('div.h-lights'), el('div.h-sparks'), el('div.h-bar', {}, el('i')), el('div.h-name', {}, el('small'), el('b'), el('i')), el('div.h-clock'), el('div.h-seeds'), el('div.h-stamp', { title: 'The stamp hidden in this level' }), el('div.h-hint'), el('div.h-tutor', { hidden: true }), el('button.h-home', { type: 'button', 'aria-label': 'Title screen', title: 'Title screen (T)', on: { click: () => home() }, html: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11.5 12 4.5l8 7M6.5 10v9h11v-9M10.3 19v-5h3.4v5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>' }), el('button.h-pause', { type: 'button', 'aria-label': 'Pause', title: 'Pause (P)', on: { click: () => pause() } }, 'II')); }
 
 // ---- title ----
 // A wide, quiet look at the country with the name over it and one line asking for a key; the menu comes only after that.
@@ -32,7 +32,7 @@ const emblem = () => el('div.emblem', { html: '<svg viewBox="0 0 64 64" aria-hid
 export function showTitle() {
   clear(); api.attract(); hud.hidden = true; document.getElementById('touch').hidden = true; if (awake) playMusic('title');
   const next = ALL.find((id) => !save.levels[id]?.done) || ALL[0], any = Object.keys(save.levels).length > 0;
-  const items = [[any ? 'Continue' : 'New game', () => (any || save.seen.tutor ? play(next) : askTutor(next))], any && ['Levels', showLevels], ['Tutorial', () => play('T')], any && ['The story', showStory], any && ['Stamps', showAlbum], ['Notebook', showNotebook], ['More', showMore], ['How to play', showHow], ['Settings', () => showSettings(showTitle)], ['Also play this!', showAlso], ['Credits', showCredits]].filter(Boolean);
+  const items = [[any ? 'Continue' : 'New game', () => (any || save.seen.tutor ? play(next) : askTutor(next))], any && ['Levels', showLevels], ['Tutorial', () => play('T')], any && ['The story', showStory], any && ['Stamps', showAlbum], ['Notebook', showNotebook], ['The lab', showLab], ['More', showMore], ['How to play', showHow], ['Settings', () => showSettings(showTitle)], ['Also play this!', showAlso], ['Credits', showCredits]].filter(Boolean);
   const menu = el('nav.tmenu', { 'aria-label': 'Menu' }, items.map(([t, f], i) => el('button.titem', { type: 'button', style: `--i:${i}`, on: { click: () => { sfx.ui(true); f(); }, mouseenter: (e) => e.target.focus() } }, t)));
   const root = el('div.cine' + (awake ? '.awake.seen' : ''), {}, el('div.veil'), el('div.logo', {}, emblem(), el('h1', { text: 'Gradient Descent' }), el('div.rule')), el('p.press', { text: 'ontouchstart' in window ? 'Tap to begin' : framed ? 'Click to begin' : 'Press any key' }), menu);
   ui.append(root);
@@ -57,14 +57,14 @@ export function showLevels() {
 // ---- the lesson: offered once, before the first level, and always there on the menu ----
 function askTutor(next) {
   clear(); document.body.classList.add('dim');
-  ui.append(el('div.card.small', {}, el('h2', { text: 'First time here?' }), el('p', { text: 'There is a practice slope with a short lesson: running, jumping, sliding, a turbo, and the things there are to find. It takes about two minutes, and nothing can be lost on it.' }),
+  ui.append(el('div.card.small', {}, el('h2', { text: 'First time here?' }), el('p', { text: 'There is a practice slope with a short lesson: running, jumping, rolling, a turbo, and the things there are to find. It takes about two minutes, and nothing can be lost on it.' }),
     el('div.row', {}, btn('Take the lesson', () => play('T'), 'big'), btn('Go straight in', () => { save.seen.tutor = true; store(); play(next); }))));
 }
 function tutorDone() {
   save.seen.tutor = true; store(); const next = ALL.find((id) => !save.levels[id]?.done) || ALL[0], any = Object.keys(save.levels).length > 0;
   setTimeout(() => { hud.hidden = true; document.body.classList.add('dim'); playMusic('card');
-    ui.append(el('div.card.small', {}, el('h2', { text: 'That is all you need' }), el('p', { text: 'Run, jump, slide, and spend a spark when a gap is too wide. Look for the stamp. Find the lowest ground.' }),
-      el('p.note', { text: 'Two more things come later, in Cappadocia: a roll, and a lift in the air from a bird called Mu. Each is explained when it arrives.' }),
+    ui.append(el('div.card.small', {}, el('h2', { text: 'That is all you need' }), el('p', { text: 'Run, jump, roll, and spend a spark when a gap is too wide. Look for the stamp. Find the lowest ground.' }),
+      el('p.note', { text: 'One more thing comes a little later: a lift in the air from a bird called Mu. It is explained when Mu arrives.' }),
       el('div.row', {}, btn(any ? 'Continue' : 'Begin', () => play(next), 'big'), btn('Again', () => play('T')), btn('Title', showTitle)))); }, 1500);
 }
 // ---- playing ----
@@ -73,7 +73,7 @@ export function play(id, told = false) {
   if (STORY[id] && !told && (!save.seen['story' + id] || api.forceIntro)) return showTale(id, () => play(id, true));
   clear(); hud.hidden = false; const f = levelById(id); run = { id, f, shown: null };
   const intro = !!f.spec.intro && (!save.seen.intro || api.forceIntro);
-  const p = api.startLevel(id, { ghost: ghostFor(id), intro, meet: id === '2-1' && (!save.seen.mu || api.forceIntro) }); if (!p) return showTitle();
+  const p = api.startLevel(id, { ghost: ghostFor(id), intro, meet: id === '1-3' && (!save.seen.mu || api.forceIntro) }); if (!p) return showTitle();
   ui.append(el('div.veil' + (intro ? '.slow' : '.quick')));      // every level comes up out of black
   playMusic(f.spec.music || f.world.music); hud.querySelector('.h-name small').textContent = f.world.name; hud.querySelector('.h-name b').textContent = f.spec.name; hud.classList.remove('fresh'); hud.classList.toggle('intro', intro); if (!intro) card();
   document.getElementById('touch').hidden = !('ontouchstart' in window); api.G.paused = false;
@@ -103,6 +103,8 @@ export function pause() {
   ui.append(el('div.card.small', {}, el('h2', { text: 'Paused' }), el('div.menu', {}, btn('Go on', back, 'big'), btn('Start again', () => play(run.id)), btn('Settings', () => showSettings(() => { clear(); api.G.paused = false; pause(); })), btn('Levels', showLevels), btn('Title', showTitle))));
 }
 export function restart() { if (run && !hud.hidden) play(run.id); }
+// One press, from anywhere, and the title screen is back: the T key or Home, the house in the corner of a level, Back (Select) on a pad.
+export function home() { if (!api || ui.querySelector('.cine')) return; initAudio(); sfx.ui(true); showTitle(); }
 
 // ---- the story ----
 // The road so far, drawn as a line going down, with the place the chapter is about lit.
@@ -115,7 +117,7 @@ function route(at) {
   return c;
 }
 export function showTale(key, then) {
-  const ch = STORY[key]; if (!ch) return then(); clear(); hud.hidden = true; const w = WORLDS[ch.at], way = { '2-1': 'balloon', '3-1': 'current', '4-1': 'bird', '5-1': 'balloon', '6-1': 'bird', '7-1': 'current' }[key];
+  const ch = STORY[key]; if (!ch) return then(); clear(); hud.hidden = true; const w = WORLDS[ch.at], way = { '2-1': 'balloon', '3-1': 'current', '4-1': 'bird', '5-1': 'balloon', '6-1': 'bird', '7-1': 'bird' }[key];
   if (way && then !== showTitle && then !== showStory) api.travel(w.id, way); else api.attract(); playMusic('title'); sfx.page(); save.seen['story' + key] = true; store();
   const go = () => { sfx.ui(true); then(); };
   ui.append(el('div.tale' + (way && then !== showTitle && then !== showStory ? '.journey' : ''), {}, el('div.inner', {}, el('small', { text: 'The story' }), el('h2', { text: ch.title }), route(ch.at), ...ch.lines.map((t, i) => el('p', { style: `--i:${i}`, text: t })), el('div.row', { style: `--i:${ch.lines.length}` }, el('button.btn.big', { type: 'button', on: { click: go } }, then === showTitle || then === showStory ? 'Back' : 'Go on')))));
@@ -125,7 +127,7 @@ export function showEnding() {
   const ch = STORY.end; clear(); hud.hidden = true; document.getElementById('touch').hidden = true; api.ending(); playMusic('title'); save.seen.storyend = true; save.seen.end = true; store();
   const n = ch.lines.length, stamps = ALL.filter((id) => save.levels[id]?.stamp).length, box = el('div.tale.ending'); let stage = 0, timer = 0;
   const last = () => { stage = 2; clearTimeout(timer); box.replaceChildren(el('div.inner.last', {}, el('p.fin', { text: 'The end' }), el('p.note', { text: stamps < ALL.length ? `${stamps} of ${ALL.length} stamps are in the album. The rest are still out there.` : 'Every stamp is in the album.' }),
-    el('p.note', { text: 'The lab is open now: any hill, any step, any amount of momentum, and Theta walking down it alone.' }), el('div.row', {}, btn('The lab', showLab, 'big'), btn('The long descent', () => playEndless()), btn('Title', showTitle)))); };
+    el('div.row', {}, btn('Title', showTitle, 'big'), btn('The long descent', () => playEndless()), btn('The lab', showLab)))); };
   const roll = () => { stage = 1; clearTimeout(timer); const line = (cls, text) => el('p' + (cls ? '.' + cls : ''), { text });
     box.replaceChildren(el('div.roll', {}, el('div.reel', {}, line('big', 'Gradient Descent'), line('head', 'Created by'), line('big', 'Cantay Caliskan'), line('', 'He teaches data science and artificial intelligence, and studies politics and society with computational methods.'),
       el('p', {}, el('a', { href: 'https://www.cantaycaliskan.net/', target: '_blank', rel: 'noopener', text: 'cantaycaliskan.net' })),
@@ -178,7 +180,7 @@ export function showFinish(res) {
       el('div.chartwrap', {}, chart, el('p.cap', { text: 'Your run as a loss curve: how high you stood, moment by moment. Lower is better.' })),
       card ? el('div.note' + (fresh ? '.fresh' : ''), {}, cardArt(card.draw), el('div', {}, el('h3', { text: (fresh ? 'New in the notebook: ' : '') + card.name }), ...card.text.slice(0, fresh ? 3 : 1).map((t) => el('p', { text: t })))) : null,
       f.spec.daily ? shareRow(f, res) : null,
-      el('div.row', {}, nx ? btn('Next', () => (f.spec.boss && !save.seen['sort' + f.world.n] ? showSort(f.world.n, () => play(nx)) : play(nx)), 'big') : run.id === '7-B' ? btn('The ending', showEnding, 'big') : f.spec.daily ? btn('More', showMore, 'big') : btn('Levels', showLevels, 'big'), btn('Again', () => play(run.id)), nx || run.id === '7-B' ? btn('Levels', showLevels) : null)));
+      el('div.row', {}, nx ? btn('Next', () => (f.spec.boss && !save.seen['sort' + f.world.n] ? showSort(f.world.n, () => play(nx)) : play(nx)), 'big') : run.id === '7-B' ? btn('The ending', showEnding, 'big') : f.spec.daily ? btn('More', showMore, 'big') : btn('Levels', showLevels, 'big'), btn('Again', () => play(run.id)), nx || run.id === '7-B' ? btn('Levels', showLevels) : null, btn('Title', showTitle))));
     drawCurve(chart, res.curve, out.bestBefore != null && !out.newBest ? s.curve : null, res.top, res.bottom);
   }, 1500);
 }
@@ -249,19 +251,19 @@ function cardArt(kind) {
 }
 
 // ---- more to do: the valley of the day, Sort!, the long descent, the lab, the page for teachers ----
-const doneLv = (id) => !!save.levels[id]?.done, finished = () => api.unlockAll || !!save.seen.end || doneLv('7-B');
+const doneLv = (id) => !!save.levels[id]?.done;
 export function showMore() {
   clear(); hud.hidden = true; api.attract(); document.body.classList.add('dim'); if (awake) playMusic('title');
   const bosses = WORLDS.filter((w) => doneLv(w.levels[5].id)).length, any = api.unlockAll || doneLv('1-1'), today = save.levels[todayId()], long = save.long || { best: 0 };
+  const WHY = 'Opens when the first level is finished.';
   const tile = (name, text, fn, ok = true, why = '') => el('button.tile' + (ok ? '' : '.locked'), { type: 'button', disabled: !ok, on: { click: () => { initAudio(); sfx.ui(true); fn(); } } }, el('b', { text: name }), el('span', { text: ok ? text : why }));
   ui.append(sheet('More', showTitle, el('div.tiles', {},
-    tile('Today’s valley', 'One new valley every day, the same for everyone who plays it.' + (today?.best != null ? ` Your best today: ${fmt(today.best)}.` : ''), () => play(todayId()), any, 'Opens when the first level is finished.'),
-    tile('Sort!', 'Seeds from stones, as fast as they come. Under a minute.', () => showSort(Math.max(1, Math.min(6, bosses || 1)), showMore), api.unlockAll || bosses > 0, 'Opens when the first country is finished.'),
-    tile('The long descent', 'One long hill that grows harder as it goes. How far can the light be carried?' + (long.best ? ` Your best: ${long.best} m.` : ''), () => playEndless(), finished(), 'Opens when the journey is finished.'),
-    tile('The lab', 'Any hill, any length of step, any momentum, and Theta walking down it alone, by the rule.', showLab, finished(), 'Opens when the journey is finished.'),
-    tile('The hidden valley', 'Iceland again, by night, with everything learned since. Nothing to lose in it: a long way down, to be flown.', () => play('H'), api.unlockAll || WORLDS.some((w) => w.levels.every((l) => save.levels[l.id]?.stamp)), 'Opens when one country’s page of stamps is full.'),
-    tile('Wardrobe', 'Hats, colours and trails, earned with seeds and stamps. None of them does anything.', showWardrobe, any, 'Opens when the first level is finished.'),
-    tile('For teachers', 'Every level, the idea it shows, and a question for the class afterwards.', showTeachers))));
+    tile('Today’s valley', 'One new valley every day, the same for everyone who plays it.' + (today?.best != null ? ` Your best today: ${fmt(today.best)}.` : ''), () => play(todayId()), any, WHY),
+    tile('Sort!', 'Seeds from stones, as fast as they come. Under a minute.', () => showSort(Math.max(1, Math.min(6, bosses || 1)), showMore), any, WHY),
+    tile('The long descent', 'One long hill that grows harder as it goes. How far can the light be carried?' + (long.best ? ` Your best: ${long.best} m.` : ''), () => playEndless(), any, WHY),
+    tile('The hidden valley', 'Iceland by night, and a long way down that is meant to be flown. Nothing can be lost in it.', () => play('H'), any, WHY),
+    tile('Wardrobe', 'Hats, colours and trails, earned with seeds and stamps. None of them does anything.', showWardrobe, any, WHY),
+    tile('For teachers', 'Every level, the idea it shows, and a question for the class afterwards.', showTeachers, any, WHY))));
 }
 export function playEndless() { save.long = save.long || { runs: 0, best: 0 }; const id = 'E-' + (Math.floor(Date.now() / 864e5) * 7 + save.long.runs); save.long.runs++; store(); play(id); }
 function longEnd(res, whole) {
@@ -317,7 +319,7 @@ export function showLab() {
     const c = ch.getContext('2d'), w = ch.width, h = ch.height; c.clearRect(0, 0, w, h); c.strokeStyle = 'rgba(255,255,255,0.35)'; c.lineWidth = 1.5; c.beginPath(); c.moveTo(46, 14); c.lineTo(46, h - 30); c.lineTo(w - 16, h - 30); c.stroke(); c.fillStyle = '#a8b7c6'; c.font = '600 13px Nunito, sans-serif'; c.fillText('loss', 8, 24); c.fillText('steps', w - 54, h - 9);
     if (R) { const n = R.path.length - 1, top = Math.min(9, Math.max(...R.path.slice(0, k + 2).map((q) => q.loss), 0.5)), cx = (i) => 46 + (i / Math.max(20, n)) * (w - 70), cy = (L) => h - 30 - (Math.min(L, top) / top) * (h - 52); c.fillText(top.toFixed(1), 12, 44); c.fillText('0', 30, h - 30); c.fillText(String(Math.max(20, n)), w - 40, h - 34 + 22 - 22);
       c.strokeStyle = '#ffd87a'; c.lineWidth = 3; c.lineJoin = 'round'; c.beginPath(); for (let i = 0; i <= k; i++) { i ? c.lineTo(cx(i), cy(R.path[i].loss)) : c.moveTo(cx(i), cy(R.path[i].loss)); } const u = st.t - k, nb = R.path[Math.min(k + 1, n)]; c.lineTo(cx(k + u), cy(R.path[k].loss + (nb.loss - R.path[k].loss) * u)); c.stroke(); } };
-  ui.append(el('div.card.sheet.lab', {}, el('header', {}, el('h2', { text: 'The lab' }), btn('Back', () => (finished() ? showMore() : showTitle()), 'ghost')), el('div.body.labgrid', {},
+  ui.append(el('div.card.sheet.lab', {}, el('header', {}, el('h2', { text: 'The lab' }), btn('Back', showTitle, 'ghost')), el('div.body.labgrid', {},
     el('div.labview', {}, cv, ch, out),
     el('div.labside', {}, el('h3', { text: 'The hill' }), lands, el('h3', { text: 'The rule' }),
       slider('η', 'eta', 0.01, 1.5, 0.01, ' learning rate'), slider('μ', 'mu', 0, 0.98, 0.01, ' momentum'), slider('noise', 'sigma', 0, 4, 0.1, ''), slider('limit', 'limit', 0, 10, 0.5, ' on the slope'),
@@ -393,26 +395,26 @@ export function showWardrobe() {
 const keyed = (t) => { if (!t || !save.settings.keys || how() !== 'key') return t; const n = (a) => (input.keys[a][0] ? KEYNAME(input.keys[a][0]) : '?'); return t.replace(/← → or A D/g, `${n('left')} ${n('right')}`).replace(/→ or D/g, n('right')).replace(/\bSpace\b/g, n('jump')).replace(/\bShift\b/g, n('tuck')).replace(/\bE\b/g, n('turbo')); };
 const KEYNAME = (c) => ({ ArrowLeft: '←', ArrowRight: '→', ArrowUp: '↑', ArrowDown: '↓', Space: 'Space', ShiftLeft: 'Left Shift', ShiftRight: 'Right Shift', ControlLeft: 'Left Ctrl', ControlRight: 'Right Ctrl' }[c] || c.replace(/^Key|^Digit/, ''));
 export function showKeys(back = showTitle) {
-  clear(); document.body.classList.add('dim'); const names = { left: 'Run left', right: 'Run right', jump: 'Jump, and Mu’s lift', tuck: 'Slide and roll', turbo: 'Turbo' }; let waiting = null;
+  clear(); document.body.classList.add('dim'); const names = { left: 'Run left', right: 'Run right', jump: 'Jump, and Mu’s lift', tuck: 'Roll', turbo: 'Turbo' }; let waiting = null;
   const listen = (e) => { if (!waiting) return; e.preventDefault(); e.stopImmediatePropagation(); if (e.code !== 'Escape') { for (const k of Object.keys(input.keys)) input.keys[k] = input.keys[k].filter((c) => c !== e.code); input.keys[waiting] = [e.code]; save.settings.keys = input.keys; store(); } removeEventListener('keydown', listen, true); waiting = null; showKeys(back); };
   ui.append(sheet('Keys', () => { removeEventListener('keydown', listen, true); showSettings(back); }, el('p.lead', { text: 'Choose a key for each thing Theta does. Press Change, then the key you want.' }),
     el('dl.keys.binds', {}, Object.entries(names).flatMap(([k, label]) => { const b = btn('Change', () => { waiting = k; b.textContent = 'Press a key…'; addEventListener('keydown', listen, true); }); return [el('dt', { text: label }), el('dd', {}, el('span', { text: input.keys[k].map(KEYNAME).join('  ·  ') || 'no key' }), b)]; })),
     el('div.row', {}, btn('The usual keys', () => { input.keys = structuredClone(DEFAULT_KEYS); save.settings.keys = null; store(); showKeys(back); })),
-    el('p.note', { text: 'Pause is Esc or P, start again is R, and sound off is M.' })));
+    el('p.note', { text: 'Pause is Esc or P, start again is R, the title screen is T or Home, and sound off is M.' })));
 }
 
 // ---- the rest ----
 function forget(back) { let armed = 0; const b = btn('Forget my progress', () => { if (Date.now() - armed < 5000) { resetSave(); showSettings(back); } else { armed = Date.now(); b.textContent = 'Press again to forget everything'; setTimeout(() => { if (b.isConnected) b.textContent = 'Forget my progress'; }, 5000); } }, 'ghost'); return b; }
-function sheet(title, back, ...kids) { return el('div.card.sheet', {}, el('header', {}, el('h2', { text: title }), btn('Back', back, 'ghost')), el('div.body', {}, ...kids)); }
+function sheet(title, back, ...kids) { return el('div.card.sheet', {}, el('header', {}, el('h2', { text: title }), back !== showTitle ? btn('Title', showTitle, 'ghost') : null, btn('Back', back, 'ghost')), el('div.body', {}, ...kids)); }
 export function showHow() {
   clear(); document.body.classList.add('dim');
-  const k = how(), rows = k === 'touch' ? [['Run', 'Slide your left thumb left or right.'], ['Jump', 'The upper button. Tap for a hop, hold for a leap.'], ['Slide', 'Hold the lower button on ice and snow.'], ['Float', 'Hold jump in the air to spread wide and fall slowly.'], ['Roll', 'From Cappadocia on, hold the lower button to tuck in and roll.'], ['Lift', 'From Cappadocia on, press jump again in the air. Mu lifts Theta once between one landing and the next.'], ['Turbo', 'The star button. A burst of speed from Eta. It uses up one spark.']]
-    : [['Run', '← → or A D'], ['Jump', 'Space. Tap for a hop, hold for a leap.'], ['Slide', 'Hold Shift on ice and snow.'], ['Float', 'Hold Space in the air to spread wide and fall slowly.'], ['Roll', 'From Cappadocia on, hold Shift to tuck in and roll.'], ['Lift', 'From Cappadocia on, press Space again in the air. Mu lifts Theta once between one landing and the next.'], ['Turbo', 'E. A burst of speed from Eta. It uses up one spark.'], ['Start again', 'R'], ['Pause', 'Esc or P'], ['Sound off', 'M']];
+  const k = how(), rows = k === 'touch' ? [['Run', 'Slide your left thumb left or right.'], ['Jump', 'The upper button. Tap for a hop, hold for a leap.'], ['Roll', 'Hold the lower button to tuck in and roll. Downhill, nothing is faster.'], ['Float', 'Hold jump in the air to spread wide and fall slowly.'], ['Lift', 'Once Mu has joined, press jump again in the air. Mu lifts Theta once between one landing and the next.'], ['Turbo', 'The star button. A burst of speed from Eta. It uses up one spark.']]
+    : [['Run', '← → or A D'], ['Jump', 'Space. Tap for a hop, hold for a leap.'], ['Roll', 'Hold Shift to tuck in and roll. Downhill, nothing is faster.'], ['Float', 'Hold Space in the air to spread wide and fall slowly.'], ['Lift', 'Once Mu has joined, press Space again in the air. Mu lifts Theta once between one landing and the next.'], ['Turbo', 'E. A burst of speed from Eta. It uses up one spark.'], ['Start again', 'R'], ['Pause', 'Esc or P'], ['Title screen', 'T or Home, from anywhere'], ['Sound off', 'M']];
   ui.append(sheet('How to play', showTitle, el('p.lead', { text: 'Find the lowest ground. Every level ends in the deepest valley, where a light is waiting.' }), el('dl.keys', {}, rows.flatMap(([a, b]) => [el('dt', { text: a }), el('dd', { text: keyed(b) })])),
     el('h3', { text: 'To win a level' }), el('p', { text: 'Bring the seed to the lowest valley while it still has a light, and before that light fades.' }),
-    el('h3', { text: 'How a level is lost' }), el('p', { text: 'The seed has three lights, shown at the top left. Every fall puts one out, and so does being thrown by the Geyser. When the last goes out the level is lost.' }), el('p', { text: 'The light also fades with time. The bar under the clock shows how much is left. It is generous, but it does run out.' }), el('p', { text: 'A lost level starts again from the top.' }),
+    el('h3', { text: 'How a level is lost' }), el('p', { text: 'The seed has three lights, shown at the top left. Every fall into a gap puts one out, and so does being carried off by the pigeons of the Dovecotes. When the last goes out the level is lost.' }), el('p', { text: 'The light also fades with time. The bar under the clock shows how much is left. It is generous, but it does run out.' }), el('p', { text: 'A lost level starts again from the top.' }),
     el('h3', { text: 'Sparks' }), el('p', { text: 'The small stars under the lights are sparks. You begin a level with one, and every five seeds earn another, up to three.' }), el('p', { text: 'A spark can be spent as a turbo. Or it can be kept: if Theta falls with a spark in hand, Eta makes the catch, the spark is spent and no light is lost.' }),
-    el('h3', { text: 'Things to find' }), el('dl.keys.finds', {}, [['Seeds', 'Small and golden, all along the way. Five make a spark.'], ['Dewdrops', 'Blue. One relights a light that has gone out. If every light is lit, it becomes a spark.'], ['Feathers', 'Mu’s, hanging in the air from Cappadocia on. Touch one after a lift and Mu can lift again.'], ['Stamps', 'One is hidden in every level, and never in the same sort of place twice. They are kept in the album.']].flatMap(([a, b]) => [el('dt', { text: a }), el('dd', { text: b })])),
+    el('h3', { text: 'Things to find' }), el('dl.keys.finds', {}, [['Seeds', 'Small and golden, all along the way. Five make a spark.'], ['Dewdrops', 'Blue. One relights a light that has gone out. If every light is lit, it becomes a spark.'], ['Feathers', 'Mu’s, hanging in the air once Mu has joined. Touch one after a lift and Mu can lift again.'], ['Stamps', 'One is hidden in every level, and never in the same sort of place twice. They are kept in the album.']].flatMap(([a, b]) => [el('dt', { text: a }), el('dd', { text: b })])),
     el('h3', { text: 'More than one thing to do' }), el('p', { text: 'A level asks four things, and only the first is needed to go on: reach the valley, find the stamp, gather every seed, and lose no light. The card at the end shows which were done.' }),
     el('h3', { text: 'To win the game' }), el('p', { text: 'Each country has five levels and then a harder last one. Finish that and the next country opens. Medals are for time: gold, silver, bronze.' }),
     el('p.note', { text: 'Height is the lesson. The higher you stand, the worse the guess, so the way to go is always down.' })));
@@ -439,5 +441,5 @@ export function showCredits() {
   ui.append(sheet('Credits', showTitle, el('section', {}, el('h3', { text: 'Created by' }), el('p.big', { text: 'Cantay Caliskan' }), el('p', { text: 'He teaches data science and artificial intelligence, and studies politics and society with computational methods.' }), el('p', {}, el('a', { href: 'https://www.cantaycaliskan.net/', target: '_blank', rel: 'noopener', text: 'cantaycaliskan.net' }))),
     el('section', {}, el('h3', { text: 'Made with' }), el('p', { text: 'Typefaces: Fredoka and Nunito, under the SIL Open Font Licence. All pictures are drawn by the program. All sound is made in your browser.' }))));
 }
-addEventListener('keydown', (e) => { if (e.code === 'Escape' || e.code === 'KeyP') { if (api?.G.paused) { clear(); api.G.paused = false; } else pause(); } else if (e.code === 'KeyR') restart(); else if (e.code === 'KeyM') mute(); else if (e.code === 'Enter' || e.code === 'Space') { if (document.activeElement?.tagName !== 'BUTTON') { const b = ui.querySelector('.btn.big'); if (b) { b.click(); e.preventDefault(); } } }
+addEventListener('keydown', (e) => { if (e.code === 'Escape' || e.code === 'KeyP') { if (api?.G.paused) { clear(); api.G.paused = false; } else pause(); } else if (e.code === 'KeyR') restart(); else if (e.code === 'KeyM') mute(); else if ((e.code === 'KeyT' || e.code === 'Home') && !e.repeat && !e.ctrlKey && !e.metaKey && !e.altKey && !/^(text|search|email|url|number)$/.test(e.target?.type || '') && e.target?.tagName !== 'TEXTAREA' && !Object.values(input.keys).flat().includes(e.code)) home(); else if (e.code === 'Enter' || e.code === 'Space') { if (document.activeElement?.tagName !== 'BUTTON') { const b = ui.querySelector('.btn.big'); if (b) { b.click(); e.preventDefault(); } } }
   else if (/^Arrow(Up|Down)$|^Key[WS]$/.test(e.code)) { const list = [...ui.querySelectorAll('.titem, .menu .btn')]; if (list.length) { const i = list.indexOf(document.activeElement), d = /Up|KeyW/.test(e.code) ? -1 : 1; list[(i + d + list.length) % list.length].focus(); sfx.ui(); } } });
