@@ -178,7 +178,8 @@ The lab (a sandbox: pick a landscape, set learning rate, momentum and noise with
 
 ## Where it lives
 
-- Repository: https://github.com/cantayus/gradient-descent (public). The game is played at https://cantayus.github.io/gradient-descent/.
+- Repository: https://github.com/cantayus/gradient-descent (public). The game is played at https://www.gradientdescentgame.net, the address the owner gave on 26 November;
+  it is the one to use wherever the game is named. GitHub Pages itself publishes the files at https://cantayus.github.io/gradient-descent/.
 - `.github/workflows/deploy-pages.yml` publishes `dist/` to GitHub Pages on every push to `main` that touches `dist/`. Pages is set to Source: GitHub Actions.
 - First measured on a real machine through the live page (Ultra setting, canvas 1682x1424): 53 to 60 frames a second on the title, in the last country (then Yakushima) and in Patagonia.
   The page was in a background pane when measured, so treat the figure as a first reading.

@@ -4,7 +4,7 @@ A browser platformer about how machines learn.
 
 Theta finds a seed of light that will grow only in the lowest valley in the world, and carries it downhill through seven countries to find that valley. Height is the loss, the slope underfoot is the gradient, and every level ends on the lowest ground there is. Every idea in it is one that is used to train real models.
 
-**Play it:** https://cantayus.github.io/gradient-descent/
+**Play it:** https://www.gradientdescentgame.net
 
 ![Cappadocia](docs/shot-cappadocia.png)
 ![Iceland](docs/shot-iceland.png)
