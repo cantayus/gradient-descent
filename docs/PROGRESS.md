@@ -30,6 +30,13 @@ game is of high quality. Published on GitHub Pages at the owner's word (see "Whe
    through the samples overshooting; `CLIFF` in `physics.js`); a long fall is flailed through (`flail` in `theta.js`); and a fall into a gap is seen to its
    end, after which Eta hauls Theta back to the last safe ground on a thread of the seed's light, Theta swinging on it like a weight on a string
    (`Play._rescue`).
+8. **"Add a more deep story about the name of the game and the story of the hero Theta at the beginning of the game."** (asked the same night.) Two pages now
+   come before the first chapter (`name` and `theta` in `js/data/story.js`, shown by the first entry of the title menu until they have been read, and always
+   listed under "The story"). The first says what the two words mean (gradient from the Latin for stepping; descent, going down), where the method comes from
+   (Cauchy's three-page note to the Académie des Sciences, October 1847, wanted for the orbits of planets and comets), how it goes, and that machines learn by
+   it; its picture is the method drawn by doing it. The second says who Theta is: named for θ, the letter for everything a learning machine can change about
+   itself; begun somewhere high by chance; unable to see far; often wrong and corrected by the next step; and with two friends named for η and μ. Its picture is
+   Theta beside the letter. The first chapter, "The seed", gained two lines that join it to them.
 
 ## The seven worlds, in order
 

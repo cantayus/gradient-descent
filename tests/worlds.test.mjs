@@ -22,7 +22,8 @@ test('every level has its page, its question, its hints and its story', () => {
   for (const w of WORLDS) { assert.ok(STORY[w.levels[0].id], 'a chapter before ' + w.name); assert.equal(STORY[w.levels[0].id].at, w.n - 1);
     for (const l of w.levels) { assert.ok(ASK[l.id], 'a question for ' + l.id); if (l.boss) assert.ok(BOSS[l.boss], 'an idea for ' + l.boss); else assert.ok(CARDS[l.card], 'a page for ' + l.id);
       for (const m of build(l).marks) if (m.kind === 'hint') for (const k of ['key', 'touch', 'pad']) assert.ok(HINTS[m.text]?.[k], `hint "${m.text}" (${k}) in ${l.id}`); } }
-  assert.ok(STORY.end); for (const m of build(TUTORIAL).marks) if (m.kind === 'tutor') assert.ok(TUTOR[m.text], 'lesson ' + m.text);
+  assert.ok(STORY.end); for (const k of ['name', 'theta']) assert.ok(STORY[k].art && STORY[k].lines.length >= 4, 'the page before the first chapter: ' + k);
+  assert.deepEqual(Object.keys(STORY).slice(0, 3), ['name', 'theta', '1-1'], 'the name, then Theta, then the seed'); for (const m of build(TUTORIAL).marks) if (m.kind === 'tutor') assert.ok(TUTOR[m.text], 'lesson ' + m.text);
 });
 test('Mu joins in Cappadocia, at the third level, and is with Theta from then on', () => {
   const can = (id) => { const f = levelById(id); return { ...f.world.can, ...(f.spec.can || {}) }; };

@@ -103,3 +103,8 @@ The design is original and must stay clear of any known character.
 - **One press to the title:** `UI.home()`. The T key is ignored if the player has given T to something in "Choose keys".
 - **More** opens tile by tile on one condition, `doneLv('1-1')` (or `?unlock`/`?class`). The lab is not in it.
 - **The title menu** has twelve entries once a level is finished; its type and spacing are sized by the window's height (`.titem`, end of `app.css`).
+- **The beginning of the story** is three pages: `name`, `theta` and chapter `1-1`. A story page with `art` is one of the two that come first; it has no
+  place on the route, shows a picture made by `taleArt` in `ui.js`, and is always in the list of chapters. A page of more than three lines gets the class
+  `long` (smaller type sized by the window's height). If a page is lengthened, check that it still fits a window 560 high without scrolling.
+  The owner asked for depth here, so these pages are longer than the house rule for text would otherwise allow; the rule still holds everywhere else.
+

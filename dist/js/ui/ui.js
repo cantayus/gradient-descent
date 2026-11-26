@@ -32,7 +32,8 @@ const emblem = () => el('div.emblem', { html: '<svg viewBox="0 0 64 64" aria-hid
 export function showTitle() {
   clear(); api.attract(); hud.hidden = true; document.getElementById('touch').hidden = true; if (awake) playMusic('title');
   const next = ALL.find((id) => !save.levels[id]?.done) || ALL[0], any = Object.keys(save.levels).length > 0;
-  const items = [[any ? 'Continue' : 'New game', () => (any || save.seen.tutor ? play(next) : askTutor(next))], any && ['Levels', showLevels], ['Tutorial', () => play('T')], any && ['The story', showStory], any && ['Stamps', showAlbum], ['Notebook', showNotebook], ['The lab', showLab], ['More', showMore], ['How to play', showHow], ['Settings', () => showSettings(showTitle)], ['Also play this!', showAlso], ['Credits', showCredits]].filter(Boolean);
+  const on = () => (any || save.seen.tutor ? play(next) : askTutor(next)), begin = () => (save.seen.storytheta && !api.forceIntro ? on() : showTale('name', () => showTale('theta', on)));
+  const items = [[any ? 'Continue' : 'New game', begin], any && ['Levels', showLevels], ['Tutorial', () => play('T')], (any || save.seen.storyname) && ['The story', showStory], any && ['Stamps', showAlbum], ['Notebook', showNotebook], ['The lab', showLab], ['More', showMore], ['How to play', showHow], ['Settings', () => showSettings(showTitle)], ['Also play this!', showAlso], ['Credits', showCredits]].filter(Boolean);
   const menu = el('nav.tmenu', { 'aria-label': 'Menu' }, items.map(([t, f], i) => el('button.titem', { type: 'button', style: `--i:${i}`, on: { click: () => { sfx.ui(true); f(); }, mouseenter: (e) => e.target.focus() } }, t)));
   const root = el('div.cine' + (awake ? '.awake.seen' : ''), {}, el('div.veil'), el('div.logo', {}, emblem(), el('h1', { text: 'Gradient Descent' }), el('div.rule')), el('p.press', { text: 'ontouchstart' in window ? 'Tap to begin' : framed ? 'Click to begin' : 'Press any key' }), menu);
   ui.append(root);
@@ -116,11 +117,27 @@ function route(at) {
   for (let i = 0; i < n; i++) { x.fillStyle = i <= at ? '#ffd87a' : 'rgba(255,255,255,0.4)'; x.beginPath(); x.arc(px(i), py(i), i === at ? 8 : 5, 0, 7); x.fill(); if (i === at) { x.strokeStyle = 'rgba(255,216,122,0.5)'; x.lineWidth = 2; x.beginPath(); x.arc(px(i), py(i), 14, 0, 7); x.stroke(); } x.fillStyle = i === at ? '#fff' : i < at ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.35)'; x.fillText(ROUTE[i], px(i), py(i) + 36); }
   return c;
 }
+// Two pictures for the pages that come before the first chapter: the method, drawn by doing it, and the traveller beside the letter.
+function taleArt(kind) {
+  const c = el('canvas.route', { width: 900, height: 176 }), x = c.getContext('2d');
+  if (kind === 'steps') { // a hillside and a valley; each step as long as the ground where it starts is steep, so they shorten as the valley floor comes near
+    const X = (u) => 110 + 680 * u, Y = (u) => 24 + 118 * (1 - ((u - 0.78) / 0.78) ** 2), dL = (u) => (2 * (u - 0.78)) / 0.6084, line = () => { x.beginPath(); for (let u = 0; u <= 1.001; u += 0.01) (u ? x.lineTo(X(u), Y(u)) : x.moveTo(X(u), Y(u))); };
+    line(); x.lineTo(X(1), 176); x.lineTo(X(0), 176); x.closePath(); const g = x.createLinearGradient(0, 20, 0, 176); g.addColorStop(0, 'rgba(255,255,255,0.17)'); g.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = g; x.fill(); line(); x.strokeStyle = 'rgba(255,255,255,0.62)'; x.lineWidth = 2; x.stroke();
+    const pts = []; let u = 0.03; for (let k = 0; k < 10; k++) { pts.push(u); u -= 0.11 * dL(u); }
+    x.strokeStyle = '#ffd87a'; x.lineWidth = 3; x.lineJoin = 'round'; x.beginPath(); pts.forEach((p, i) => (i ? x.lineTo(X(p), Y(p) - 7) : x.moveTo(X(p), Y(p) - 7))); x.stroke();
+    pts.forEach((p, i) => { const last = i === pts.length - 1; if (last) { const h = x.createRadialGradient(X(p), Y(p) - 7, 0, X(p), Y(p) - 7, 26); h.addColorStop(0, 'rgba(255,216,122,0.7)'); h.addColorStop(1, 'rgba(255,216,122,0)'); x.fillStyle = h; x.fillRect(X(p) - 26, Y(p) - 33, 52, 52); } x.fillStyle = i ? '#ffd87a' : '#ffffff'; x.beginPath(); x.arc(X(p), Y(p) - 7, last ? 6 : 5 - Math.min(2, i * 0.3), 0, 7); x.fill(); }); return c; }
+  // Theta, and the letter: an oval with a bar across it, as Theta is an oval with a band across the eyes
+  const draw = (now) => { if (!c.isConnected && c.dataset.seen) return; if (c.isConnected) c.dataset.seen = 1; requestAnimationFrame(draw); const t = now / 1000; x.clearRect(0, 0, 900, 176);
+    x.strokeStyle = 'rgba(255,255,255,0.9)'; x.lineWidth = 5; x.beginPath(); x.ellipse(372, 90, 40, 64, 0, 0, 7); x.stroke(); x.strokeStyle = '#4fb0b4'; x.lineWidth = 10; x.lineCap = 'round'; x.beginPath(); x.moveTo(340, 90); x.lineTo(404, 90); x.stroke();
+    x.fillStyle = 'rgba(255,255,255,0.07)'; x.beginPath(); x.ellipse(528, 160, 70, 9, 0, 0, 7); x.fill();
+    x.save(); x.translate(528, 158 - 132 * 0.46); x.scale(132, 132); drawTheta(x, { ...POSE(), turn: 0.45 + 0.35 * Math.sin(t * 0.7), sy: 1 + 0.02 * Math.sin(t * 2.2), expr: 'smile', t }); x.restore(); };
+  requestAnimationFrame(draw); return c;
+}
 export function showTale(key, then) {
   const ch = STORY[key]; if (!ch) return then(); clear(); hud.hidden = true; const w = WORLDS[ch.at], way = { '2-1': 'balloon', '3-1': 'current', '4-1': 'bird', '5-1': 'balloon', '6-1': 'bird', '7-1': 'bird' }[key];
   if (way && then !== showTitle && then !== showStory) api.travel(w.id, way); else api.attract(); playMusic('title'); sfx.page(); save.seen['story' + key] = true; store();
   const go = () => { sfx.ui(true); then(); };
-  ui.append(el('div.tale' + (way && then !== showTitle && then !== showStory ? '.journey' : ''), {}, el('div.inner', {}, el('small', { text: 'The story' }), el('h2', { text: ch.title }), route(ch.at), ...ch.lines.map((t, i) => el('p', { style: `--i:${i}`, text: t })), el('div.row', { style: `--i:${ch.lines.length}` }, el('button.btn.big', { type: 'button', on: { click: go } }, then === showTitle || then === showStory ? 'Back' : 'Go on')))));
+  ui.append(el('div.tale' + (way && then !== showTitle && then !== showStory ? '.journey' : '') + (ch.lines.length > 3 ? '.long' : ''), {}, el('div.inner', {}, el('small', { text: ch.label || 'The story' }), el('h2', { text: ch.title }), ch.art ? taleArt(ch.art) : route(ch.at), ...ch.lines.map((t, i) => el('p', { style: `--i:${i}`, text: t })), el('div.row', { style: `--i:${ch.lines.length}` }, el('button.btn.big', { type: 'button', on: { click: go } }, then === showTitle || then === showStory ? 'Back' : 'Go on')))));
 }
 // ---- the ending: the last chapter told over the scene it describes, then the credits rolling over the same scene, then the way on ----
 export function showEnding() {
@@ -148,8 +165,8 @@ export function showAlbum() {
         n === w.levels.length ? el('p.note', { text: 'The page is full. ' + (w.theme.note || '') }) : null); })));
 }
 export function showStory() {
-  clear(); hud.hidden = true; api.attract(); document.body.classList.add('dim'); const keys = Object.keys(STORY).filter((k) => save.seen['story' + k]);
-  ui.append(sheet('The story', showTitle, keys.length ? null : el('p.note', { text: 'It begins when you do.' }), el('div.pages', {}, keys.map((k) => el('button.stone.chapter', { type: 'button', on: { click: () => showTale(k, showStory) } }, el('span.num', { text: String(STORY[k].at + 1) }), el('span.nm', { text: STORY[k].title }), el('span.tm', { text: STORY[k].lines[0] }))))));
+  clear(); hud.hidden = true; api.attract(); document.body.classList.add('dim'); const keys = Object.keys(STORY).filter((k) => STORY[k].art || save.seen['story' + k]);
+  ui.append(sheet('The story', showTitle, keys.some((k) => !STORY[k].art) ? null : el('p.note', { text: 'The chapters come as you travel.' }), el('div.pages', {}, keys.map((k) => el('button.stone.chapter', { type: 'button', on: { click: () => showTale(k, showStory) } }, el('span.num', { text: STORY[k].num || String(STORY[k].at + 1) }), el('span.nm', { text: STORY[k].title }), el('span.tm', { text: STORY[k].lines[0] }))))));
 }
 
 // ---- a lost level ----

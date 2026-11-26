@@ -279,3 +279,10 @@ body.safe #grade { display: none; } body.safe #view { filter: contrast(1.12) sat
 .titem { font-size: clamp(0.72rem, 2.15vh, 1.08rem); padding-block: clamp(0.2rem, 1.25vh, 0.6rem); }
 .titem:first-child { font-size: clamp(0.9rem, 2.7vh, 1.36rem); margin-bottom: clamp(0.1rem, 0.6vh, 0.35rem); }
 @media (max-aspect-ratio: 1/1) { .tmenu { top: auto; } }
+/* the longer pages of the story (the two that come before the first chapter, and the first chapter itself): smaller type and a wider measure, so that a
+   whole page can be read without scrolling on an ordinary screen, and lines that follow one another a little sooner */
+.tale.long .inner { width: min(54rem, 92vw); padding: 0.6rem 0; }
+.tale.long h2 { font-size: clamp(1.4rem, 2.6vw, 2.1rem); margin-bottom: 0.2rem; }
+.tale.long p { font-size: clamp(0.9rem, 2.4vh, 1.08rem); line-height: 1.45; margin: clamp(0.3rem, 1.1vh, 0.55rem) auto; max-width: 50rem; animation-delay: calc(var(--i) * 1.1s + 1s); }
+.tale.long .row { margin-top: clamp(0.5rem, 2vh, 1.1rem); animation-delay: calc(var(--i) * 1.1s + 1s); }
+.tale.long .route { height: clamp(4.6rem, 20vh, 9.5rem); width: auto; max-width: 100%; margin: 0.2rem auto 0.3rem; }
