@@ -1,6 +1,7 @@
 // Start-up and the frame loop. The screens (title, levels, card, notebook, settings) are in js/ui/; this file runs a level, or the scene behind the title,
 // and turns what happens in it into sound.
 import { input, initInput, initTouch, readInput } from './core/input.js';
+import { Q } from './art/paint.js';
 import { Play } from './game/play.js';
 import { WORLDS, levelById, TITLE, ALL, ENDING } from './data/worlds.js';
 import { save, loadSave } from './core/save.js';
@@ -9,19 +10,19 @@ import * as UI from './ui/ui.js';
 
 const view = document.getElementById('view'), ctx = view.getContext('2d', { alpha: false });
 const q = new URLSearchParams(location.search);
-export const G = { play: null, mode: null, W: 1, H: 1, dpr: 1, gfx: 2, auto: 2, paused: false, last: 0, fps: 60, slow: 0, hooks: {} };
+export const G = { play: null, mode: null, W: 1, H: 1, dpr: 1, gfx: 2, auto: (window.screen?.height || 0) * (window.devicePixelRatio || 1) >= 1900 ? 3 : 2, paused: false, last: 0, fps: 60, slow: 0, hooks: {} };
 window.__G = G;   // for the scripted player and the tests in scripts/
 const IDLE = { move: 0, jump: false, jumpNow: false, tuck: false };
 
 function resize() {
-  const cap = G.gfx >= 2 ? 2 : G.gfx === 1 ? 1.25 : 1, dpr = Math.min(window.devicePixelRatio || 1, cap), w = innerWidth, h = innerHeight;
-  // a painted picture in many layers costs by the pixel, so there is a ceiling on how many are painted: 1440p on Full, 1080p on Good, 720p on Plain
-  const lim = G.gfx >= 2 ? 2560 * 1440 : G.gfx === 1 ? 1920 * 1080 : 1280 * 720, k = Math.min(1, Math.sqrt(lim / (w * h * dpr * dpr)));
+  const cap = G.gfx >= 3 ? 3 : G.gfx === 2 ? 2 : G.gfx === 1 ? 1.25 : 1, dpr = Math.min(window.devicePixelRatio || 1, cap), w = innerWidth, h = innerHeight;
+  // a painted picture in many layers costs by the pixel, so there is a ceiling on how many are painted: 2160p (4K) on Ultra, 1440p on Full, 1080p on Good, 720p on Plain
+  const lim = G.gfx >= 3 ? 3840 * 2160 : G.gfx === 2 ? 2560 * 1440 : G.gfx === 1 ? 1920 * 1080 : 1280 * 720, k = Math.min(1, Math.sqrt(lim / (w * h * dpr * dpr)));
   G.dpr = dpr * k; G.W = view.width = Math.round(w * G.dpr); G.H = view.height = Math.round(h * G.dpr);
   if (G.play) G.play.resize(G.W, G.H);
 }
 addEventListener('resize', resize);
-function applyGfx() { const s = save.settings.gfx; G.gfx = q.has('gfx') ? +q.get('gfx') : s < 0 ? G.auto : s; resize(); if (G.play) G.play.scene.q = G.gfx; document.body.dataset.gfx = G.gfx; document.body.classList.toggle('safe', !!save.settings.safe); }
+function applyGfx() { const s = save.settings.gfx; G.gfx = q.has('gfx') ? +q.get('gfx') : s < 0 ? G.auto : s; Q.k = [1, 1.25, 1.75, 2.5][G.gfx] || 1; Q.far = [1, 1.15, 1.5, 2][G.gfx] || 1; resize(); if (G.play) G.play.scene.q = G.gfx; document.body.dataset.gfx = G.gfx; document.body.classList.toggle('safe', !!save.settings.safe); }
 function applyText() { document.documentElement.style.setProperty('--fs', save.settings.text || 1); }
 
 // Three lights and a time limit; with assist, five lights and all the time in the world. The limit is generous: a little over twice a good first run.

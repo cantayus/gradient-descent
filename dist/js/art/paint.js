@@ -23,7 +23,11 @@ export function ridge(x, seed = 0, oct = 4) { let s = 0, a = 0.5, f = 1, n = 0; 
 // ---- small pictures ----
 // A sprite is painted once on its own canvas, at `ppu` pixels to the unit, and remembers where its foot is.
 export const PPU = 72;
+// How finely the small pictures are painted. The picture setting raises it, so that on a large screen nothing is a blown-up thumbnail:
+// `k` for everything, and `far` on top of it for the things of the far country, which are painted small and then shown large.
+export const Q = { k: 1, far: 1 };
 export function sprite(w, h, paint, { ax = 0.5, ay = 1, ppu = PPU, blur = 0 } = {}) {
+  { const f = Q.k * (ppu < PPU ? Q.far : 1); ppu *= f; blur *= f; }
   const pad = blur ? blur * 2.5 / ppu : 0.04, c = document.createElement('canvas'); c.width = Math.ceil((w + pad * 2) * ppu); c.height = Math.ceil((h + pad * 2) * ppu);
   const ctx = c.getContext('2d'); ctx.scale(ppu, ppu); ctx.translate(pad, pad);
   if (blur && 'filter' in ctx) ctx.filter = `blur(${blur}px)`;

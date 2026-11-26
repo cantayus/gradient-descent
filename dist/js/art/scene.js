@@ -2,7 +2,7 @@
 // A world's theme (js/art/worlds/*.js) says what to paint; this file knows how.
 // Layers, back to front: sky, far ridges, middle ridges, ground and what stands on it, the hero, near silhouettes, air and light.
 import { RNG } from '../core/rng.js';
-import { TAU, lerp, clamp, smooth, mix, rgba, lighten, darken, hash1, noise1, fbm, ridge, sprite, stamp, P } from './paint.js';
+import { TAU, lerp, clamp, smooth, mix, rgba, lighten, darken, hash1, noise1, fbm, ridge, sprite, stamp, P, Q } from './paint.js';
 import { stampSprite } from './stamps.js';
 import { drawTheta } from '../game/theta.js';
 import { Weather } from '../game/weather.js';
@@ -22,9 +22,12 @@ const RIDGE = {
   pillar: (u, s) => { const k = Math.floor(u * 1.7), f = u * 1.7 - k, on = hash1(k, s) > 0.42, hh = hash1(k, s + 2); return (on ? smooth(clamp(Math.min(f, 1 - f) * 7, 0, 1)) * (0.45 + 0.55 * hh) : 0) * 0.85 + fbm(u * 0.6, s + 7, 2) * 0.2; },
 };
 
+// Which shapes of skyline throw spurs, and how strongly: peaks and dunes do, rounded hills and table-lands do not.
+const SPUR = { jag: 1, torres: 1.1, cone: 0.8, volc: 0.9, dune: 1.15 };
+
 // A tile of brushwork, one unit to 64 pixels, to lay over a flat colour.
-function tile(kind, seed) {
-  const n = 192, c = document.createElement('canvas'); c.width = c.height = n; const x = c.getContext('2d'), r = new RNG('tile' + kind + seed);
+function tile(kind, seed, s = 1) {
+  const n = 192, c = document.createElement('canvas'); c.width = c.height = n * s; const x = c.getContext('2d'), r = new RNG('tile' + kind + seed); x.scale(s, s);
   const dab = (col, a, w, h, rot) => { x.fillStyle = col; x.globalAlpha = a; const px = r.range(0, n), py = r.range(0, n); for (const ox of [-n, 0, n]) for (const oy of [-n, 0, n]) { x.beginPath(); x.ellipse(px + ox, py + oy, w, h, rot, 0, TAU); x.fill(); } };
   if (kind === 'grass') for (let i = 0; i < 260; i++) dab(r.chance(0.5) ? '#ffffff' : '#000000', r.range(0.05, 0.16), r.range(0.8, 1.6), r.range(4, 11), r.range(-0.35, 0.35));
   else if (kind === 'snow') { for (let i = 0; i < 90; i++) dab('#7fa2d0', r.range(0.05, 0.14), r.range(5, 16), r.range(1.5, 4), r.range(-0.2, 0.2)); for (let i = 0; i < 60; i++) dab('#ffffff', r.range(0.3, 0.8), 0.9, 0.9, 0); }
@@ -48,7 +51,7 @@ export class Scene {
     { const gd = typeof document !== 'undefined' && document.getElementById('grade'); if (gd) { gd.children[0].style.background = this.time.tint || 'transparent'; gd.children[2].style.opacity = String(Math.min(1, (this.time.vignette ?? 0.42) / 0.5)); } }      // the hour's tint and the dark corners belong to the page (see css): cheaper there, and the same on every machine
     this.wx = new Weather(level.spec.id + timeKey, theme.weather ? theme.weather(timeKey) : {}); this.cloudX = 0; this.windX = 0; this.coldNow = this.wx.c.cold; this.own = true;   // Play hands in the weather it shares with the physics; a scene on its own keeps its own
   }
-  _pat(ctx, kind) { let p = this.tiles[kind]; if (!p) { p = ctx.createPattern(tile(kind, 1), 'repeat'); p.setTransform(new DOMMatrix().scale(1 / 64)); this.tiles[kind] = p; } return p; }
+  _pat(ctx, kind) { let p = this.tiles[kind]; if (!p) { const s = Q.k >= 2 ? 3 : Q.k > 1 ? 2 : 1; p = ctx.createPattern(tile(kind, 1, s), 'repeat'); p.setTransform(new DOMMatrix().scale(1 / (64 * s))); this.tiles[kind] = p; } return p; }
   resize(W, H) { this.W = W; this.H = H; this.sky = null; }
 
   // ---- small moving things ----
@@ -78,7 +81,7 @@ export class Scene {
     const { W, H, time, theme } = this, S = H / cam.vh, t = this.t;
     const sx = (Math.random() - 0.5) * this.shake * 10, sy = (Math.random() - 0.5) * this.shake * 10;
     // The far country is painted smaller than the screen and laid in as one picture: it is soft with distance anyway, and this is most of the cost of a frame.
-    const k = this.q >= 2 ? (W > 2200 ? 0.5 : 0.75) : this.q === 1 ? 0.6 : 0.5, fw = Math.ceil(W * k), fh = Math.ceil(H * k);
+    const k = this.q >= 3 ? 1 : this.q === 2 ? (W > 2600 ? 0.8 : 1) : this.q === 1 ? 0.7 : 0.5, fw = Math.ceil(W * k), fh = Math.ceil(H * k);
     if (!this.farC || this.farC.width !== fw || this.farC.height !== fh) { this.farC = document.createElement('canvas'); this.farC.width = fw; this.farC.height = fh; this.farX = this.farC.getContext('2d', { alpha: false }); }
     const main = ctx; ctx = this.farX; ctx.setTransform(k, 0, 0, k, 0, 0);
     this._sky(ctx);
@@ -179,6 +182,23 @@ export class Scene {
     if (this.q) { ctx.strokeStyle = rgba(time.rim || '#ffffff', (L.rimA ?? 0.3) * (1 - wx.cover * 0.7)); ctx.lineWidth = H * 0.0017; ctx.lineJoin = 'round'; ctx.stroke(); }      // the light catching the crest
     if (this.q && L.facet !== 0) { // the side of each slope turned away from the sun is a shade darker
       const d = (time.sun && time.sun.x < 0.5 ? 1 : -1) * H * 0.012 * (L.facet ?? 1); ctx.save(); ctx.clip(); ctx.beginPath(); ctx.moveTo(-2, H + 2); for (let x = -2; x <= W + step; x += step) ctx.lineTo(x, yAt(x + d) + H * 0.004); ctx.lineTo(W + 2, H + 2); ctx.closePath(); ctx.fillStyle = rgba(time.shade, 0.2); ctx.fill(); ctx.restore();
+      ctx.beginPath(); ctx.moveTo(-2, H + 2); for (let x = -2; x <= W + step; x += step) ctx.lineTo(x, yAt(x)); ctx.lineTo(W + 2, H + 2); ctx.closePath(); }
+    if (this.q && (L.spurs ?? SPUR[L.style || 'jag'])) { // every peak throws a spur toward the viewer, and the face on the far side of it from the sun stands in shade
+      const ks = L.spurs ?? SPUR[L.style || 'jag'], du = (W / 420) / px, sd = time.sun && time.sun.x < 0.5 ? 1 : -1, i0 = Math.floor((-W / 2 / px + camU) / du) - 40, i1 = Math.ceil((W / 2 / px + camU) / du) + 40, f = [];
+      for (let i = i0; i <= i1; i++) f.push(fn(i * du, L.seed)); const X = (i) => ((i0 + i) * du - camU) * px + W / 2, Y = (i) => base - amp * f[i], lit = 1 - wx.cover * 0.7;
+      ctx.save(); ctx.clip();
+      for (let i = 4; i < f.length - 4; i++) { if (!(f[i] > f[i - 1] && f[i] >= f[i + 1] && f[i] > f[i - 4] && f[i] > f[i + 4]) || f[i] < 0.2) continue;
+        let v = i; while (v + sd > 0 && v + sd < f.length - 1 && f[v + sd] <= f[v] + 1e-4 && Math.abs(v - i) < 70) v += sd; if (Math.abs(v - i) < 3) continue;
+        const a = i0 + i, xp = X(i), yp = Y(i), xv = X(v), hgt = amp * f[i] * (0.7 + 0.5 * hash1(a, L.seed + 70)), xs = xp + (xv - xp) * (0.22 + 0.3 * hash1(a, L.seed + 71)), yf = yp + hgt;
+        const g2 = ctx.createLinearGradient(0, yp, 0, yf); g2.addColorStop(0, rgba(time.shade, 0.3 * ks)); g2.addColorStop(0.6, rgba(time.shade, 0.16 * ks)); g2.addColorStop(1, rgba(time.shade, 0)); ctx.fillStyle = g2; ctx.beginPath(); ctx.moveTo(xp, yp - 1); for (let j = i; j !== v + sd; j += sd) ctx.lineTo(X(j), Y(j) - 1); ctx.lineTo(xv, yf); ctx.lineTo(xs, yf); ctx.closePath(); ctx.fill();
+        // a second, smaller fold lower on the same face
+        const xm = xp + (xv - xp) * 0.55, ym = Y(Math.round(i + (v - i) * 0.55)); ctx.fillStyle = rgba(time.shade, 0.1 * ks); ctx.beginPath(); ctx.moveTo(xm, ym); ctx.lineTo(xv, Y(v)); ctx.lineTo(xv, yf); ctx.lineTo(xm + (xv - xm) * 0.3, ym + hgt * 0.7); ctx.closePath(); ctx.fill();
+        // and the lit edge of the spur itself
+        const g3 = ctx.createLinearGradient(0, yp, 0, yf); g3.addColorStop(0, rgba(time.rim || '#ffffff', 0.3 * ks * lit)); g3.addColorStop(1, rgba(time.rim || '#ffffff', 0)); ctx.fillStyle = g3; ctx.beginPath(); ctx.moveTo(xp, yp); ctx.lineTo(xs, yf); ctx.lineTo(xs - sd * hgt * 0.14, yf); ctx.closePath(); ctx.fill(); }
+      ctx.restore(); ctx.beginPath(); ctx.moveTo(-2, H + 2); for (let x = -2; x <= W + step; x += step) ctx.lineTo(x, yAt(x)); ctx.lineTo(W + 2, H + 2); ctx.closePath(); }
+    if (this.q >= 2 && L.grain !== 0) { // brushwork over the flat of the paint, coarser on the nearer ridges
+      if (!this.farPat) { const s = Q.k >= 2 ? 2 : 1; this.farPat = ctx.createPattern(tile('rock', 7, s), 'repeat'); this.farPatS = s; }
+      const z = (H / 1080) * (0.9 + L.par * 5) / this.farPatS; this.farPat.setTransform(new DOMMatrix().translate(-camU * px, 0).scale(z)); ctx.save(); ctx.clip(); ctx.globalAlpha = (L.grain ?? 0.5) * (1 - Math.min(0.7, hz0)); ctx.fillStyle = this.farPat; ctx.fillRect(0, base - amp - 4, W, H - (base - amp) + 8); ctx.restore();
       ctx.beginPath(); ctx.moveTo(-2, H + 2); for (let x = -2; x <= W + step; x += step) ctx.lineTo(x, yAt(x)); ctx.lineTo(W + 2, H + 2); ctx.closePath(); }
     if (this.q && L.ribs) { // gullies running down from the crest, which is what makes a far mountain look like rock and not like paper
       ctx.save(); ctx.clip(); const gap = H * 0.011 * (L.ribGap ?? 1), lean = (time.sun && time.sun.x < 0.5 ? 1 : -1) * 0.16; ctx.lineCap = 'round';
